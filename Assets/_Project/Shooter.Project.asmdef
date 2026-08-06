@@ -1,0 +1,17 @@
+{
+    "name": "Shooter.Project",
+    "rootNamespace": "Shooter.Project",
+    "references": [
+        "com.lightbug.character-controller-pro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

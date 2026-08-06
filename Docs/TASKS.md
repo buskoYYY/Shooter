@@ -5,75 +5,322 @@
 
 ---
 
-## Задача 1 — Интеграция Character Controller Pro + полное тело (FPS)
+## Справка: Как устроен FPS Animation Framework
 
-**Цель:** взять готовый Character Controller Pro как основной компонент движения (ходьба, бег, прыжки, слоупы, карабканье по лестнице и т.д.), подключить к нему полное тело персонажа с видом от первого лица. Оружие, стрельба и перезарядка — позже.
+### Зачем вообще эта сложность?
 
-### Что нужно сделать
+**Обычный Animator Controller** отлично проигрывает заранее записанные клипы (Idle, Walk, Run).  
+**FPS Animation Framework** нужен, когда одних клипов мало — в FPS с видимым телом каждый кадр нужно *досчитывать* позу поверх базовой анимации.
 
-#### Этап A — Подготовка ассетов
-- [ ] Убедиться, что Character Controller Pro импортирован и доступен в проекте
-- [ ] Скачать и импортировать **Demo Content** для KINEMATION FPS Animation Framework  
-  (`KINEMATION → Tools → FPS Animation Framework → Download Demo`) — анимации, Animator Controller, примеры
-- [ ] Разместить персонажа (`Character_model.fbx`) и префаб CCP на сцене
+#### Что делает обычный Animator
 
-#### Этап B — Character Controller Pro (движение)
-- [ ] Настроить префаб/сцену с контроллером CCP по его документации
-- [ ] Проверить базовое движение: ходьба, бег, прыжок, приземление
-- [ ] Проверить слоупы (наклонные поверхности)
-- [ ] Проверить карабканье по лестнице вверх
-- [ ] Настроить камеру от первого лица (FPS view)
+```
+Idle клип → кости двигаются по ключам → готово
+```
 
-#### Этап C — KINEMATION FPS Animation Framework (тело)
-- [ ] Запустить **FPS ANIMATOR Wizard** (`GameObject → FPS ANIMATOR Wizard`) на персонаже:
-  - Root, Head, Pelvis, Spine Root
-  - Right/Left Hand, Right/Left Foot
-  - Animator Controller из демо
-  - Input Config: `Assets/KINEMATION/FPSAnimationFramework/Assets/InputConfig_FPSAnimationFramework.asset`
-- [ ] Создать **Animator Profile** через **FPS PROFILE Wizard** (`Assets → FPS PROFILE Wizard` на Rig-ассете)
-- [ ] Подключить слои из демо-профиля:
-  - **Turn Layer** — поворот тела (hip/root)
-  - **View Layer** — наклон камеры/вида
-  - **IK Layer** — IK для ног и рук
-  - **Sway Layer** — процедурный разброс
-  - **Look Layer**, **Pose Sampler**, **Additive**, **Ik Motion**, **ADS** (по необходимости без оружия)
-- [ ] Связать параметры аниматора с состоянием CCP (скорость, grounded, прыжок, лестница и т.д.)
-- [ ] Настроить `UserInputController` / Input System под управление проекта
+Персонаж стоит в одном Idle, пока не переключишь state. Для third person или FPS **без тела** (только руки) этого часто хватает.
 
-#### Этап D — Интеграция CCP ↔ анимация
-- [ ] Передавать скорость и состояние движения из CCP в `FPSAnimator` / Animator
-- [ ] Синхронизировать поворот камеры с `FPSCameraController` и Turn Layer
-- [ ] Проверить IK ног на неровной поверхности и на лестнице
-- [ ] Убедиться, что тело видно в FPS (руки, ноги при движении) без артефактов
+#### Что ломается в FPS с полным телом
 
-#### Этап E — Тестирование
-- [ ] Прогнать тестовую сцену: плоскость, слоуп, лестница
-- [ ] Зафиксировать известные проблемы и отложить оружие на следующую задачу
+| Проблема | Почему Idle/Walk не решают |
+|----------|---------------------------|
+| Смотришь вверх/вниз | Нужно наклонить позвоночник, голову, плечи — на каждый градус мыши |
+| Смотришь влево/вправо | Бёдра и торс должны догонять камеру с задержкой (Turn Layer) |
+| Идёшь по склону | Ноги должны вставать на наклонную — IK |
+| Бежишь, дёргаешь мышью | Тело слегка качается (Sway) — это не отдельный клип на каждый угол |
+| Перезарядка / mantle | Нужно наложить клип *поверх* текущей позы, не сбрасывая всё |
 
-### Что уже сделано
+Записать отдельный клип на каждую комбинацию — combinatorial explosion. Процедурные слои решают это **математикой в runtime**, а не сотнями клипов.
 
-- [x] Создан Unity-проект Shooter (URP, Input System)
-- [x] Импортирован **KINEMATION FPS Animation Framework** (`Assets/KINEMATION/`)
-- [x] Добавлена 3D-модель персонажа (`Assets/_Project/Packages/Models/Character_model.fbx`)
-- [x] Пользователь добавил Character Controller Pro и персонажа в проект *(в репозитории CCP пока не отслеживается git — проверить локально в Unity)*
-- [ ] Demo Content KINEMATION — **не импортирован** (нужно скачать через Wizard)
-- [ ] Интеграция CCP + анимация — **не начата**
-- [ ] Сцена `SampleScene` — дефолтная (камера + свет), персонаж не настроен
+#### Когда система НЕ нужна
 
-### Используемые ассеты
+- Вид от первого лица **только руки + оружие** (классический FPS)
+- Простой third person: Idle / Walk / Run / Jump — и всё
+- Нет процедурного sway, IK, поворота тела от камеры
 
-| Ассет | Путь / заметки |
-|-------|----------------|
-| Character Controller Pro | Документация внутри пакета (PDF / Online Docs) |
-| KINEMATION FPS Animation Framework | `Assets/KINEMATION/FPSAnimationFramework/` |
-| Документация KINEMATION | `Offline Documentation.pdf`, `Online Documentation.url` |
-| Demo Content | Скачать: GitHub kinemation/demoes → FPSAnimationFramework_Demo.unitypackage |
-| Модель персонажа | `Assets/_Project/Packages/Models/Character_model.fbx` |
+#### Когда система НУЖНА (наш случай)
 
-### Следующая задача (запланировано)
+CCP двигает капсулу, а тело должно выглядеть живым в FPS — поворот, IK ног, sway, look. FPS AF **не заменяет** анимации, а **дополняет** их:
 
-**Задача 2 — Оружие:** добавление оружия, перезарядка, стрельба, Weapon Layer, Recoil.
+```
+Базовые клипы (Idle, Walk, Run)     ← обычный Animator
+        ↓
+Процедурные слои (Look, Turn, IK…)  ← FPS AF поверх, каждый кадр
+        ↓
+Итоговая поза костей
+```
+
+> **Idle/Walk/Run** — «что делает персонаж».  
+> **FPS AF** — «как тело реагирует на камеру, рельеф и движение в каждый кадр».
 
 ---
 
-*Последнее обновление: 4 августа 2026*
+### Wizard: первичная настройка персонажа
+
+`ПКМ по герою → FPS ANIMATOR Wizard`
+
+| Что создаётся | Зачем |
+|---------------|-------|
+| **Компоненты на игроке** | `FPSAnimator`, `FPSBoneController`, `UserInputController`, `FPSPlayablesController`, `RecoilAnimation` |
+| **Rig asset** (ScriptableObject) | «Паспорт» скелета: иерархия костей, chains (руки, ноги, pelvis), curves |
+| **InputConfig** | Мост между **нашим кодом** (CCP, input) и **фреймворком**. Пишем `_userInput.SetValue("MouseDelta", ...)` — слои читают это |
+| **Камера + FPSCameraController** | FPS-камера (FOV, shake и т.д.) |
+| **IK targets** (виртуальные кости) | Точки для IK рук/ног |
+
+**InputConfig** из пакета — это **не** Unity Input System. Это **внутренний словарь свойств** фреймворка (мышь, движение, aiming, weights слоёв).  
+Путь: `Assets/KINEMATION/FPSAnimationFramework/Assets/InputConfig_FPSAnimationFramework.asset`
+
+---
+
+### Profile Wizard: процедурные фичи
+
+`ПКМ по Rig asset → FPS PROFILE Wizard`
+
+Создаёт **Animator Profile** — набор процедурных слоёв. Profile **ссылается на Rig** — слои знают, *какие кости* крутить.
+
+```
+AnimatorProfile
+├── PoseSamplerLayer   — базовая поза pelvis/spine
+├── ViewLayer          — наклон «вида» при движении
+├── TurnLayer          — поворот бёдер относительно камеры
+├── LookLayer          — наклон костей при взгляде вверх/вниз/в стороны
+├── IkLayer            — ноги на склонах, руки
+├── SwayLayer          — качание при движении
+├── AdditiveLayer      — доп. наложения
+├── IkMotionLayer      — IK при root motion анимациях
+└── … (ADS, Weapon — позже, в Задаче 2)
+```
+
+#### Look Layer
+
+Берёт **mouse input** и **раскладывает угол по цепочке костей** (spine → chest → neck → head). У каждой кости — свой лимит (`clampedAngle`):
+
+- `pitchOffsetElements` — вверх/вниз
+- `yawOffsetElements` — влево/вправо
+- `rollOffsetElements` — наклон
+
+Без этого при взгляде вверх голова уйдёт в плечи, или всё будет крутиться одной костью.
+
+---
+
+### Animation Asset vs Profile vs Animator Controller
+
+| Ассет | Что хранит |
+|-------|-----------|
+| **Animator Controller** | Locomotion: Idle, Walk, Run, Jump (state machine) |
+| **Animator Profile** | Настройки процедурных слоёв (Look, Turn, IK…) |
+| **Animation Asset** | Клипы для *динамических* анимаций (перезарядка, throw, mantle overlay). Играется через `PlayablesController.PlayAnimation()` |
+| **Rig asset** | Информация о скелете + ссылка на Animator Controller и InputConfig |
+
+Profile **не хранит** locomotion-клипы — только настройки «надстройки» поверх них.
+
+---
+
+### Связка с CCP (как будет работать у нас)
+
+```
+Input
+  ↓
+CharacterBrain (CCP)  →  движение капсулы, velocity
+  ↓                           ↓
+Animator params          UserInputController (FPS AF)
+(PlanarSpeed, Grounded)  (MouseDelta, MoveInput, weights)
+  ↓                           ↓
+Walk/Run клипы           Look, Turn, IK, Sway
+  ↓                           ↓
+       ═══ итоговая поза костей ═══
+```
+
+CCP отвечает за **где** персонаж. FPS AF — за **как выглядит** тело.
+
+---
+
+## Задача 1 — Полное тело + FPS-движение (CCP + FPS AF + Motion Warping)
+
+**Цель:** Character Controller Pro — физика и логика движения. FPS Animation Framework — процедурное тело (поворот, IK, sway). Motion Warping — интеракты и карабканье на препятствия. Вид от первого лица. Оружие — позже.
+
+### Архитектура (как это стыкуется)
+
+```
+[Input System]
+      ↓
+[CharacterBrain (CCP)] ──→ CharacterActions (move, jump, interact…)
+      ↓
+[CharacterStateController (CCP)]
+   ├── NormalMovement  → ходьба, бег, прыжок, слоупы
+   ├── LadderClimbing  → лестницы (root motion + IK)
+   └── (будущее) MantleState → Motion Warping (mantle/vault)
+      ↓
+[CharacterActor (CCP)] — позиция, velocity, root motion
+      ↓
+[Animator] ← параметры из NormalMovement (PlanarSpeed, Grounded…)
+      ↓
+[FPSAnimator + Layers (FPS AF)] — Turn, View, IK, Sway, Look…
+      ↓
+[FPSCameraController] — FPS-камера, pitch/yaw
+      ↓
+[MotionWarping (LateUpdate)] — warp root motion на препятствиях
+```
+
+**Иерархия персонажа (CCP):**
+```
+Player (Root)
+├── CharacterBody + CharacterActor
+├── FPSAnimator, UserInputController, CharacterBrain…
+├── Graphics/
+│   └── Character_model (Animator, KRigComponent, MotionWarping)
+├── States/  (NormalMovement, LadderClimbing…)
+├── Actions/ (CharacterBrain)
+└── Environment/
+```
+
+---
+
+### План работ
+
+#### Фаза 0 — Подготовка (≈30 мин)
+- [x] Импортировать **Character Controller Pro** (`Assets/Character Controller Pro/`)
+- [x] Импортировать **FPS Animation Framework** (`Assets/KINEMATION/FPSAnimationFramework/`)
+- [x] Импортировать **Motion Warping** (`Assets/KINEMATION/MotionWarping/`)
+- [x] Добавить модель персонажа (`Assets/_Project/Packages/Models/Character_model.fbx`)
+- [x] Скачан **Demo Content FPS AF** → `Assets/_Project/Downloads/FPSAnimationFramework_Demo.unitypackage` *(импорт в Unity: Shooter → Phase 0)*
+- [ ] **Motion Warping Demo** — отдельного package в releases нет; будет на Фазе 5
+- [ ] Изучить демо-сцены CCP: `Demo/Scenes/3D Scene.unity`, `Character Scene.unity`
+
+#### Фаза 1 — Базовый персонаж CCP (≈1–2 ч)
+> Документация: [Organize the character hierarchy](https://lightbug14.gitbook.io/ccp/how-to.../implementation/organize-the-character-hierarchy.md)  
+> **Авто-setup:** `Shooter → Phase 1 → Run Full Setup` (см. `Assets/_Project/PHASE1_SETUP.md`)
+
+- [x] Скрипт **ShooterInputHandler** — мост Unity Input System → CCP
+- [x] Editor-меню **Shooter/Phase 1** — создание префаба и тестовой сцены
+- [ ] Запустить setup в Unity и проверить префаб `Assets/_Project/Prefabs/PlayerCharacter.prefab`
+- [ ] Создать префаб на основе `Demo Character 3D`, заменить меш на `Character_model`
+- [ ] Сохранить иерархию: Root → Graphics / States / Actions / Environment
+- [ ] Настроить `CharacterBody` (капсула под рост модели)
+- [x] Подключить Input System к `CharacterBrain` (Custom + ShooterInputHandler)
+- [ ] Проверить `NormalMovement`: ходьба, бег, прыжок, приземление, слоупы
+- [ ] Убедиться, что аниматор получает параметры: `Grounded`, `PlanarSpeed`, `VerticalSpeed`, `HorizontalAxis`, `VerticalAxis`
+
+#### Фаза 2 — FPS Animation Framework: настройка тела (≈2–3 ч)
+> Документация: [Character Rig](https://kinemation.gitbook.io/scriptable-animation-system/workflow/character-rig.md) → [Profiles and Layers](https://kinemation.gitbook.io/scriptable-animation-system/workflow/profiles-and-layers.md)
+
+- [ ] `GameObject → FPS ANIMATOR Wizard` на персонаже:
+  - Проверить кости: Root, Head, Pelvis, Spine Root, Hands, Feet
+  - Animator Controller — из демо (или свой, retarget)
+  - Input Config: `Assets/KINEMATION/FPSAnimationFramework/Assets/InputConfig_FPSAnimationFramework.asset`
+- [ ] `Assets → FPS PROFILE Wizard` на Rig-ассете → создать Animator Profile
+- [ ] Настроить слои (без оружия, минимальный набор):
+  | Слой | Назначение |
+  |------|-----------|
+  | **Pose Sampler** | Базовая поза pelvis/spine |
+  | **View Layer** | Наклон камеры при движении |
+  | **Turn Layer** | Поворот бёдер/корня относительно камеры |
+  | **Look Layer** | Наклон головы/взгляд |
+  | **IK Layer** | IK ног (слopes, ступени) и рук |
+  | **Sway Layer** | Процедурный разброс при движении |
+  | **Ik Motion Layer** | IK при root motion анимациях |
+  | **Additive Layer** | Доп. наложения |
+- [ ] Камера: `FPSCameraController` на камере в голове (Wizard создаёт автоматически)
+- [ ] FPS-режим: камера в Head, тело видно (не hideBody)
+
+#### Фаза 3 — Мост CCP ↔ FPS AF (≈2–3 ч) ⭐ ключевая фаза
+> Документация: [Integration](https://kinemation.gitbook.io/scriptable-animation-system/workflow/integration.md)
+
+Написать скрипт `ShooterCharacterController` (аналог demo `FPSController`):
+
+```csharp
+// Инициализация (Start)
+_fpsAnimator = GetComponent<FPSAnimator>();
+_fpsAnimator.Initialize();
+_userInput = GetComponent<UserInputController>();
+_fpsCamera = GetComponentInChildren<FPSCameraController>();
+
+// Каждый кадр — прокинуть input в FPS AF
+_userInput.SetValue(FPSANames.MouseDeltaInput, mouseDelta);
+_userInput.SetValue(FPSANames.MoveInput, moveInput);
+
+// Из CCP NormalMovement — прокинуть в Animator
+// (CCP уже делает это сам, но нужно синхронизировать поворот)
+```
+
+- [ ] Создать `ShooterCharacterController.cs` в `Assets/_Project/Scripts/`
+- [ ] Инициализация FPSAnimator, UserInputController, FPSCameraController
+- [ ] Прокинуть mouse delta → `UserInputController` (для Turn/View/Sway)
+- [ ] Прокинуть move input → `UserInputController`
+- [ ] FPS-поворот: камера управляет yaw/pitch, Turn Layer крутит тело
+- [ ] CCP `lookingDirectionParameters` → режим «TowardsCamera» / custom для FPS
+- [ ] При спринте: `StabilizationWeight = 0`, `PlayablesWeight = 0` (как в доке FPS AF)
+- [ ] Проверить: движение + поворот тела + sway + IK ног на слopes
+
+#### Фаза 4 — Лестницы через CCP (≈1–2 ч)
+> CCP Demo: `LadderClimbing.cs` — готовый state с root motion + IK
+
+- [ ] Добавить `Ladder` компоненты на лестницы в тестовой сцене
+- [ ] Добавить state `LadderClimbing` в `CharacterStateController`
+- [ ] Настроить Animator Controller: триггеры `BottomUp`, `TopDown`, `Up`, `Down`, `BottomDown`, `TopUp`
+- [ ] Root motion: `CharacterActor.SetUpRootMotion(true, SetVelocity, false)` — CCP делает сам
+- [ ] IK на лестнице: `useIKOffsetValues` в LadderClimbing или IK Layer FPS AF
+- [ ] При входе на лестницу: отключить Turn Layer / Sway (через UserInputController weights)
+- [ ] При выходе: восстановить веса слоёв
+- [ ] Тест: подойти → Interact → карабкаться вверх/вниз → слезть
+
+#### Фаза 5 — Motion Warping: mantle/vault (≈2–3 ч)
+> Документация: [How this asset works](https://kinemation.gitbook.io/motion-warping-for-unity/concept/how-this-asset-works.md)
+
+- [ ] Добавить `MotionWarping` + `MotionWarpingIk` на персонажа (Graphics)
+- [ ] Импортировать demo MotionWarpingAsset (mantle high/low, vault)
+- [ ] Добавить `MantleComponent` / `VaultComponent` на препятствия или через raycast
+- [ ] Создать CCP state `MotionWarpState`:
+  - Detect obstacle → call `MotionWarping.Play(asset, warpPoints)`
+  - `CharacterActor.IsKinematic = true`, `UseRootMotion = true`
+  - Motion Warping двигает root в `LateUpdate`
+  - По `onWarpEnded` → вернуть NormalMovement
+- [ ] ⚠️ Motion Warping ожидает `CharacterController`/`Rigidbody` — CCP использует свой `CharacterBody`. Нужен адаптер: warp двигает `CharacterActor.Position` напрямую
+- [ ] Animator parameter `WarpRate` — для play rate scale
+- [ ] Тест: подбежать к низкому препятствию → mantle, к высокому → vault
+
+#### Фаза 6 — Тестовая сцена и полировка (≈1–2 ч)
+- [ ] Сцена: плоскость + слoп + лестница + 2–3 препятствия для mantle
+- [ ] Прогнать все режимы: walk, run, jump, slope, ladder, mantle
+- [ ] Проверить артефакты: twisted feet, clipping, camera jitter
+- [ ] Зафиксировать баги → отложить оружие на Задачу 2
+
+---
+
+### Что уже сделано
+
+- [x] Unity-проект Shooter (URP 17.3, Input System 1.18)
+- [x] **Character Controller Pro** — импортирован (`Assets/Character Controller Pro/`)
+- [x] **FPS Animation Framework** — импортирован (`Assets/KINEMATION/FPSAnimationFramework/`)
+- [x] **Motion Warping** — импортирован (`Assets/KINEMATION/MotionWarping/`)
+- [x] Модель персонажа — `Character_model.fbx`
+- [x] **ShooterInputHandler** + Editor setup (`Assets/_Project/Scripts/`, `Assets/_Project/Editor/`)
+- [x] FPS AF Demo package скачан в `Assets/_Project/Downloads/`
+- [ ] Demo Content FPS AF — **импортировать в Unity** (Phase 0 menu)
+- [ ] Префаб `PlayerCharacter` — **создать через Run Full Setup**
+- [ ] Тестовая сцена `PlayerTest` — **создать через Run Full Setup**
+- [ ] Play Mode тест движения — **не проверен**
+
+### Документация ассетов
+
+| Ассет | Онлайн | Локально |
+|-------|--------|----------|
+| Character Controller Pro | [User Manual](https://lightbug14.gitbook.io/ccp/) · [API](https://lightbug14.github.io/lightbug-web/character-controller-pro/Documentation/html/index.html) | `Assets/Character Controller Pro/Documentation/` |
+| FPS Animation Framework | [GitBook](https://kinemation.gitbook.io/scriptable-animation-system/) | `Offline Documentation.pdf` |
+| Motion Warping | [GitBook](https://kinemation.gitbook.io/motion-warping-for-unity/) | `Offline Documentation.pdf` |
+
+### Риски и нюансы
+
+1. **CCP vs Motion Warping** — MW заточен под Unity CharacterController/Rigidbody; CCP использует свой CharacterBody. Нужен адаптер, который двигает `CharacterActor.Position` в LateUpdate.
+2. **FPS-поворот vs CCP-поворот** — в FPS камера задаёт направление, а не движение. Нужно отключить auto-rotation CCP и передать yaw камеры в Turn Layer.
+3. **Root motion конфликт** — и CCP LadderClimbing, и Motion Warping используют root motion. Важно не включать оба одновременно.
+4. **Retarget анимаций** — demo FPS AF использует Mixamo-скелет; `Character_model` может иметь другую иерархию костей. Wizard поможет, но анимации могут потребовать retarget.
+5. **Execution Order** — CCP (FixedUpdate) → Animator → FPS AF layers → Motion Warping (LateUpdate).
+
+### Следующая задача (запланировано)
+
+**Задача 2 — Оружие:** Weapon Layer, Attach Hand, ADS, Recoil, перезарядка, стрельба.
+
+---
+
+*Последнее обновление: 6 августа 2026 — Фаза 0–1 (код + setup menu)*
