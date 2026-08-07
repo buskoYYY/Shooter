@@ -3,7 +3,9 @@
     "rootNamespace": "Shooter.Project",
     "references": [
         "com.lightbug.character-controller-pro",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "FPSAnimationFramework.Runtime",
+        "KAnimationCore.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

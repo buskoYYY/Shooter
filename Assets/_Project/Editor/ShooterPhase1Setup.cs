@@ -103,6 +103,8 @@ namespace Shooter.Project.Editor
 
                 ConfigureInput(instance, inputActions);
                 DisableExtraDemoStates(instance);
+                ShooterProjectSetup.EnsureCcpDemoTags();
+                ShooterProjectSetup.StripDemoOnlyComponents(instance);
 
                 var existing = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
                 if (existing != null)

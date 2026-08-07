@@ -202,55 +202,31 @@ Player (Root)
 - [ ] Убедиться, что аниматор получает параметры: `Grounded`, `PlanarSpeed`, `VerticalSpeed`, `HorizontalAxis`, `VerticalAxis`
 
 #### Фаза 2 — FPS Animation Framework: настройка тела (≈2–3 ч)
-> Документация: [Character Rig](https://kinemation.gitbook.io/scriptable-animation-system/workflow/character-rig.md) → [Profiles and Layers](https://kinemation.gitbook.io/scriptable-animation-system/workflow/profiles-and-layers.md)
+> Документация: [Character Rig](https://kinemation.gitbook.io/scriptable-animation-system/workflow/character-rig.md) → [Profiles and Layers](https://kinemation.gitbook.io/scriptable-animation-system/workflow/profiles-and-layers.md)  
+> **Авто-setup:** `Shooter → Phase 2 → Run Full Phase 2 Setup` (см. `Assets/_Project/PHASE2_SETUP.md`)
 
-- [ ] `GameObject → FPS ANIMATOR Wizard` на персонаже:
-  - Проверить кости: Root, Head, Pelvis, Spine Root, Hands, Feet
-  - Animator Controller — из демо (или свой, retarget)
-  - Input Config: `Assets/KINEMATION/FPSAnimationFramework/Assets/InputConfig_FPSAnimationFramework.asset`
-- [ ] `Assets → FPS PROFILE Wizard` на Rig-ассете → создать Animator Profile
-- [ ] Настроить слои (без оружия, минимальный набор):
-  | Слой | Назначение |
-  |------|-----------|
-  | **Pose Sampler** | Базовая поза pelvis/spine |
-  | **View Layer** | Наклон камеры при движении |
-  | **Turn Layer** | Поворот бёдер/корня относительно камеры |
-  | **Look Layer** | Наклон головы/взгляд |
-  | **IK Layer** | IK ног (слopes, ступени) и рук |
-  | **Sway Layer** | Процедурный разброс при движении |
-  | **Ik Motion Layer** | IK при root motion анимациях |
-  | **Additive Layer** | Доп. наложения |
-- [ ] Камера: `FPSCameraController` на камере в голове (Wizard создаёт автоматически)
-- [ ] FPS-режим: камера в Head, тело видно (не hideBody)
+- [x] Editor-меню **Shooter/Phase 2** — Rig, Profile, IK, FPS-компоненты, камера
+- [x] **ShooterCharacterController** — мост CCP ↔ FPS AF (input, yaw, animator sync)
+- [ ] Запустить setup в Unity и проверить Play в `PlayerTest`
+- [ ] Проверить кости: Root, Head, Pelvis, Spine Root, Hands, Feet
+- [ ] Animator Controller — `FPSAnimator_Humanoid` из демо
+- [ ] Input Config: `Assets/KINEMATION/FPSAnimationFramework/Assets/InputConfig_FPSAnimationFramework.asset`
+- [ ] Слои Profile (Pose Sampler, View, Turn, Look, IK, Sway, Ik Motion, Additive)
+- [ ] Камера: `FPSCameraController` на голове, third-person камера сцены отключена
+- [ ] FPS-режим: тело видно, sway/turn/IK на склоне
 
 #### Фаза 3 — Мост CCP ↔ FPS AF (≈2–3 ч) ⭐ ключевая фаза
-> Документация: [Integration](https://kinemation.gitbook.io/scriptable-animation-system/workflow/integration.md)
+> Документация: [Integration](https://kinemation.gitbook.io/scriptable-animation-system/workflow/integration.md)  
+> **Базовый мост уже в `ShooterCharacterController` (Phase 2). Фаза 3 — полировка и edge cases.**
 
-Написать скрипт `ShooterCharacterController` (аналог demo `FPSController`):
-
-```csharp
-// Инициализация (Start)
-_fpsAnimator = GetComponent<FPSAnimator>();
-_fpsAnimator.Initialize();
-_userInput = GetComponent<UserInputController>();
-_fpsCamera = GetComponentInChildren<FPSCameraController>();
-
-// Каждый кадр — прокинуть input в FPS AF
-_userInput.SetValue(FPSANames.MouseDeltaInput, mouseDelta);
-_userInput.SetValue(FPSANames.MoveInput, moveInput);
-
-// Из CCP NormalMovement — прокинуть в Animator
-// (CCP уже делает это сам, но нужно синхронизировать поворот)
-```
-
-- [ ] Создать `ShooterCharacterController.cs` в `Assets/_Project/Scripts/`
-- [ ] Инициализация FPSAnimator, UserInputController, FPSCameraController
-- [ ] Прокинуть mouse delta → `UserInputController` (для Turn/View/Sway)
-- [ ] Прокинуть move input → `UserInputController`
-- [ ] FPS-поворот: камера управляет yaw/pitch, Turn Layer крутит тело
-- [ ] CCP `lookingDirectionParameters` → режим «TowardsCamera» / custom для FPS
-- [ ] При спринте: `StabilizationWeight = 0`, `PlayablesWeight = 0` (как в доке FPS AF)
-- [ ] Проверить: движение + поворот тела + sway + IK ног на слopes
+- [x] Создать `ShooterCharacterController.cs`
+- [x] Инициализация FPSAnimator, UserInputController
+- [x] Прокинуть mouse delta / move input → `UserInputController`
+- [x] FPS-поворот: yaw на корне, pitch через FPS AF
+- [x] CCP `changeLookingDirection = false`, External Reference → корень игрока
+- [x] При спринте: `StabilizationWeight = 0`, `PlayablesWeight = 0`
+- [ ] Проверить в Play: движение + поворот тела + sway + IK ног на склоне
+- [ ] Полировка: прыжок/приземление, crouch transitions, чувствительность мыши
 
 #### Фаза 4 — Лестницы через CCP (≈1–2 ч)
 > CCP Demo: `LadderClimbing.cs` — готовый state с root motion + IK

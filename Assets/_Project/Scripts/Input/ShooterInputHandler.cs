@@ -1,4 +1,5 @@
 using Lightbug.CharacterControllerPro.Implementation;
+using Shooter.Project.Character;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +21,7 @@ namespace Shooter.Project.Input
         InputAction _sprint;
         InputAction _crouch;
         InputAction _interact;
+        bool _fpsLookHandledExternally;
 
         void Awake()
         {
@@ -36,6 +38,7 @@ namespace Shooter.Project.Input
             _sprint = _playerMap.FindAction("Sprint", true);
             _crouch = _playerMap.FindAction("Crouch", true);
             _interact = _playerMap.FindAction("Interact", true);
+            _fpsLookHandledExternally = GetComponent<ShooterCharacterController>() != null;
         }
 
         void OnEnable()
@@ -70,6 +73,9 @@ namespace Shooter.Project.Input
             if (_playerMap == null)
                 return 0f;
 
+            if (_fpsLookHandledExternally)
+                return 0f;
+
             return actionName switch
             {
                 "Pitch" => _look.ReadValue<Vector2>().y,
@@ -81,6 +87,9 @@ namespace Shooter.Project.Input
         public override Vector2 GetVector2(string actionName)
         {
             if (_playerMap == null)
+                return Vector2.zero;
+
+            if (_fpsLookHandledExternally && actionName == "Camera")
                 return Vector2.zero;
 
             return actionName switch

@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c9c04639ae548bdb0a8e927492d029d, type: 3}
-  m_Name: Rig_Swat_model
+  m_Name: Rig_CharacterModel
   m_EditorClassIdentifier: KAnimationCore.Runtime::KINEMATION.Shared.KAnimationCore.Runtime.Rig.KRig
-  targetAnimator: {fileID: 9100000, guid: 4c77323136b9524478f3a5c86ed70c71, type: 2}
+  targetAnimator: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
   rigHierarchy:
   - name: root
     index: 0
@@ -374,7 +374,7 @@ MonoBehaviour:
   - name: IK LeftElbow
     index: 119
     depth: 11
-  - name: Camera
+  - name: FPS Camera
     index: 120
     depth: 10
   - name: spine_04_latissimus_l
@@ -521,22 +521,22 @@ MonoBehaviour:
   - name: thigh_twistCor_02_r
     index: 168
     depth: 4
-  - name: WeaponBone
+  - name: IK RightFoot
     index: 169
     depth: 1
-  - name: WeaponBoneAdditive
+  - name: IK LeftFoot
     index: 170
     depth: 1
-  - name: IK RightFoot
+  - name: IK RightKnee
     index: 171
     depth: 1
-  - name: IK LeftFoot
+  - name: IK LeftKnee
     index: 172
     depth: 1
-  - name: IK RightKnee
+  - name: WeaponBone
     index: 173
     depth: 1
-  - name: IK LeftKnee
+  - name: WeaponBoneAdditive
     index: 174
     depth: 1
   rigElementChains:

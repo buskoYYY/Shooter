@@ -4,7 +4,12 @@
     "references": [
         "Shooter.Project",
         "com.lightbug.character-controller-pro",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "FPSAnimationFramework.Runtime",
+        "FPSAnimationFramework.Editor",
+        "KAnimationCore.Runtime",
+        "KAnimationCore.Editor",
+        "RecoilAnimation.Runtime"
     ],
     "includePlatforms": [
         "Editor"
