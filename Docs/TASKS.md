@@ -229,31 +229,21 @@ Player (Root)
 - [ ] Полировка: прыжок/приземление, crouch transitions, чувствительность мыши
 
 #### Фаза 4 — Лестницы через CCP (≈1–2 ч)
-> CCP Demo: `LadderClimbing.cs` — готовый state с root motion + IK
+> CCP Demo: `LadderClimbing.cs` — готовый state с root motion + IK  
+> **Авто-setup:** `Shooter → Phase 4 → Run Full Phase 4 Setup` (см. `Assets/_Project/PHASE4_SETUP.md`)
 
-- [ ] Добавить `Ladder` компоненты на лестницы в тестовой сцене
-- [ ] Добавить state `LadderClimbing` в `CharacterStateController`
-- [ ] Настроить Animator Controller: триггеры `BottomUp`, `TopDown`, `Up`, `Down`, `BottomDown`, `TopUp`
-- [ ] Root motion: `CharacterActor.SetUpRootMotion(true, SetVelocity, false)` — CCP делает сам
-- [ ] IK на лестнице: `useIKOffsetValues` в LadderClimbing или IK Layer FPS AF
-- [ ] При входе на лестницу: отключить Turn Layer / Sway (через UserInputController weights)
-- [ ] При выходе: восстановить веса слоёв
-- [ ] Тест: подойти → Interact → карабкаться вверх/вниз → слезть
+- [x] **ShooterLadderFpsBridge** — отключение Turn/Sway/Look на лестнице, restore FPS controller после
+- [x] Editor-меню **Shooter/Phase 4** — LadderClimbing state + TestLadder в сцене
+- [ ] Запустить setup в Unity и проверить Interact → climb → exit
+- [ ] NormalMovement: `overrideAnimatorController = false` (FPS Humanoid не ломается)
+- [ ] Ladder state: `LadderClimbing.controller` при лазании (root motion CCP)
+- [ ] Тест: подойти → E → W/S → E слезть
 
-#### Фаза 5 — Motion Warping: mantle/vault (≈2–3 ч)
-> Документация: [How this asset works](https://kinemation.gitbook.io/motion-warping-for-unity/concept/how-this-asset-works.md)
+#### Фаза 5 — Motion Warping: mantle/vault (≈2–3 ч) ⏸️ ОТЛОЖЕНО
+> **Scope заказчика:** на данном этапе только **CCP + FPS AF**. Motion Warping — после отдельного согласования.
 
-- [ ] Добавить `MotionWarping` + `MotionWarpingIk` на персонажа (Graphics)
-- [ ] Импортировать demo MotionWarpingAsset (mantle high/low, vault)
-- [ ] Добавить `MantleComponent` / `VaultComponent` на препятствия или через raycast
-- [ ] Создать CCP state `MotionWarpState`:
-  - Detect obstacle → call `MotionWarping.Play(asset, warpPoints)`
-  - `CharacterActor.IsKinematic = true`, `UseRootMotion = true`
-  - Motion Warping двигает root в `LateUpdate`
-  - По `onWarpEnded` → вернуть NormalMovement
-- [ ] ⚠️ Motion Warping ожидает `CharacterController`/`Rigidbody` — CCP использует свой `CharacterBody`. Нужен адаптер: warp двигает `CharacterActor.Position` напрямую
-- [ ] Animator parameter `WarpRate` — для play rate scale
-- [ ] Тест: подбежать к низкому препятствию → mantle, к высокому → vault
+- [ ] (отложено) Motion Warping + адаптер под CCP CharacterBody
+- [ ] (отложено) Mantle/vault на препятствиях
 
 #### Фаза 6 — Тестовая сцена и полировка (≈1–2 ч)
 - [ ] Сцена: плоскость + слoп + лестница + 2–3 препятствия для mantle
