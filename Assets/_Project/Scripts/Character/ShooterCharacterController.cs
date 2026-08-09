@@ -107,9 +107,16 @@ namespace Shooter.Project.Character
         void Update()
         {
             UpdateLook();
+
+            if (IsOnLadder())
+                return;
+
             UpdateFpsInput();
             SyncAnimatorFromCcp();
         }
+
+        bool IsOnLadder() =>
+            _stateController != null && _stateController.CurrentState is LadderClimbing;
 
         void ConfigureCcpForFps()
         {

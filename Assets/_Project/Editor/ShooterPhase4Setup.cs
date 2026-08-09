@@ -1,3 +1,4 @@
+using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using Lightbug.CharacterControllerPro.Demo;
 using Lightbug.CharacterControllerPro.Implementation;
 using Shooter.Project.Character;
@@ -16,6 +17,8 @@ namespace Shooter.Project.Editor
             "Assets/Character Controller Pro/Demo/Animations/Character/LadderClimbing.controller";
         const string HumanoidControllerPath =
             "Assets/Demo/Animations/Locomotion/FPSAnimator_Humanoid.controller";
+        const string FpsProfilePath =
+            "Assets/_Project/FPS/AnimatorProfile_CharacterModel.asset";
 
         [MenuItem("Shooter/Phase 4/Setup Ladder on Player")]
         public static void SetupLadderOnPlayer()
@@ -38,6 +41,27 @@ namespace Shooter.Project.Editor
                 EditorSceneManager.MarkSceneDirty(player.scene);
 
             Debug.Log("Ladder climbing enabled on " + player.name);
+        }
+
+        [MenuItem("Shooter/Phase 4/Setup Ladder on Player (current scene)")]
+        public static void SetupLadderOnPlayerInScene()
+        {
+            var player = GameObject.Find("PlayerCharacter") ?? GameObject.Find("Player Character");
+            if (player == null)
+            {
+                EditorUtility.DisplayDialog("Player not found", "Place PlayerCharacter in the open scene first.", "OK");
+                return;
+            }
+
+            if (!ConfigurePlayerForLadder(player, out string error))
+            {
+                EditorUtility.DisplayDialog("Ladder setup failed", error, "OK");
+                return;
+            }
+
+            EditorUtility.SetDirty(player);
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            Debug.Log("Ladder climbing enabled on " + player.name + " in current scene.");
         }
 
         [MenuItem("Shooter/Phase 4/Add Test Ladder to Scene")]
@@ -166,10 +190,12 @@ namespace Shooter.Project.Editor
 
             var graphics = playerRoot.transform.Find("Graphics");
             Transform model = graphics != null && graphics.childCount > 0 ? graphics.GetChild(0) : null;
+            var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(FpsProfilePath);
 
             var so = new SerializedObject(bridge);
             so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
             so.FindProperty("locomotionController").objectReferenceValue = locomotionController;
+            so.FindProperty("fpsAnimatorProfile").objectReferenceValue = profile;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

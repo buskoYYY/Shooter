@@ -270,6 +270,7 @@ namespace Lightbug.CharacterControllerPro.Demo
                         }
                         else if (CharacterActions.movement.Down)
                         {
+                            
                             if (currentClimbingAnimation == 0)
                             {
                                 CharacterActor.Animator.SetTrigger(bottomDownParameter);                                

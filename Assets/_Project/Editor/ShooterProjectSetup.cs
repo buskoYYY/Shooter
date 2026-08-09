@@ -41,11 +41,65 @@ namespace Shooter.Project.Editor
             Debug.Log($"Upgraded {fixedCount} EventSystem(s) to InputSystemUIInputModule.");
         }
 
+        [MenuItem("Shooter/Project/Fix EventSystem in ALL demo scenes")]
+        public static void FixEventSystemInAllDemoScenes()
+        {
+            FixAllDemoScenesInternal(upgradeEventSystem: true, disableLegacyManagers: false);
+        }
+
+        [MenuItem("Shooter/Project/Fix ALL demo scenes for Input System")]
+        public static void FixAllDemoScenesForInputSystem()
+        {
+            FixAllDemoScenesInternal(upgradeEventSystem: true, disableLegacyManagers: true);
+        }
+
+        static void FixAllDemoScenesInternal(bool upgradeEventSystem, bool disableLegacyManagers)
+        {
+            string[] sceneGuids = AssetDatabase.FindAssets("t:Scene", new[]
+            {
+                "Assets/Demo",
+                "Assets/Character Controller Pro/Demo/Scenes"
+            });
+
+            int sceneCount = 0;
+            string activeScenePath = SceneManager.GetActiveScene().path;
+
+            foreach (string guid in sceneGuids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+                bool changed = false;
+                if (upgradeEventSystem && UpgradeEventSystemsInScene() > 0)
+                    changed = true;
+                if (disableLegacyManagers && DisableLegacyDemoManagersInScene() > 0)
+                    changed = true;
+
+                if (changed)
+                {
+                    EditorSceneManager.SaveScene(scene);
+                    sceneCount++;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(activeScenePath))
+                EditorSceneManager.OpenScene(activeScenePath, OpenSceneMode.Single);
+
+            Debug.Log($"Demo scene Input System fix complete. Updated {sceneCount} scene(s).");
+        }
+
+        [MenuItem("Shooter/Project/Fix EventSystem in ALL demo scenes", true)]
+        static bool FixAllDemoScenesValidate() => !Application.isPlaying;
+
+        [MenuItem("Shooter/Project/Fix ALL demo scenes for Input System", true)]
+        static bool FixAllDemoScenesForInputSystemValidate() => !Application.isPlaying;
+
         [MenuItem("Shooter/Project/Fix Demo Warnings (current scene)")]
         public static void FixDemoWarningsInScene()
         {
             EnsureCcpDemoTags();
             UpgradeEventSystemsInScene();
+            DisableLegacyDemoManagersInScene();
 
             var player = GameObject.Find("PlayerCharacter") ?? GameObject.Find("Player Character");
             if (player != null)
@@ -56,7 +110,41 @@ namespace Shooter.Project.Editor
 
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            Debug.Log("Demo warnings fix applied (tags, EventSystem, MaterialController).");
+            Debug.Log("Demo warnings fix applied (tags, EventSystem, demo managers/camera, MaterialController).");
+        }
+
+        public static int DisableLegacyDemoManagersInScene()
+        {
+            int count = 0;
+
+            foreach (var manager in Object.FindObjectsByType<DemoSceneManager>(FindObjectsSortMode.None))
+            {
+                if (!manager.enabled)
+                    continue;
+
+                manager.enabled = false;
+                count++;
+            }
+
+            foreach (var menu in Object.FindObjectsByType<MainMenuManager>(FindObjectsSortMode.None))
+            {
+                if (!menu.enabled)
+                    continue;
+
+                menu.enabled = false;
+                count++;
+            }
+
+            foreach (var camera in Object.FindObjectsByType<Camera3D>(FindObjectsSortMode.None))
+            {
+                if (!camera.enabled)
+                    continue;
+
+                camera.enabled = false;
+                count++;
+            }
+
+            return count;
         }
 
         public static int UpgradeEventSystemsInScene()
