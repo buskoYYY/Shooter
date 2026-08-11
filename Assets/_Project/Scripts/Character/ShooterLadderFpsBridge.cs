@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
@@ -6,6 +7,7 @@ using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
 using Lightbug.CharacterControllerPro.Implementation;
 using UnityEngine;
+using UnityEngine.Playables;
 
 namespace Shooter.Project.Character
 {
@@ -23,10 +25,15 @@ namespace Shooter.Project.Character
         [SerializeField] float jumpOffBackSpeed = 4f;
 
         const string LookLayerWeightProperty = "LookLayerWeight";
+        const int FpsRestoreMaxAttempts = 90;
+        const int LadderEntryTriggerAttempts = 10;
+        const string BottomUpTrigger = "BottomUp";
+        const string TopDownTrigger = "TopDown";
 
         CharacterActor _characterActor;
         CharacterBrain _characterBrain;
         CharacterStateController _stateController;
+        ShooterCharacterController _shooterController;
         UserInputController _userInput;
         Animator _animator;
         ShooterFpsCameraApply _cameraApply;
@@ -35,18 +42,23 @@ namespace Shooter.Project.Character
         FPSBoneController _boneController;
 
         bool _ladderModeActive;
+        bool _isRestoringFps;
         bool _jumpPressed;
         bool _applyRootMotionWasEnabled;
         Coroutine _restoreFpsCoroutine;
+        Coroutine _ladderSetupCoroutine;
 
         bool IsOnLadder =>
             _stateController != null && _stateController.CurrentState is LadderClimbing;
+
+        Animator CharacterAnimator => _characterActor != null ? _characterActor.Animator : _animator;
 
         void Awake()
         {
             _characterActor = GetComponent<CharacterActor>();
             _characterBrain = GetComponentInChildren<CharacterBrain>();
             _stateController = GetComponentInChildren<CharacterStateController>();
+            _shooterController = GetComponent<ShooterCharacterController>();
             _cameraApply = GetComponent<ShooterFpsCameraApply>();
 
             if (fpsCharacterRoot == null)
@@ -71,6 +83,20 @@ namespace Shooter.Project.Character
                 if (entity != null)
                     fpsAnimatorProfile = entity.animatorProfile;
             }
+
+            ResolveAnimatorProfileFromFpsAnimator();
+        }
+
+        void ResolveAnimatorProfileFromFpsAnimator()
+        {
+            if (fpsAnimatorProfile != null || _fpsAnimator == null)
+                return;
+
+            FieldInfo profileField = typeof(FPSAnimator).GetField(
+                "animatorProfile",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            fpsAnimatorProfile = profileField?.GetValue(_fpsAnimator) as FPSAnimatorProfile;
         }
 
         void OnEnable()
@@ -90,6 +116,14 @@ namespace Shooter.Project.Character
                 _restoreFpsCoroutine = null;
             }
 
+            if (_ladderSetupCoroutine != null)
+            {
+                StopCoroutine(_ladderSetupCoroutine);
+                _ladderSetupCoroutine = null;
+            }
+
+            _isRestoringFps = false;
+
             if (!_ladderModeActive)
                 return;
 
@@ -105,13 +139,16 @@ namespace Shooter.Project.Character
 
         void Update()
         {
-            SyncLadderModeFlag();
-
             if (!IsOnLadder || _characterBrain == null)
                 return;
 
             if (_characterBrain.CharacterActions.jump.Started)
                 _jumpPressed = true;
+        }
+
+        void LateUpdate()
+        {
+            SyncLadderModeFlag();
         }
 
         void FixedUpdate()
@@ -125,6 +162,9 @@ namespace Shooter.Project.Character
 
         void SyncLadderModeFlag()
         {
+            if (_isRestoringFps)
+                return;
+
             if (IsOnLadder && !_ladderModeActive)
                 EnterLadderMode();
             else if (!IsOnLadder && _ladderModeActive)
@@ -133,9 +173,7 @@ namespace Shooter.Project.Character
 
         void HandleStateChange(CharacterState from, CharacterState to)
         {
-            if (to is LadderClimbing)
-                EnterLadderMode();
-            else if (from is LadderClimbing)
+            if (from is LadderClimbing)
                 ExitLadderMode();
         }
 
@@ -152,20 +190,10 @@ namespace Shooter.Project.Character
                 _restoreFpsCoroutine = null;
             }
 
-            if (_fpsAnimator != null)
-                _fpsAnimator.enabled = false;
+            if (_ladderSetupCoroutine != null)
+                StopCoroutine(_ladderSetupCoroutine);
 
-            ReleaseFpsAnimationStack();
-
-            if (_animator != null)
-            {
-                _applyRootMotionWasEnabled = _animator.applyRootMotion;
-                _animator.applyRootMotion = true;
-
-                var ladderState = _stateController.GetState<LadderClimbing>();
-                if (ladderState != null && ladderState.RuntimeAnimatorController != null)
-                    _animator.runtimeAnimatorController = ladderState.RuntimeAnimatorController;
-            }
+            _isRestoringFps = false;
 
             if (_userInput != null)
             {
@@ -174,12 +202,48 @@ namespace Shooter.Project.Character
                 _userInput.SetValue(LookLayerWeightProperty, 0f);
             }
 
+            _shooterController?.ResetPitchForLadder();
+
             if (_cameraApply != null)
-                _cameraApply.enabled = false;
+            {
+                _cameraApply.PrepareCameraBeforeInit();
+                _cameraApply.ForceRefresh();
+            }
+
+            _ladderSetupCoroutine = StartCoroutine(SetupLadderModeRoutine());
         }
 
-        void ReleaseFpsAnimationStack()
+        IEnumerator SetupLadderModeRoutine()
         {
+            ReleaseFpsForLadder();
+
+            yield return null;
+            yield return new WaitForEndOfFrame();
+
+            PrepareLadderAnimator(rebind: true);
+
+            for (int attempt = 0; attempt < LadderEntryTriggerAttempts; attempt++)
+            {
+                ApplyLadderEntryTrigger();
+
+                if (IsLadderEntryAnimating())
+                    break;
+
+                yield return null;
+                EnsureLadderController();
+            }
+
+            _ladderSetupCoroutine = null;
+        }
+
+        void ReleaseFpsForLadder()
+        {
+            if (_fpsAnimator != null)
+            {
+                _fpsAnimator.UnlinkAnimatorProfile();
+                _fpsAnimator.enabled = false;
+            }
+
             if (_boneController != null)
                 _boneController.Dispose();
 
@@ -190,6 +254,150 @@ namespace Shooter.Project.Character
                 _playablesController.SetControllerWeight(0f);
 
             _playablesController.enabled = false;
+
+            PlayableGraph graph = _playablesController.GetPlayableGraph();
+            if (graph.IsValid())
+            {
+                graph.Stop();
+                graph.Destroy();
+            }
+        }
+
+        void PrepareLadderAnimator(bool rebind)
+        {
+            EnsureLadderController();
+
+            if (!rebind)
+                return;
+
+            Animator animator = CharacterAnimator;
+            if (animator == null)
+                return;
+
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        void EnsureLadderController()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null)
+                return;
+
+            _applyRootMotionWasEnabled = animator.applyRootMotion;
+            animator.applyRootMotion = true;
+
+            var ladderState = _stateController.GetState<LadderClimbing>();
+            if (ladderState != null && ladderState.RuntimeAnimatorController != null)
+                animator.runtimeAnimatorController = ladderState.RuntimeAnimatorController;
+        }
+
+        void ApplyLadderEntryTrigger()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null || !TryGetLadderEntryTrigger(out string triggerName))
+                return;
+
+            animator.ResetTrigger(BottomUpTrigger);
+            animator.ResetTrigger(TopDownTrigger);
+            animator.SetTrigger(triggerName);
+            animator.Update(0f);
+        }
+
+        bool IsLadderEntryAnimating()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null)
+                return false;
+
+            if (IsLadderAnimState(animator.GetCurrentAnimatorStateInfo(0)))
+                return true;
+
+            if (!animator.IsInTransition(0))
+                return false;
+
+            return IsLadderAnimState(animator.GetNextAnimatorStateInfo(0));
+        }
+
+        static bool IsLadderAnimState(AnimatorStateInfo stateInfo)
+        {
+            return stateInfo.IsName("BottomUp")
+                || stateInfo.IsName("TopDown")
+                || stateInfo.IsName("Entry");
+        }
+
+        bool TryGetLadderEntryTrigger(out string triggerName)
+        {
+            triggerName = null;
+
+            Ladder ladder = FindClosestLadder();
+            if (ladder == null || ladder.TopReference == null || ladder.BottomReference == null)
+                return false;
+
+            float distanceToTop = Vector3.Distance(_characterActor.Position, ladder.TopReference.position);
+            float distanceToBottom = Vector3.Distance(_characterActor.Position, ladder.BottomReference.position);
+            triggerName = distanceToBottom <= distanceToTop ? BottomUpTrigger : TopDownTrigger;
+            return true;
+        }
+
+        Ladder FindClosestLadder()
+        {
+            Ladder fromTriggers = FindClosestLadderFromTriggers();
+            if (fromTriggers != null)
+                return fromTriggers;
+
+#if UNITY_2023_1_OR_NEWER
+            Ladder[] ladders = FindObjectsByType<Ladder>(FindObjectsSortMode.None);
+#else
+            Ladder[] ladders = FindObjectsOfType<Ladder>();
+#endif
+            Ladder closest = null;
+            float closestSqrDistance = float.MaxValue;
+
+            for (int i = 0; i < ladders.Length; i++)
+            {
+                Ladder ladder = ladders[i];
+                if (ladder == null || ladder.TopReference == null || ladder.BottomReference == null)
+                    continue;
+
+                float sqrDistance = (_characterActor.Position - ladder.transform.position).sqrMagnitude;
+                if (sqrDistance >= closestSqrDistance)
+                    continue;
+
+                closestSqrDistance = sqrDistance;
+                closest = ladder;
+            }
+
+            return closest;
+        }
+
+        Ladder FindClosestLadderFromTriggers()
+        {
+            if (_characterActor == null)
+                return null;
+
+            Ladder closestLadder = null;
+            float closestSqrDistance = float.MaxValue;
+
+            for (int i = 0; i < _characterActor.Triggers.Count; i++)
+            {
+                var trigger = _characterActor.Triggers[i];
+                if (trigger.gameObject == null)
+                    continue;
+
+                var ladder = trigger.transform.GetComponentInParent<Ladder>();
+                if (ladder == null || ladder.TopReference == null || ladder.BottomReference == null)
+                    continue;
+
+                float sqrDistance = (_characterActor.Position - trigger.transform.position).sqrMagnitude;
+                if (sqrDistance >= closestSqrDistance)
+                    continue;
+
+                closestSqrDistance = sqrDistance;
+                closestLadder = ladder;
+            }
+
+            return closestLadder;
         }
 
         void ExitLadderMode()
@@ -199,6 +407,18 @@ namespace Shooter.Project.Character
 
             _ladderModeActive = false;
 
+            if (_ladderSetupCoroutine != null)
+            {
+                StopCoroutine(_ladderSetupCoroutine);
+                _ladderSetupCoroutine = null;
+            }
+
+            if (_restoreFpsCoroutine != null)
+            {
+                StopCoroutine(_restoreFpsCoroutine);
+                _restoreFpsCoroutine = null;
+            }
+
             if (_animator != null)
             {
                 _animator.applyRootMotion = _applyRootMotionWasEnabled;
@@ -207,10 +427,10 @@ namespace Shooter.Project.Character
             }
 
             RestoreFpsInputWeights();
+            _isRestoringFps = true;
             _restoreFpsCoroutine = StartCoroutine(RestoreFpsAfterControllerSwap());
 
-            if (_cameraApply != null)
-                _cameraApply.enabled = true;
+            _cameraApply?.ForceRefresh();
         }
 
         void RestoreFpsInputWeights()
@@ -231,19 +451,63 @@ namespace Shooter.Project.Character
             if (_fpsAnimator != null)
                 _fpsAnimator.enabled = false;
 
-            for (int i = 0; i < 12; i++)
-            {
-                yield return null;
+            yield return null;
+            yield return null;
+            WarmUpAnimatorGraph();
+            yield return new WaitForEndOfFrame();
 
+            for (int i = 0; i < FpsRestoreMaxAttempts; i++)
+            {
                 if (TryRestoreFpsStack())
                 {
+                    _isRestoringFps = false;
                     _restoreFpsCoroutine = null;
                     yield break;
                 }
+
+                WarmUpAnimatorGraph();
+                yield return null;
             }
 
-            TryRestoreFpsStack();
+            if (TryForceAnimatorRecovery())
+            {
+                _isRestoringFps = false;
+                _restoreFpsCoroutine = null;
+                yield break;
+            }
+
+            Debug.LogWarning($"{nameof(ShooterLadderFpsBridge)}: failed to restore FPS animation stack after ladder.");
+            _isRestoringFps = false;
             _restoreFpsCoroutine = null;
+        }
+
+        void WarmUpAnimatorGraph()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null || !animator.isActiveAndEnabled)
+                return;
+
+            animator.Update(0f);
+        }
+
+        bool TryForceAnimatorRecovery()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null)
+                return false;
+
+            animator.Rebind();
+            WarmUpAnimatorGraph();
+
+            for (int i = 0; i < 15; i++)
+            {
+                if (TryRestoreFpsStack())
+                    return true;
+
+                WarmUpAnimatorGraph();
+            }
+
+            return false;
         }
 
         bool TryRestoreFpsStack()
@@ -257,22 +521,24 @@ namespace Shooter.Project.Character
             if (!_playablesController.InitializeController())
                 return false;
 
+            _playablesController.SetControllerWeight(1f);
             _playablesController.enabled = true;
 
-            if (_boneController != null)
-            {
-                _boneController.Initialize();
-                if (fpsAnimatorProfile != null)
-                    _boneController.LinkAnimatorProfile(fpsAnimatorProfile);
-            }
+            _fpsAnimator?.UnlinkAnimatorProfile();
 
-            if (_fpsAnimator != null)
+            if (_boneController != null)
+                _boneController.Initialize();
+
+            if (_fpsAnimator != null && fpsAnimatorProfile != null)
             {
                 _fpsAnimator.enabled = true;
+                _fpsAnimator.LinkAnimatorProfile(fpsAnimatorProfile);
                 _fpsAnimator.RebuildPlayables();
             }
 
-            return true;
+            WarmUpAnimatorGraph();
+            _cameraApply?.ForceRefresh();
+            return _fpsAnimator != null && _fpsAnimator.HasLinkedProfile;
         }
 
         void JumpOffLadder()
@@ -283,9 +549,6 @@ namespace Shooter.Project.Character
             Vector3 pushDirection = -_characterActor.Forward;
             _stateController.ForceState<NormalMovement>();
             _characterActor.Velocity = Vector3.up * jumpOffUpSpeed + pushDirection * jumpOffBackSpeed;
-
-            if (_ladderModeActive)
-                ExitLadderMode();
         }
     }
 

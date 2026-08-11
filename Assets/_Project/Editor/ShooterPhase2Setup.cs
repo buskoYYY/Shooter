@@ -434,6 +434,9 @@ namespace Shooter.Project.Editor
             AddLayer(profile, lookLayer);
 
             var turnLayer = ScriptableObject.CreateInstance<TurnLayerSettings>();
+            turnLayer.animatorTurnRightTrigger = "TurnRight";
+            turnLayer.animatorTurnLeftTrigger = "TurnLeft";
+            turnLayer.angleThreshold = 45f;
             AddLayer(profile, turnLayer);
 
             var ikLayer = ScriptableObject.CreateInstance<IkLayerSettings>();
@@ -464,6 +467,7 @@ namespace Shooter.Project.Editor
             }
 
             ConfigureLookLayerSpine(lookLayer, rig);
+            ConfigureSwayLayerHead(profile, rig);
 
             if (rightHand != null) ikLayer.rightHand = rightHand.elementChain[0];
             if (leftHand != null) ikLayer.leftHand = leftHand.elementChain[0];
@@ -523,22 +527,109 @@ namespace Shooter.Project.Editor
             return true;
         }
 
+        [MenuItem("Shooter/Phase 2/Fix FPS Look Layer And Camera")]
+        public static void FixFpsLookLayerAndCamera()
+        {
+            var rig = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
+            var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(ProfilePath);
+            if (rig == null || profile == null)
+            {
+                EditorUtility.DisplayDialog("Missing assets", "Run Phase 2 setup first.", "OK");
+                return;
+            }
+
+            foreach (var layer in profile.settings)
+            {
+                if (layer == null) continue;
+                layer.isStandalone = false;
+
+                if (layer is LookLayerSettings lookLayer)
+                    ConfigureLookLayerSpine(lookLayer, rig);
+            }
+
+            ConfigureSwayLayerHead(profile, rig);
+            profile.OnRigUpdated();
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            if (prefab != null)
+            {
+                var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                if (instance != null)
+                {
+                    try
+                    {
+                        var head = FindHeadTransform(instance.transform);
+                        if (head != null)
+                            SetupFpsCamera(head);
+
+                        PrefabUtility.SaveAsPrefabAsset(instance, PlayerPrefabPath);
+                    }
+                    finally
+                    {
+                        Object.DestroyImmediate(instance);
+                    }
+                }
+            }
+
+            Debug.Log("FPS Look Layer and camera offset updated.");
+        }
+
+        static Transform FindHeadTransform(Transform root)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "head")
+                    return t;
+            }
+
+            return null;
+        }
+
         static void ConfigureLookLayerSpine(LookLayerSettings lookLayer, KRig rig)
         {
-            foreach (var boneName in new[] { "spine_01", "spine_02", "spine_03", "spine_04", "neck_01", "neck_02" })
+            lookLayer.pitchOffsetElements.Clear();
+            lookLayer.yawOffsetElements.Clear();
+            lookLayer.rollOffsetElements.Clear();
+
+            AddLookElement(lookLayer.pitchOffsetElements, rig, "pelvis", new Vector2(5f, 5f));
+            foreach (var boneName in new[] { "spine_01", "spine_02", "spine_03", "spine_04", "neck_01", "neck_02", "head" })
+                AddLookElement(lookLayer.pitchOffsetElements, rig, boneName, new Vector2(17f, 17f));
+
+            foreach (var boneName in new[] { "spine_02", "spine_03", "spine_04" })
+                AddLookElement(lookLayer.yawOffsetElements, rig, boneName, new Vector2(25f, 25f));
+            AddLookElement(lookLayer.yawOffsetElements, rig, "neck_01", new Vector2(32.5f, 32.5f));
+
+            AddLookElement(lookLayer.rollOffsetElements, rig, "pelvis", new Vector2(5f, 5f));
+            foreach (var boneName in new[] { "spine_01", "spine_02", "spine_03", "spine_04" })
+                AddLookElement(lookLayer.rollOffsetElements, rig, boneName, new Vector2(28.333334f, 28.333334f));
+        }
+
+        static void AddLookElement(List<LookLayerElement> list, KRig rig, string boneName, Vector2 angle)
+        {
+            var element = rig.GetElementByName(boneName);
+            if (string.IsNullOrEmpty(element.name))
+                return;
+
+            list.Add(new LookLayerElement
             {
-                var element = rig.GetElementByName(boneName);
-                if (element.name == null) continue;
+                rigElement = element,
+                clampedAngle = angle,
+                cachedClampedAngle = angle
+            });
+        }
 
-                var lookElement = new LookLayerElement
-                {
-                    rigElement = element,
-                    clampedAngle = new Vector2(25f, 25f)
-                };
+        static void ConfigureSwayLayerHead(FPSAnimatorProfile profile, KRig rig)
+        {
+            var head = rig.GetElementByName("head");
+            if (string.IsNullOrEmpty(head.name))
+                return;
 
-                lookLayer.pitchOffsetElements.Add(lookElement);
-                lookLayer.yawOffsetElements.Add(lookElement);
-                lookLayer.rollOffsetElements.Add(lookElement);
+            foreach (var layer in profile.settings)
+            {
+                if (layer is SwayLayerSettings sway)
+                    sway.headBone = head;
             }
         }
 
@@ -558,11 +649,12 @@ namespace Shooter.Project.Editor
                 var cameraGo = new GameObject("FPS Camera");
                 cameraTransform = cameraGo.transform;
                 cameraTransform.SetParent(head, false);
-                cameraTransform.localPosition = Vector3.zero;
-                cameraTransform.localRotation = Quaternion.identity;
                 cameraGo.AddComponent<Camera>();
                 cameraGo.AddComponent<AudioListener>();
             }
+
+            cameraTransform.localPosition = new Vector3(0f, 0.06f, 0.04f);
+            cameraTransform.localRotation = Quaternion.identity;
 
             var camera = cameraTransform.GetComponent<Camera>();
             if (camera != null)
@@ -590,6 +682,10 @@ namespace Shooter.Project.Editor
             var so = new SerializedObject(bridge);
             so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
             so.FindProperty("inputActions").objectReferenceValue = inputActions;
+            var jumpMotion = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Jump.asset");
+            if (jumpMotion != null)
+                so.FindProperty("jumpMotion").objectReferenceValue = jumpMotion;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

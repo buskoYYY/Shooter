@@ -1,5 +1,6 @@
 using KINEMATION.FPSAnimationFramework.Runtime.Camera;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
+using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
@@ -18,6 +19,7 @@ namespace Shooter.Project.Character
     {
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
+        [SerializeField] IkMotionLayerSettings jumpMotion;
         [SerializeField] float lookSensitivity = 0.15f;
         [SerializeField] float pitchClamp = 89f;
 
@@ -30,9 +32,15 @@ namespace Shooter.Project.Character
         FPSCameraController _fpsCamera;
 
         Vector2 _mouseInput;
+        bool _wasGrounded = true;
 
         public float Pitch => _mouseInput.y;
         public FPSCameraController FpsCamera => _fpsCamera;
+
+        public void ResetPitchForLadder()
+        {
+            _mouseInput.y = 0f;
+        }
 
         InputActionMap _playerMap;
         InputAction _move;
@@ -78,9 +86,20 @@ namespace Shooter.Project.Character
                 _crouch = _playerMap.FindAction("Crouch", true);
             }
 
+            EnsureFpsCameraApplyOnSelf();
+            GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
+
             // FPSPlayablesController.Update runs before FPSAnimator.Start — init early.
             if (_fpsAnimator != null)
                 _fpsAnimator.Initialize();
+        }
+
+        void EnsureFpsCameraApplyOnSelf()
+        {
+            if (GetComponent<ShooterFpsCameraApply>() != null)
+                return;
+
+            gameObject.AddComponent<ShooterFpsCameraApply>();
         }
 
         void OnEnable()
@@ -100,8 +119,8 @@ namespace Shooter.Project.Character
 
             ConfigureCcpForFps();
 
-            if (_fpsCamera != null && _userInput != null)
-                _fpsCamera.Initialize();
+            if (_characterActor != null)
+                _wasGrounded = _characterActor.IsGrounded;
         }
 
         void Update()
@@ -109,9 +128,13 @@ namespace Shooter.Project.Character
             UpdateLook();
 
             if (IsOnLadder())
+            {
+                SyncMouseInputOnly();
                 return;
+            }
 
             UpdateFpsInput();
+            UpdateJumpLandMotion();
             SyncAnimatorFromCcp();
         }
 
@@ -132,16 +155,20 @@ namespace Shooter.Project.Character
 
         void UpdateLook()
         {
-            if (_look == null)
+            if (_look == null || _characterActor == null)
                 return;
 
             Vector2 lookDelta = _look.ReadValue<Vector2>() * lookSensitivity;
 
-            _mouseInput.x += lookDelta.x;
             _mouseInput.y -= lookDelta.y;
             _mouseInput.y = Mathf.Clamp(_mouseInput.y, -pitchClamp, pitchClamp);
 
-            transform.rotation *= Quaternion.Euler(0f, lookDelta.x, 0f);
+            if (IsOnLadder())
+                return;
+
+            _mouseInput.x += lookDelta.x;
+            _characterActor.Rotation *= Quaternion.Euler(0f, lookDelta.x, 0f);
+            _characterActor.ResetInterpolationRotation();
         }
 
         void UpdateFpsInput()
@@ -160,22 +187,50 @@ namespace Shooter.Project.Character
             _userInput.SetValue(FPSANames.PlayablesWeight, sprinting ? 0f : 1f);
         }
 
+        void SyncMouseInputOnly()
+        {
+            if (_userInput == null)
+                return;
+
+            _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
+        }
+
+        void UpdateJumpLandMotion()
+        {
+            if (_characterActor == null || _fpsAnimator == null || jumpMotion == null)
+                return;
+
+            bool grounded = _characterActor.IsGrounded;
+
+            if (_wasGrounded && !grounded)
+                _fpsAnimator.LinkAnimatorLayer(jumpMotion);
+            else if (!_wasGrounded && grounded)
+                _fpsAnimator.LinkAnimatorLayer(jumpMotion);
+
+            _wasGrounded = grounded;
+        }
+
         void SyncAnimatorFromCcp()
         {
             if (_animator == null || _characterActor == null)
                 return;
 
+            bool inAir = !_characterActor.IsGrounded;
             Vector3 localVelocity = transform.InverseTransformDirection(_characterActor.PlanarVelocity);
             Vector2 animatorVelocity = new Vector2(localVelocity.x, localVelocity.z);
-            float speed = _characterActor.PlanarVelocity.magnitude;
-            bool moving = speed > 0.1f;
+
+            if (inAir)
+                animatorVelocity = Vector2.zero;
+
+            float speed = inAir ? 0f : _characterActor.PlanarVelocity.magnitude;
+            bool moving = !inAir && speed > 0.1f;
             bool sprinting = _sprint != null && _sprint.IsPressed();
             bool crouching = _crouch != null && _crouch.IsPressed();
 
             _animator.SetFloat(MoveXHash, animatorVelocity.x);
             _animator.SetFloat(MoveYHash, animatorVelocity.y);
             _animator.SetFloat(VelocityHash, speed);
-            _animator.SetBool(InAirHash, !_characterActor.IsGrounded);
+            _animator.SetBool(InAirHash, inAir);
             _animator.SetBool(MovingHash, moving);
             _animator.SetBool(CrouchingHash, crouching);
             _animator.SetFloat(SprintingHash, sprinting && moving ? 1f : 0f);

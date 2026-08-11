@@ -481,7 +481,7 @@ Transform:
   m_GameObject: {fileID: 5745374993527454885}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.06, z: 0.04}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -757,6 +757,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9176093836267626186}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8822334455667788991}
     - targetCorrespondingSourceObject: {fileID: 6289874670575315051, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7556114334140695970}
@@ -785,6 +788,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterCharacterController
   fpsCharacterRoot: {fileID: 8937905704391999758}
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  jumpMotion: {fileID: 11400000, guid: 93be04a77e31740498d5c7d7e8286ab5, type: 2}
   lookSensitivity: 0.15
   pitchClamp: 89
 --- !u!114 &2422158940464857524
@@ -932,6 +936,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterLadderFpsBridge
   fpsCharacterRoot: {fileID: 8937905704391999758}
   locomotionController: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
+  fpsAnimatorProfile: {fileID: 11400000, guid: 4a142f9f52fc91f4c84fd23af0c5675c, type: 2}
+--- !u!114 &8822334455667788991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b94d1296e62f4c34baca7b37b25f7d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterFpsCameraApply
+  cameraLocalOffset: {x: 0, y: 0.06, z: 0.04}
 --- !u!4 &3804788901806876030 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}

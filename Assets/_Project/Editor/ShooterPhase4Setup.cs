@@ -184,6 +184,9 @@ namespace Shooter.Project.Editor
 
         static void ConfigureLadderBridge(GameObject playerRoot, RuntimeAnimatorController locomotionController)
         {
+            if (playerRoot.GetComponent<ShooterFpsCameraApply>() == null)
+                playerRoot.AddComponent<ShooterFpsCameraApply>();
+
             var bridge = playerRoot.GetComponent<ShooterLadderFpsBridge>();
             if (bridge == null)
                 bridge = playerRoot.AddComponent<ShooterLadderFpsBridge>();

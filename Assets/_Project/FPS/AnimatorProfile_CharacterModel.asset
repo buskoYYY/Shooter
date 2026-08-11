@@ -212,9 +212,111 @@ MonoBehaviour:
   leanInputProperty: LeanInput
   useTurnOffset: 1
   turnOffsetProperty: TurnOffset
-  pitchOffsetElements: []
-  yawOffsetElements: []
-  rollOffsetElements: []
+  pitchOffsetElements:
+  - rigElement:
+      name: pelvis
+      index: 10
+      depth: 1
+    clampedAngle: {x: 5, y: 5}
+    cachedClampedAngle: {x: 5, y: 5}
+  - rigElement:
+      name: spine_01
+      index: 11
+      depth: 2
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: spine_02
+      index: 12
+      depth: 3
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: spine_03
+      index: 13
+      depth: 4
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: spine_04
+      index: 14
+      depth: 5
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: neck_01
+      index: 112
+      depth: 7
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: neck_02
+      index: 113
+      depth: 8
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  - rigElement:
+      name: head
+      index: 114
+      depth: 9
+    clampedAngle: {x: 17, y: 17}
+    cachedClampedAngle: {x: 17, y: 17}
+  yawOffsetElements:
+  - rigElement:
+      name: spine_02
+      index: 12
+      depth: 3
+    clampedAngle: {x: 25, y: 25}
+    cachedClampedAngle: {x: 25, y: 25}
+  - rigElement:
+      name: spine_03
+      index: 13
+      depth: 4
+    clampedAngle: {x: 25, y: 25}
+    cachedClampedAngle: {x: 25, y: 25}
+  - rigElement:
+      name: spine_04
+      index: 14
+      depth: 5
+    clampedAngle: {x: 25, y: 25}
+    cachedClampedAngle: {x: 25, y: 25}
+  - rigElement:
+      name: neck_01
+      index: 112
+      depth: 7
+    clampedAngle: {x: 32.5, y: 32.5}
+    cachedClampedAngle: {x: 32.5, y: 32.5}
+  rollOffsetElements:
+  - rigElement:
+      name: pelvis
+      index: 10
+      depth: 1
+    clampedAngle: {x: 5, y: 5}
+    cachedClampedAngle: {x: 5, y: 5}
+  - rigElement:
+      name: spine_01
+      index: 11
+      depth: 2
+    clampedAngle: {x: 28.333334, y: 28.333334}
+    cachedClampedAngle: {x: 28.333334, y: 28.333334}
+  - rigElement:
+      name: spine_02
+      index: 12
+      depth: 3
+    clampedAngle: {x: 28.333334, y: 28.333334}
+    cachedClampedAngle: {x: 28.333334, y: 28.333334}
+  - rigElement:
+      name: spine_03
+      index: 13
+      depth: 4
+    clampedAngle: {x: 28.333334, y: 28.333334}
+    cachedClampedAngle: {x: 28.333334, y: 28.333334}
+  - rigElement:
+      name: spine_04
+      index: 14
+      depth: 5
+    clampedAngle: {x: 28.333334, y: 28.333334}
+    cachedClampedAngle: {x: 28.333334, y: 28.333334}
 --- !u!114 &3263972937887254653
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -247,9 +349,9 @@ MonoBehaviour:
   animatedPivotOffset: {x: 0, y: 0, z: 0}
   hintTargetWeight: 1
   headBone:
-    name: 
-    index: 0
-    depth: 0
+    name: head
+    index: 114
+    depth: 9
   freeAimClamp: 0
   freeAimInterpSpeed: 0
   freeAimInputScale: 0
@@ -478,7 +580,7 @@ MonoBehaviour:
     name: pelvis
     index: 10
     depth: -1
-  angleThreshold: 90
+  angleThreshold: 45
   turnCurve:
     serializedVersion: 2
     m_Curve:
@@ -506,8 +608,8 @@ MonoBehaviour:
   turnSpeed: 1
   mouseDeltaInputProperty: MouseDeltaInput
   turnInputProperty: TurnOffset
-  animatorTurnRightTrigger: 
-  animatorTurnLeftTrigger: 
+  animatorTurnRightTrigger: TurnRight
+  animatorTurnLeftTrigger: TurnLeft
 --- !u!114 &8901918207968195969
 MonoBehaviour:
   m_ObjectHideFlags: 3
