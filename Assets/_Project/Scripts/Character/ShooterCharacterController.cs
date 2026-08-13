@@ -22,7 +22,7 @@ namespace Shooter.Project.Character
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] IkMotionLayerSettings jumpMotion;
         [SerializeField] float lookSensitivity = 0.15f;
-        [SerializeField] float pitchClamp = 89f;
+        [SerializeField] float pitchClamp = 70f;
         [Tooltip("How quickly leg blend parameters follow input (demo default ~5).")]
         [SerializeField] float locomotionSmoothing = 5f;
         [Tooltip("Blend tree Velocity expects 0-1 from input, not m/s.")]
@@ -31,6 +31,7 @@ namespace Shooter.Project.Character
         CharacterActor _characterActor;
         CharacterStateController _stateController;
         NormalMovement _normalMovement;
+        ShooterLadderFpsBridge _ladderBridge;
         FPSAnimator _fpsAnimator;
         UserInputController _userInput;
         Animator _animator;
@@ -68,6 +69,7 @@ namespace Shooter.Project.Character
             _characterActor = GetComponent<CharacterActor>();
             _stateController = GetComponentInChildren<CharacterStateController>();
             _normalMovement = GetComponentInChildren<NormalMovement>();
+            _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
 
             if (fpsCharacterRoot == null)
             {
@@ -134,7 +136,7 @@ namespace Shooter.Project.Character
         {
             UpdateLook();
 
-            if (IsOnLadder())
+            if (IsOnLadder() || ShouldDeferFpsLocomotion())
             {
                 SyncMouseInputOnly();
                 return;
@@ -144,6 +146,9 @@ namespace Shooter.Project.Character
             UpdateFpsInput();
             UpdateJumpLandMotion();
         }
+
+        bool ShouldDeferFpsLocomotion() =>
+            _ladderBridge != null && _ladderBridge.ShouldBlockFpsPlayables;
 
         bool IsOnLadder() =>
             _stateController != null && _stateController.CurrentState is LadderClimbing;
@@ -189,6 +194,10 @@ namespace Shooter.Project.Character
             _userInput.SetValue(FPSANames.MouseDeltaInput, new Vector4(lookDelta.x, lookDelta.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MoveInput, new Vector4(_animatorVelocity.x, _animatorVelocity.y, 0f, 0f));
+
+            if (ShouldDeferFpsLocomotion())
+                return;
+
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
             _userInput.SetValue(FPSANames.PlayablesWeight, sprinting ? 0f : 1f);
         }

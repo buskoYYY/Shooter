@@ -749,11 +749,25 @@ namespace Shooter.Project.Editor
             if (playerRoot.GetComponent<ShooterFpsCameraApply>() == null)
                 playerRoot.AddComponent<ShooterFpsCameraApply>();
 
+            if (playerRoot.GetComponent<ShooterFpsHeadHide>() == null)
+                playerRoot.AddComponent<ShooterFpsHeadHide>();
+
             SetupHandPoseState(playerRoot, model, profile);
+
+            var headHide = playerRoot.GetComponent<ShooterFpsHeadHide>();
+            if (headHide != null)
+            {
+                var headHideSo = new SerializedObject(headHide);
+                headHideSo.FindProperty("characterRoot").objectReferenceValue = model;
+                headHideSo.FindProperty("hiddenMaterial").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/FPS_HeadHidden.mat");
+                headHideSo.ApplyModifiedPropertiesWithoutUndo();
+            }
 
             var so = new SerializedObject(bridge);
             so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
             so.FindProperty("inputActions").objectReferenceValue = inputActions;
+            so.FindProperty("pitchClamp").floatValue = 70f;
             var jumpMotion = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Jump.asset");
             if (jumpMotion != null)

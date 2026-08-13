@@ -34,6 +34,7 @@ namespace Shooter.Project.Character
         CharacterBrain _characterBrain;
         CharacterStateController _stateController;
         ShooterCharacterController _shooterController;
+        ShooterHandPoseState _handPoseState;
         UserInputController _userInput;
         Animator _animator;
         ShooterFpsCameraApply _cameraApply;
@@ -43,6 +44,10 @@ namespace Shooter.Project.Character
 
         bool _ladderModeActive;
         bool _isRestoringFps;
+
+        public bool IsLadderModeActive => _ladderModeActive;
+        public bool IsRestoringFps => _isRestoringFps;
+        public bool ShouldBlockFpsPlayables => _ladderModeActive || _isRestoringFps;
         bool _jumpPressed;
         bool _applyRootMotionWasEnabled;
         Coroutine _restoreFpsCoroutine;
@@ -59,6 +64,7 @@ namespace Shooter.Project.Character
             _characterBrain = GetComponentInChildren<CharacterBrain>();
             _stateController = GetComponentInChildren<CharacterStateController>();
             _shooterController = GetComponent<ShooterCharacterController>();
+            _handPoseState = GetComponent<ShooterHandPoseState>();
             _cameraApply = GetComponent<ShooterFpsCameraApply>();
 
             if (fpsCharacterRoot == null)
@@ -405,8 +411,6 @@ namespace Shooter.Project.Character
             if (!_ladderModeActive)
                 return;
 
-            _ladderModeActive = false;
-
             if (_ladderSetupCoroutine != null)
             {
                 StopCoroutine(_ladderSetupCoroutine);
@@ -419,28 +423,48 @@ namespace Shooter.Project.Character
                 _restoreFpsCoroutine = null;
             }
 
-            if (_animator != null)
+            _isRestoringFps = true;
+            _ladderModeActive = false;
+            HoldFpsOverlayUntilRestored();
+
+            if (TryRestoreFpsStack())
             {
-                _animator.applyRootMotion = _applyRootMotionWasEnabled;
-                if (locomotionController != null)
-                    _animator.runtimeAnimatorController = locomotionController;
+                _isRestoringFps = false;
+                _cameraApply?.ForceRefresh();
+                return;
             }
 
-            RestoreFpsInputWeights();
-            _isRestoringFps = true;
             _restoreFpsCoroutine = StartCoroutine(RestoreFpsAfterControllerSwap());
-
-            _cameraApply?.ForceRefresh();
         }
 
-        void RestoreFpsInputWeights()
+        void HoldFpsOverlayUntilRestored()
+        {
+            if (_userInput == null)
+                return;
+
+            _userInput.SetValue(FPSANames.PlayablesWeight, 0f);
+            _userInput.SetValue(LookLayerWeightProperty, 0f);
+            _userInput.SetValue(FPSANames.StabilizationWeight, 0f);
+        }
+
+        void RestoreFpsLookWeights()
         {
             if (_userInput == null)
                 return;
 
             _userInput.SetValue(FPSANames.StabilizationWeight, 1f);
-            _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
             _userInput.SetValue(LookLayerWeightProperty, 1f);
+        }
+
+        void RestorePlayablesWeight()
+        {
+            _userInput?.SetValue(FPSANames.PlayablesWeight, 1f);
+        }
+
+        void RestoreFpsInputWeights()
+        {
+            RestoreFpsLookWeights();
+            RestorePlayablesWeight();
         }
 
         IEnumerator RestoreFpsAfterControllerSwap()
@@ -451,22 +475,17 @@ namespace Shooter.Project.Character
             if (_fpsAnimator != null)
                 _fpsAnimator.enabled = false;
 
-            yield return null;
-            yield return null;
-            WarmUpAnimatorGraph();
-            yield return new WaitForEndOfFrame();
-
             for (int i = 0; i < FpsRestoreMaxAttempts; i++)
             {
+                WarmUpAnimatorGraph();
+                yield return null;
+
                 if (TryRestoreFpsStack())
                 {
                     _isRestoringFps = false;
                     _restoreFpsCoroutine = null;
                     yield break;
                 }
-
-                WarmUpAnimatorGraph();
-                yield return null;
             }
 
             if (TryForceAnimatorRecovery())
@@ -510,10 +529,25 @@ namespace Shooter.Project.Character
             return false;
         }
 
+        void ApplyLocomotionController()
+        {
+            Animator animator = CharacterAnimator;
+            if (animator == null)
+                return;
+
+            animator.applyRootMotion = _applyRootMotionWasEnabled;
+            if (locomotionController != null)
+                animator.runtimeAnimatorController = locomotionController;
+
+            animator.Update(0f);
+        }
+
         bool TryRestoreFpsStack()
         {
             if (_animator == null || _playablesController == null)
                 return false;
+
+            ApplyLocomotionController();
 
             if (!_animator.isActiveAndEnabled || !_animator.playableGraph.IsValid())
                 return false;
@@ -529,6 +563,8 @@ namespace Shooter.Project.Character
             if (_boneController != null)
                 _boneController.Initialize();
 
+            _handPoseState?.PreparePoseForFpsRestore();
+
             if (_fpsAnimator != null && fpsAnimatorProfile != null)
             {
                 _fpsAnimator.enabled = true;
@@ -537,6 +573,9 @@ namespace Shooter.Project.Character
             }
 
             WarmUpAnimatorGraph();
+            _handPoseState?.FinalizePoseAfterFpsRestore();
+            RestoreFpsLookWeights();
+            RestorePlayablesWeight();
             _cameraApply?.ForceRefresh();
             return _fpsAnimator != null && _fpsAnimator.HasLinkedProfile;
         }

@@ -763,6 +763,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7722334455667788992}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8812334455667788993}
     - targetCorrespondingSourceObject: {fileID: 6289874670575315051, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7556114334140695970}
@@ -793,7 +796,7 @@ MonoBehaviour:
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   jumpMotion: {fileID: 11400000, guid: 93be04a77e31740498d5c7d7e8286ab5, type: 2}
   lookSensitivity: 0.15
-  pitchClamp: 89
+  pitchClamp: 70
 --- !u!114 &2422158940464857524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -972,6 +975,26 @@ MonoBehaviour:
   unarmedOverlayPose: {fileID: 11400000, guid: a8f3c2e1d4b5476f9e0a1b2c3d4e5f67, type: 2}
   armedOverlayPose: {fileID: 11400000, guid: 17a051265d63c894bab0b0c5be42815b, type: 2}
   startUnarmed: 1
+--- !u!114 &8812334455667788993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3c4d5e6f7a8490b1c2d3e4f5a6b7c8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterFpsHeadHide
+  characterRoot: {fileID: 8937905704391999758}
+  hiddenMaterial: {fileID: 2100000, guid: f1e2d3c4b5a697886950443322110099, type: 2}
+  hiddenMaterialNames:
+  - Head
+  - Hair3
+  - Brows_Leashes
+  - Mouth
+  - Body_Arkit_Eye
 --- !u!4 &3804788901806876030 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
