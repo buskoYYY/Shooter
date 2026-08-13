@@ -49,6 +49,11 @@ namespace Shooter.Project.Editor
         const string OverlayPosePath =
             "Assets/Demo/Prefabs/Humanoid/AA_Rifle_OverlayPose_Humanoid.asset";
 
+        const string UnarmedIdleFbxPath =
+            "Assets/Demo/Animations/Locomotion/Humanoid/UnarmedSet/UnarmedLocomotion/Unarmed_Idle.fbx";
+
+        const string UnarmedOverlayPosePath = FpsFolder + "/AA_Unarmed_OverlayPose_Humanoid.asset";
+
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
 
         [MenuItem("Shooter/Phase 2/Setup FPS on Player Prefab")]
@@ -121,7 +126,7 @@ namespace Shooter.Project.Editor
                 return;
             }
 
-            if (!TryConfigurePoseSampler(profile, rig, out string error))
+            if (!TryConfigurePoseSampler(profile, rig, unarmed: true, out string error))
             {
                 EditorUtility.DisplayDialog("Fix failed", error, "OK");
                 return;
@@ -130,7 +135,38 @@ namespace Shooter.Project.Editor
             profile.OnRigUpdated();
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
-            Debug.Log("Animator Profile fixed: " + ProfilePath);
+            Debug.Log("Animator Profile fixed (unarmed pose): " + ProfilePath);
+        }
+
+        [MenuItem("Shooter/Phase 2/Apply Unarmed Hand Pose")]
+        public static void ApplyUnarmedHandPoseMenu()
+        {
+            var rig = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
+            var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(ProfilePath);
+            if (rig == null || profile == null)
+            {
+                EditorUtility.DisplayDialog("Missing assets", "Run Phase 2 setup first.", "OK");
+                return;
+            }
+
+            if (!TryConfigurePoseSampler(profile, rig, unarmed: true, out string error))
+            {
+                EditorUtility.DisplayDialog("Failed", error, "OK");
+                return;
+            }
+
+            profile.OnRigUpdated();
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+
+            var player = GameObject.Find("PlayerCharacter");
+            if (player != null)
+            {
+                SetupHandPoseState(player, player.transform.Find("Graphics/Character_model"), profile);
+                SavePlayerToPrefab(player);
+            }
+
+            Debug.Log("Unarmed hand pose applied.");
         }
 
         [MenuItem("Shooter/Phase 2/Run Full Phase 2 Setup")]
@@ -191,7 +227,7 @@ namespace Shooter.Project.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
 
             SetupFpsCamera(bones.Head);
-            SetupPlayerBridge(playerRoot, model, inputActions);
+            SetupPlayerBridge(playerRoot, model, inputActions, profile);
 
             ConfigureCcpMovement(playerRoot);
             ShooterProjectSetup.StripDemoOnlyComponents(playerRoot);
@@ -442,7 +478,7 @@ namespace Shooter.Project.Editor
             var ikLayer = ScriptableObject.CreateInstance<IkLayerSettings>();
             AddLayer(profile, ikLayer);
 
-            if (!TryConfigurePoseSampler(profile, rig, out _))
+            if (!TryConfigurePoseSampler(profile, rig, unarmed: true, out _))
             {
                 Debug.LogWarning("PoseSampler not configured — overlay pose missing.");
             }
@@ -480,14 +516,19 @@ namespace Shooter.Project.Editor
             return profile;
         }
 
-        static bool TryConfigurePoseSampler(FPSAnimatorProfile profile, KRig rig, out string error)
+        static bool TryConfigurePoseSampler(FPSAnimatorProfile profile, KRig rig, bool unarmed, out string error)
         {
             error = null;
 
-            var overlayPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(OverlayPosePath);
+            FPSAnimationAsset overlayPose = unarmed
+                ? EnsureUnarmedOverlayAsset(rig)
+                : AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(OverlayPosePath);
+
             if (overlayPose == null || overlayPose.clip == null)
             {
-                error = "Overlay pose or clip not found:\n" + OverlayPosePath;
+                error = unarmed
+                    ? "Unarmed overlay pose or Unarmed_Idle clip not found.\nImport FPS demo (Phase 0)."
+                    : "Overlay pose or clip not found:\n" + OverlayPosePath;
                 return false;
             }
 
@@ -515,7 +556,7 @@ namespace Shooter.Project.Editor
                 scale = Vector3.one
             };
             poseSampler.overwriteRoot = false;
-            poseSampler.overwriteWeaponBone = true;
+            poseSampler.overwriteWeaponBone = !unarmed;
 
             var pelvis = rig.GetElementChainByName(FPSANames.Chain_Pelvis);
             var spineRoot = rig.GetElementChainByName(FPSANames.Chain_SpineRoot);
@@ -525,6 +566,33 @@ namespace Shooter.Project.Editor
                 poseSampler.spineRoot = spineRoot.elementChain[0];
 
             return true;
+        }
+
+        static FPSAnimationAsset EnsureUnarmedOverlayAsset(KRig rig)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(UnarmedOverlayPosePath);
+            if (existing != null)
+                return existing;
+
+            AnimationClip idleClip = null;
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(UnarmedIdleFbxPath))
+            {
+                if (asset is AnimationClip clip && clip.name == "Unarmed_Idle")
+                {
+                    idleClip = clip;
+                    break;
+                }
+            }
+
+            if (idleClip == null)
+                return null;
+
+            var overlay = ScriptableObject.CreateInstance<FPSAnimationAsset>();
+            overlay.rigAsset = rig;
+            overlay.clip = idleClip;
+            AssetDatabase.CreateAsset(overlay, UnarmedOverlayPosePath);
+            AssetDatabase.SaveAssets();
+            return overlay;
         }
 
         [MenuItem("Shooter/Phase 2/Fix FPS Look Layer And Camera")]
@@ -672,13 +740,16 @@ namespace Shooter.Project.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static void SetupPlayerBridge(GameObject playerRoot, Transform model, InputActionAsset inputActions)
+        static void SetupPlayerBridge(GameObject playerRoot, Transform model, InputActionAsset inputActions,
+            FPSAnimatorProfile profile)
         {
             var bridge = playerRoot.GetComponent<ShooterCharacterController>();
             if (bridge == null) bridge = playerRoot.AddComponent<ShooterCharacterController>();
 
             if (playerRoot.GetComponent<ShooterFpsCameraApply>() == null)
                 playerRoot.AddComponent<ShooterFpsCameraApply>();
+
+            SetupHandPoseState(playerRoot, model, profile);
 
             var so = new SerializedObject(bridge);
             so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
@@ -687,6 +758,40 @@ namespace Shooter.Project.Editor
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Jump.asset");
             if (jumpMotion != null)
                 so.FindProperty("jumpMotion").objectReferenceValue = jumpMotion;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetupHandPoseState(GameObject playerRoot, Transform model, FPSAnimatorProfile profile)
+        {
+            if (playerRoot == null || profile == null)
+                return;
+
+            System.Type handPoseType = typeof(ShooterCharacterController).Assembly.GetType(
+                "Shooter.Project.Character.ShooterHandPoseState");
+            if (handPoseType == null)
+            {
+                Debug.LogError(
+                    "ShooterHandPoseState not found in Shooter.Project assembly. " +
+                    "Check that Assets/_Project/Scripts/Character/ShooterHandPoseState.cs compiles.");
+                return;
+            }
+
+            Component handPose = playerRoot.GetComponent(handPoseType);
+            if (handPose == null)
+                handPose = playerRoot.AddComponent(handPoseType);
+
+            var unarmedPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(UnarmedOverlayPosePath)
+                ?? EnsureUnarmedOverlayAsset(profile.rigAsset);
+            var armedPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(OverlayPosePath);
+
+            var so = new SerializedObject(handPose);
+            so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
+            so.FindProperty("inputActions").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
+            so.FindProperty("fpsAnimatorProfile").objectReferenceValue = profile;
+            so.FindProperty("unarmedOverlayPose").objectReferenceValue = unarmedPose;
+            so.FindProperty("armedOverlayPose").objectReferenceValue = armedPose;
+            so.FindProperty("startUnarmed").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -771,7 +876,8 @@ namespace Shooter.Project.Editor
             if (bridge == null)
             {
                 var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
-                SetupPlayerBridge(playerRoot, model, inputActions);
+                var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(ProfilePath);
+                SetupPlayerBridge(playerRoot, model, inputActions, profile);
             }
         }
 
