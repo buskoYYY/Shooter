@@ -35,6 +35,7 @@ namespace Shooter.Project.Character
         CharacterStateController _stateController;
         ShooterCharacterController _shooterController;
         ShooterHandPoseState _handPoseState;
+        ShooterFpsHeadHide _headHide;
         UserInputController _userInput;
         Animator _animator;
         ShooterFpsCameraApply _cameraApply;
@@ -65,6 +66,7 @@ namespace Shooter.Project.Character
             _stateController = GetComponentInChildren<CharacterStateController>();
             _shooterController = GetComponent<ShooterCharacterController>();
             _handPoseState = GetComponent<ShooterHandPoseState>();
+            _headHide = GetComponent<ShooterFpsHeadHide>();
             _cameraApply = GetComponent<ShooterFpsCameraApply>();
 
             if (fpsCharacterRoot == null)
@@ -574,6 +576,7 @@ namespace Shooter.Project.Character
 
             WarmUpAnimatorGraph();
             _handPoseState?.FinalizePoseAfterFpsRestore();
+            _headHide?.RefreshHeadHide();
             RestoreFpsLookWeights();
             RestorePlayablesWeight();
             _cameraApply?.ForceRefresh();

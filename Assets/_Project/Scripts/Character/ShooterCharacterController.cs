@@ -198,8 +198,10 @@ namespace Shooter.Project.Character
             if (ShouldDeferFpsLocomotion())
                 return;
 
+            // Demo FPS AF: sprint disables spine stabilization, not the overlay pose.
+            // PlayablesWeight = 0 exposes rifle locomotion on the upper body (armed flash).
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
-            _userInput.SetValue(FPSANames.PlayablesWeight, sprinting ? 0f : 1f);
+            _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
         }
 
         void SyncMouseInputOnly()

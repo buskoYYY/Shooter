@@ -22,7 +22,6 @@ namespace Shooter.Project.Character
         };
 
         HashSet<string> _hiddenNameSet;
-        bool _applied;
 
         void Awake()
         {
@@ -38,12 +37,20 @@ namespace Shooter.Project.Character
 
         void Start()
         {
+            RefreshHeadHide();
+        }
+
+        /// <summary>
+        /// Re-applies hidden head materials. Needed after animator Rebind / ladder FPS restore.
+        /// </summary>
+        public void RefreshHeadHide()
+        {
             ApplyHiddenMaterials();
         }
 
         void ApplyHiddenMaterials()
         {
-            if (_applied || characterRoot == null || hiddenMaterial == null)
+            if (characterRoot == null || hiddenMaterial == null)
                 return;
 
             foreach (var renderer in characterRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -65,8 +72,6 @@ namespace Shooter.Project.Character
                 if (changed)
                     renderer.materials = materials;
             }
-
-            _applied = true;
         }
     }
 }
