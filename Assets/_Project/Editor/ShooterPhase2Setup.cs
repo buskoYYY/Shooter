@@ -661,6 +661,7 @@ namespace Shooter.Project.Editor
             {
                 camera.tag = "MainCamera";
                 camera.nearClipPlane = 0.05f;
+                camera.fieldOfView = 80f;
             }
 
             var fpsCamera = cameraTransform.GetComponent<FPSCameraController>();

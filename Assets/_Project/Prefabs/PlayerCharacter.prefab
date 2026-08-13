@@ -520,7 +520,7 @@ Camera:
     height: 1
   near clip plane: 0.05
   far clip plane: 1000
-  field of view: 60
+  field of view: 80
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -950,6 +950,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterFpsCameraApply
   cameraLocalOffset: {x: 0, y: 0.06, z: 0.04}
+  defaultFieldOfView: 80
 --- !u!4 &3804788901806876030 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}

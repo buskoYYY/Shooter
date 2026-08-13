@@ -8344,7 +8344,7 @@ Transform:
   m_GameObject: {fileID: 1715007201}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: -1}
-  m_LocalPosition: {x: -0, y: 0.0828, z: -0.82}
+  m_LocalPosition: {x: 0, y: 0.0828, z: -0.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8679,7 +8679,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.007961, y: 1.7049613, z: 1.3686013}
+  m_Size: {x: 2.2, y: 1.7049613, z: 5}
   m_Center: {x: 5.3693147e-15, y: 0.3524831, z: 0.12184062}
 --- !u!4 &1836409683
 Transform:
@@ -9227,11 +9227,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4341499915915175000, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.1
+      value: -0.15
       objectReference: {fileID: 0}
     - target: {fileID: 4341499915915175000, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.04
+      value: -0.02
       objectReference: {fileID: 0}
     - target: {fileID: 4341499915915175000, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_LocalRotation.w
@@ -9255,7 +9255,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5389295900614542713, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: field of view
-      value: 30.3
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 5692461112932620692, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: overrideAnimatorController
@@ -9267,7 +9267,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: cameraLocalOffset.y
-      value: -0.1
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: cameraLocalOffset.z
+      value: -0.02
       objectReference: {fileID: 0}
     - target: {fileID: 9176093836267626186, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: fpsAnimatorProfile

@@ -14,6 +14,8 @@ namespace Shooter.Project.Character
     {
         [Tooltip("Eye offset from the head bone (local space). Edit here, not on FPS Camera transform.")]
         [SerializeField] Vector3 cameraLocalOffset = new Vector3(0f, 0.06f, 0.04f);
+        [Tooltip("Default FPS field of view. Demo humanoid uses 80; 60 feels too zoomed in.")]
+        [SerializeField] float defaultFieldOfView = 80f;
 
         static FieldInfo DefaultPositionField;
 
@@ -29,6 +31,8 @@ namespace Shooter.Project.Character
         {
             if (_character != null)
                 _fpsCamera = _character.FpsCamera;
+
+            ApplyDefaultFieldOfView();
         }
 
 #if UNITY_EDITOR
@@ -76,6 +80,7 @@ namespace Shooter.Project.Character
                 _fpsCamera = _character.FpsCamera;
 
             ApplyCamera();
+            ApplyDefaultFieldOfView();
             SyncFpsCameraDefaultPosition();
         }
 
@@ -85,6 +90,7 @@ namespace Shooter.Project.Character
                 _fpsCamera = _character.FpsCamera;
 
             ApplyCamera();
+            ApplyDefaultFieldOfView();
             SyncFpsCameraDefaultPosition();
         }
 
@@ -105,6 +111,16 @@ namespace Shooter.Project.Character
             cam.localPosition = cameraLocalOffset;
             cam.localRotation = Quaternion.identity;
             cam.rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
+        }
+
+        void ApplyDefaultFieldOfView()
+        {
+            if (_fpsCamera == null || defaultFieldOfView <= 0f)
+                return;
+
+            Camera cam = _fpsCamera.GetComponent<Camera>();
+            if (cam != null)
+                cam.fieldOfView = defaultFieldOfView;
         }
 
         void SyncFpsCameraDefaultPosition()

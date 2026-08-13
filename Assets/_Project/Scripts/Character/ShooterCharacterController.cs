@@ -1,6 +1,7 @@
 using KINEMATION.FPSAnimationFramework.Runtime.Camera;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer;
+using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
@@ -22,6 +23,10 @@ namespace Shooter.Project.Character
         [SerializeField] IkMotionLayerSettings jumpMotion;
         [SerializeField] float lookSensitivity = 0.15f;
         [SerializeField] float pitchClamp = 89f;
+        [Tooltip("How quickly leg blend parameters follow input (demo default ~5).")]
+        [SerializeField] float locomotionSmoothing = 5f;
+        [Tooltip("Blend tree Velocity expects 0-1 from input, not m/s.")]
+        [SerializeField] float movingThreshold = 0.05f;
 
         CharacterActor _characterActor;
         CharacterStateController _stateController;
@@ -32,6 +37,8 @@ namespace Shooter.Project.Character
         FPSCameraController _fpsCamera;
 
         Vector2 _mouseInput;
+        Vector2 _animatorVelocity;
+        float _sprintWeight;
         bool _wasGrounded = true;
 
         public float Pitch => _mouseInput.y;
@@ -133,9 +140,9 @@ namespace Shooter.Project.Character
                 return;
             }
 
+            SyncAnimatorFromCcp();
             UpdateFpsInput();
             UpdateJumpLandMotion();
-            SyncAnimatorFromCcp();
         }
 
         bool IsOnLadder() =>
@@ -177,12 +184,11 @@ namespace Shooter.Project.Character
                 return;
 
             Vector2 lookDelta = _look != null ? _look.ReadValue<Vector2>() * lookSensitivity : Vector2.zero;
-            Vector2 move = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
             bool sprinting = _sprint != null && _sprint.IsPressed();
 
             _userInput.SetValue(FPSANames.MouseDeltaInput, new Vector4(lookDelta.x, lookDelta.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
-            _userInput.SetValue(FPSANames.MoveInput, new Vector4(move.x, move.y, 0f, 0f));
+            _userInput.SetValue(FPSANames.MoveInput, new Vector4(_animatorVelocity.x, _animatorVelocity.y, 0f, 0f));
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
             _userInput.SetValue(FPSANames.PlayablesWeight, sprinting ? 0f : 1f);
         }
@@ -216,24 +222,27 @@ namespace Shooter.Project.Character
                 return;
 
             bool inAir = !_characterActor.IsGrounded;
-            Vector3 localVelocity = transform.InverseTransformDirection(_characterActor.PlanarVelocity);
-            Vector2 animatorVelocity = new Vector2(localVelocity.x, localVelocity.z);
+            Vector2 moveInput = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
+            Vector2 targetVelocity = inAir ? Vector2.zero : moveInput;
 
-            if (inAir)
-                animatorVelocity = Vector2.zero;
+            float blendAlpha = KMath.ExpDecayAlpha(locomotionSmoothing, Time.deltaTime);
+            _animatorVelocity = Vector2.Lerp(_animatorVelocity, targetVelocity, blendAlpha);
 
-            float speed = inAir ? 0f : _characterActor.PlanarVelocity.magnitude;
-            bool moving = !inAir && speed > 0.1f;
+            float speed = Mathf.Clamp01(_animatorVelocity.magnitude);
+            bool moving = !inAir && speed > movingThreshold;
             bool sprinting = _sprint != null && _sprint.IsPressed();
             bool crouching = _crouch != null && _crouch.IsPressed();
 
-            _animator.SetFloat(MoveXHash, animatorVelocity.x);
-            _animator.SetFloat(MoveYHash, animatorVelocity.y);
+            float targetSprint = sprinting && moving ? 1f : 0f;
+            _sprintWeight = Mathf.Lerp(_sprintWeight, targetSprint, blendAlpha);
+
+            _animator.SetFloat(MoveXHash, _animatorVelocity.x);
+            _animator.SetFloat(MoveYHash, _animatorVelocity.y);
             _animator.SetFloat(VelocityHash, speed);
             _animator.SetBool(InAirHash, inAir);
             _animator.SetBool(MovingHash, moving);
             _animator.SetBool(CrouchingHash, crouching);
-            _animator.SetFloat(SprintingHash, sprinting && moving ? 1f : 0f);
+            _animator.SetFloat(SprintingHash, _sprintWeight);
         }
     }
 
