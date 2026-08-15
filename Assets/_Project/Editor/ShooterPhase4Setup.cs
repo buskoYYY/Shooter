@@ -110,7 +110,7 @@ namespace Shooter.Project.Editor
 
             EditorUtility.DisplayDialog(
                 "Phase 4 setup",
-                "Done.\n\nWalk to the ladder, press Interact (E).\n" +
+                "Done.\n\nWalk to the ladder, press Interact (F).\n" +
                 "W/S or Up/Down to climb, Interact to exit.",
                 "OK");
         }

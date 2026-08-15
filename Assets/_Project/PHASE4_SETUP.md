@@ -4,7 +4,7 @@
 
 1. **Shooter → Phase 4 → Run Full Phase 4 Setup**
 2. Открой `PlayerTest` → **Play**
-3. Подойди к лестнице справа от спавна → **E (Interact)**
+3. Подойди к лестнице справа от спавна → **F (Interact)**
 4. **W / S** или стрелки вверх/вниз — карабкаться, **E** — слезть
 
 ## Что делает setup
@@ -40,6 +40,6 @@ FPS setup ставит `applyRootMotion = false` и перехватывает A
 
 ## Если не работает
 
-- Interact не срабатывает → проверь **ShooterInputHandler** и action **Interact** (E)
+- Interact не срабатывает → проверь **ShooterInputHandler** и action **Interact** (F)
 - Нет анимации лестницы → Avatar модели **Humanoid**
 - После лестницы T-pose → **ShooterLadderFpsBridge** должен быть на корне игрока
