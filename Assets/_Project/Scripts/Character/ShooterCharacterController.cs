@@ -21,6 +21,9 @@ namespace Shooter.Project.Character
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] IkMotionLayerSettings jumpMotion;
+        [SerializeField] IkMotionLayerSettings leanMotion;
+        [SerializeField] IkMotionLayerSettings crouchMotion;
+        [SerializeField] float leanAngle = 25f;
         [SerializeField] float lookSensitivity = 0.15f;
         [SerializeField] float pitchClamp = 70f;
         [Tooltip("How quickly leg blend parameters follow input (demo default ~5).")]
@@ -40,7 +43,9 @@ namespace Shooter.Project.Character
         Vector2 _mouseInput;
         Vector2 _animatorVelocity;
         float _sprintWeight;
+        float _lastLeanInput;
         bool _wasGrounded = true;
+        bool _wasCrouching;
 
         public float Pitch => _mouseInput.y;
         public FPSCameraController FpsCamera => _fpsCamera;
@@ -55,6 +60,9 @@ namespace Shooter.Project.Character
         InputAction _look;
         InputAction _sprint;
         InputAction _crouch;
+        InputAction _lean;
+
+        const string LookLayerWeightProperty = "LookLayerWeight";
 
         static readonly int InAirHash = Animator.StringToHash("InAir");
         static readonly int MoveXHash = Animator.StringToHash("MoveX");
@@ -93,6 +101,7 @@ namespace Shooter.Project.Character
                 _look = _playerMap.FindAction("Look", true);
                 _sprint = _playerMap.FindAction("Sprint", true);
                 _crouch = _playerMap.FindAction("Crouch", true);
+                _lean = _playerMap.FindAction("Lean", false);
             }
 
             EnsureFpsCameraApplyOnSelf();
@@ -204,7 +213,26 @@ namespace Shooter.Project.Character
             // Demo FPS AF: sprint disables spine stabilization, not the overlay pose.
             // PlayablesWeight = 0 exposes rifle locomotion on the upper body (armed flash).
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
+            _userInput.SetValue(LookLayerWeightProperty, sprinting ? 0.3f : 1f);
             _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
+
+            UpdateLeanInput();
+        }
+
+        void UpdateLeanInput()
+        {
+            if (_userInput == null)
+                return;
+
+            float leanAxis = _lean != null ? _lean.ReadValue<float>() : 0f;
+            float leanValue = leanAxis * leanAngle;
+            _userInput.SetValue(FPSANames.LeanInput, leanValue);
+
+            if (Mathf.Approximately(leanValue, _lastLeanInput) || leanMotion == null || _fpsAnimator == null)
+                return;
+
+            _fpsAnimator.LinkAnimatorLayer(leanMotion);
+            _lastLeanInput = leanValue;
         }
 
         void SyncMouseInputOnly()
@@ -257,6 +285,11 @@ namespace Shooter.Project.Character
             _animator.SetBool(MovingHash, moving);
             _animator.SetBool(CrouchingHash, crouching);
             _animator.SetFloat(SprintingHash, _sprintWeight);
+
+            if (crouching != _wasCrouching && crouchMotion != null && _fpsAnimator != null)
+                _fpsAnimator.LinkAnimatorLayer(crouchMotion);
+
+            _wasCrouching = crouching;
         }
     }
 

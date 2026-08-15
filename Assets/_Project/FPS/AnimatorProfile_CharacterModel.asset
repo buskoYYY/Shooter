@@ -68,8 +68,8 @@ MonoBehaviour:
   offsetFeetTargets: 1
   rightHandWeight: 1
   leftHandWeight: 1
-  rightFootWeight: 1
-  leftFootWeight: 1
+  rightFootWeight: 0
+  leftFootWeight: 0
 --- !u!114 &-5169331243074387990
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -183,6 +183,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   settings:
   - {fileID: 8901918207968195969}
+  - {fileID: -8234567890123456789}
   - {fileID: -908294494329790003}
   - {fileID: 9038444503662684769}
   - {fileID: 3263972937887254653}
@@ -205,7 +206,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.LookLayer.LookLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: LookLayerWeight
+    mode: 0
+    clampMin: 0
+    source: 2
   linkDynamically: 0
   isStandalone: 1
   mouseInputProperty: MouseInput
@@ -624,7 +629,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer.PoseSamplerLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: FullBodyWeight
+    mode: 1
+    clampMin: 0
+    source: 0
   linkDynamically: 0
   isStandalone: 1
   poseToSample: {fileID: 11400000, guid: a8f3c2e1d4b5476f9e0a1b2c3d4e5f67, type: 2}
@@ -743,3 +752,42 @@ MonoBehaviour:
   aimPointSpeed: 1
   cameraBlend: 0
   isAimingProperty: IsAiming
+--- !u!114 &-8234567890123456789
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dee9c1da9424d8498badb5370764946, type: 3}
+  m_Name: PoseOffsetLayerSettings
+  m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseOffsetLayer.PoseOffsetLayerSettings
+  rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
+  alpha: 1
+  curveBlending:
+  - name: AimingWeight
+    mode: 1
+    clampMin: 0
+    source: 2
+  linkDynamically: 0
+  isStandalone: 0
+  poseOffsets:
+  - pose:
+      element:
+        name: IK WeaponBone
+        index: 115
+        depth: -1
+      pose:
+        position: {x: -0.02, y: 0.02, z: 0}
+        rotation: {x: 0, y: 0, z: 0.043619387, w: 0.99904823}
+        scale: {x: 1, y: 1, z: 1}
+      space: 2
+      modifyMode: 0
+    blend:
+      name: CrouchWeight
+      mode: 0
+      clampMin: 0
+      source: 0
+    keepChildrenPose: 0

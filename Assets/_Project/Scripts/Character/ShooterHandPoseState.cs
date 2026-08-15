@@ -261,6 +261,7 @@ namespace Shooter.Project.Character
                 return;
 
             _poseSampler.poseToSample = pose;
+            _poseSampler.overwriteRoot = false;
             _poseSampler.overwriteWeaponBone = pose == armedOverlayPose;
         }
 

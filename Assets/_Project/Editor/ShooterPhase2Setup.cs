@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.IO;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.AdditiveLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.AdsLayer;
+using KINEMATION.FPSAnimationFramework.Runtime.Layers.AttachHandLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.LookLayer;
+using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseOffsetLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.SwayLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.TurnLayer;
@@ -462,6 +464,7 @@ namespace Shooter.Project.Editor
 
             var poseSampler = ScriptableObject.CreateInstance<PoseSamplerLayerSettings>();
             AddLayer(profile, poseSampler);
+            AddLayer(profile, ScriptableObject.CreateInstance<PoseOffsetLayerSettings>());
             AddLayer(profile, ScriptableObject.CreateInstance<ViewLayerSettings>());
             AddLayer(profile, ScriptableObject.CreateInstance<AdsLayerSettings>());
             AddLayer(profile, ScriptableObject.CreateInstance<SwayLayerSettings>());
@@ -512,6 +515,8 @@ namespace Shooter.Project.Editor
             if (leftHand != null) ikLayer.leftHand = leftHand.elementChain[0];
             if (rightFoot != null) ikLayer.rightFoot = rightFoot.elementChain[0];
             if (leftFoot != null) ikLayer.leftFoot = leftFoot.elementChain[0];
+
+            ConfigureLeanHandLayers(profile, rig);
 
             profile.OnRigUpdated();
             EditorUtility.SetDirty(profile);
@@ -647,6 +652,192 @@ namespace Shooter.Project.Editor
             Debug.Log("FPS Look Layer and camera offset updated.");
         }
 
+        [MenuItem("Shooter/Phase 2/Fix FPS Lean And Hand IK")]
+        public static void FixFpsLeanAndHandIk()
+        {
+            var rig = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
+            var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(ProfilePath);
+            if (rig == null || profile == null)
+            {
+                EditorUtility.DisplayDialog("Missing assets", "Run Phase 2 setup first.", "OK");
+                return;
+            }
+
+            ConfigureLeanHandLayers(profile, rig);
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+            if (prefab != null)
+            {
+                var instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                if (instance != null)
+                {
+                    try
+                    {
+                        WireLeanMotionsOnBridge(instance);
+                        PrefabUtility.SaveAsPrefabAsset(instance, PlayerPrefabPath);
+                    }
+                    finally
+                    {
+                        Object.DestroyImmediate(instance);
+                    }
+                }
+            }
+
+            Debug.Log("FPS lean input, hand IK layers, and prefab motions updated.");
+        }
+
+        static void WireLeanMotionsOnBridge(GameObject playerRoot)
+        {
+            var bridge = playerRoot.GetComponent<ShooterCharacterController>();
+            if (bridge == null)
+                return;
+
+            var so = new SerializedObject(bridge);
+            so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
+            so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Crouch.asset");
+            so.FindProperty("leanAngle").floatValue = 25f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void ConfigureLeanHandLayers(FPSAnimatorProfile profile, KRig rig)
+        {
+            foreach (var layer in profile.settings)
+            {
+                if (layer == null) continue;
+                layer.isStandalone = false;
+                layer.rigAsset = rig;
+            }
+
+            RemoveLayer<AttachHandLayerSettings>(profile);
+
+            var poseSampler = FindLayer<PoseSamplerLayerSettings>(profile);
+
+            var poseOffset = FindLayer<PoseOffsetLayerSettings>(profile);
+            if (poseOffset == null)
+            {
+                poseOffset = ScriptableObject.CreateInstance<PoseOffsetLayerSettings>();
+                AddLayer(profile, poseOffset);
+            }
+
+            EnsureLeanLayerOrder(profile);
+
+            poseOffset.rigAsset = rig;
+            if (poseOffset.poseOffsets.Count == 0)
+                poseOffset.poseOffsets.Add(new PoseOffset());
+
+            var weaponOffset = poseOffset.poseOffsets[0];
+            weaponOffset.pose.element = rig.GetElementByName(FPSANames.IkWeaponBone);
+            weaponOffset.pose.pose = new KTransform
+            {
+                position = new Vector3(-0.02f, 0.02f, 0f),
+                rotation = Quaternion.Euler(0f, 0f, 5f),
+                scale = Vector3.one
+            };
+            weaponOffset.pose.space = ESpaceType.ComponentSpace;
+            weaponOffset.pose.modifyMode = EModifyMode.Add;
+            weaponOffset.blend = new CurveBlend
+            {
+                name = "CrouchWeight",
+                mode = ECurveBlendMode.Direct,
+                source = ECurveSource.Animator
+            };
+            weaponOffset.keepChildrenPose = false;
+            poseOffset.poseOffsets[0] = weaponOffset;
+            poseOffset.curveBlending = new List<CurveBlend>
+            {
+                new CurveBlend
+                {
+                    name = "AimingWeight",
+                    mode = ECurveBlendMode.Mask,
+                    source = ECurveSource.Input
+                }
+            };
+
+            if (poseSampler != null)
+            {
+                poseSampler.overwriteRoot = false;
+                poseSampler.curveBlending = new List<CurveBlend>
+                {
+                    new CurveBlend
+                    {
+                        name = "FullBodyWeight",
+                        mode = ECurveBlendMode.Mask,
+                        source = ECurveSource.Animator
+                    }
+                };
+            }
+
+            var lookLayer = FindLayer<LookLayerSettings>(profile);
+            if (lookLayer != null)
+            {
+                ConfigureLookLayerSpine(lookLayer, rig);
+                lookLayer.curveBlending = new List<CurveBlend>
+                {
+                    new CurveBlend
+                    {
+                        name = "LookLayerWeight",
+                        mode = ECurveBlendMode.Direct,
+                        source = ECurveSource.Input
+                    }
+                };
+            }
+
+            var ikLayer = FindLayer<IkLayerSettings>(profile);
+            if (ikLayer != null)
+            {
+                ikLayer.rightFootWeight = 0f;
+                ikLayer.leftFootWeight = 0f;
+            }
+
+            profile.OnRigUpdated();
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+        }
+
+        static void RemoveLayer<T>(FPSAnimatorProfile profile) where T : FPSAnimatorLayerSettings
+        {
+            for (int i = profile.settings.Count - 1; i >= 0; i--)
+            {
+                if (profile.settings[i] is T layer)
+                {
+                    profile.settings.RemoveAt(i);
+                    Object.DestroyImmediate(layer, true);
+                }
+            }
+        }
+
+        static T FindLayer<T>(FPSAnimatorProfile profile) where T : FPSAnimatorLayerSettings
+        {
+            foreach (var layer in profile.settings)
+            {
+                if (layer is T typedLayer)
+                    return typedLayer;
+            }
+
+            return null;
+        }
+
+        static void EnsureLeanLayerOrder(FPSAnimatorProfile profile)
+        {
+            var poseSampler = FindLayer<PoseSamplerLayerSettings>(profile);
+            var poseOffset = FindLayer<PoseOffsetLayerSettings>(profile);
+
+            var ordered = new List<FPSAnimatorLayerSettings>();
+            if (poseSampler != null) ordered.Add(poseSampler);
+            if (poseOffset != null) ordered.Add(poseOffset);
+
+            foreach (var layer in profile.settings)
+            {
+                if (layer == poseSampler || layer == poseOffset)
+                    continue;
+                ordered.Add(layer);
+            }
+
+            profile.settings = ordered;
+        }
+
         static Transform FindHeadTransform(Transform root)
         {
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
@@ -776,6 +967,11 @@ namespace Shooter.Project.Editor
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Jump.asset");
             if (jumpMotion != null)
                 so.FindProperty("jumpMotion").objectReferenceValue = jumpMotion;
+            so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
+            so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Crouch.asset");
+            so.FindProperty("leanAngle").floatValue = 25f;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
