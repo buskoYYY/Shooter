@@ -53,6 +53,9 @@ namespace Shooter.Project.Editor
             "Assets/Demo/Animations/Locomotion/Humanoid/UnarmedSet/UnarmedLocomotion/Unarmed_Idle.fbx";
 
         const string UnarmedOverlayPosePath = FpsFolder + "/AA_Unarmed_OverlayPose_Humanoid.asset";
+        const string ArmedOverlayPosePath = FpsFolder + "/AA_Rifle_OverlayPose_Humanoid.asset";
+        const string EquipClipPath = FpsFolder + "/AA_Rifle_Equip_Humanoid.asset";
+        const string UnequipClipPath = FpsFolder + "/AA_Rifle_Unequip_Humanoid.asset";
 
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
 
@@ -753,6 +756,7 @@ namespace Shooter.Project.Editor
                 playerRoot.AddComponent<ShooterFpsHeadHide>();
 
             SetupHandPoseState(playerRoot, model, profile);
+            SetupBalanceTuningPanel(playerRoot);
 
             var headHide = playerRoot.GetComponent<ShooterFpsHeadHide>();
             if (headHide != null)
@@ -796,7 +800,10 @@ namespace Shooter.Project.Editor
 
             var unarmedPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(UnarmedOverlayPosePath)
                 ?? EnsureUnarmedOverlayAsset(profile.rigAsset);
-            var armedPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(OverlayPosePath);
+            var armedPose = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(ArmedOverlayPosePath)
+                ?? AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(OverlayPosePath);
+            var equipClip = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(EquipClipPath);
+            var unequipClip = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(UnequipClipPath);
 
             var so = new SerializedObject(handPose);
             so.FindProperty("fpsCharacterRoot").objectReferenceValue = model;
@@ -805,7 +812,32 @@ namespace Shooter.Project.Editor
             so.FindProperty("fpsAnimatorProfile").objectReferenceValue = profile;
             so.FindProperty("unarmedOverlayPose").objectReferenceValue = unarmedPose;
             so.FindProperty("armedOverlayPose").objectReferenceValue = armedPose;
+            so.FindProperty("equipClip").objectReferenceValue = equipClip;
+            so.FindProperty("unequipClip").objectReferenceValue = unequipClip;
             so.FindProperty("startUnarmed").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetupBalanceTuningPanel(GameObject playerRoot)
+        {
+            if (playerRoot == null)
+                return;
+
+            System.Type tuningType = typeof(ShooterCharacterController).Assembly.GetType(
+                "Shooter.Project.Character.ShooterBalanceTuningPanel");
+            if (tuningType == null)
+                return;
+
+            Component tuning = playerRoot.GetComponent(tuningType);
+            if (tuning == null)
+                tuning = playerRoot.AddComponent(tuningType);
+
+            System.Type handPoseType = typeof(ShooterCharacterController).Assembly.GetType(
+                "Shooter.Project.Character.ShooterHandPoseState");
+            Component handPose = handPoseType != null ? playerRoot.GetComponent(handPoseType) : null;
+
+            var so = new SerializedObject(tuning);
+            so.FindProperty("handPoseState").objectReferenceValue = handPose;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

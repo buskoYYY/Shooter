@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 59f5fc06806945df8a985b4b99c57863, type: 3}
-  m_Name: AA_Unarmed_OverlayPose_Humanoid
+  m_Name: AA_Rifle_OverlayPose_Humanoid
   m_EditorClassIdentifier: 
-  rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
-  clip: {fileID: -203655887218126122, guid: 50a6b1c153dced642a5182d33b2a238a, type: 3}
+  rigAsset: {fileID: 11400000, guid: 20c86149126a2b24cb88e9fc185cbd50, type: 2}
+  clip: {fileID: -203655887218126122, guid: 8230767c9bcb5484e8ba4420c3a9e7ae, type: 3}
   mask: {fileID: 0}
   overrideMask: {fileID: 0}
   isAdditive: 0

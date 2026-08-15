@@ -973,8 +973,25 @@ MonoBehaviour:
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   fpsAnimatorProfile: {fileID: 11400000, guid: 4a142f9f52fc91f4c84fd23af0c5675c, type: 2}
   unarmedOverlayPose: {fileID: 11400000, guid: a8f3c2e1d4b5476f9e0a1b2c3d4e5f67, type: 2}
-  armedOverlayPose: {fileID: 11400000, guid: 17a051265d63c894bab0b0c5be42815b, type: 2}
+  armedOverlayPose: {fileID: 11400000, guid: d6e7f8a9b0c14235d6e7f8a9b0c21346, type: 2}
+  equipClip: {fileID: 11400000, guid: b4c5d6e7f8a94123b4c5d6e7f8a90123, type: 2}
+  unequipClip: {fileID: 11400000, guid: c5d6e7f8a9b04234c5d6e7f8a9b01234, type: 2}
   startUnarmed: 1
+--- !u!114 &9922334455667788994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8a9b0c1d2e34156a7b8c9d0e1f23457, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterBalanceTuningPanel
+  handPoseState: {fileID: 7722334455667788992}
+  toggleKey: 608
+  visible: 0
 --- !u!114 &8812334455667788993
 MonoBehaviour:
   m_ObjectHideFlags: 0
