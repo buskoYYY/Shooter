@@ -134,6 +134,9 @@ namespace Shooter.Project.Character
 
         void Update()
         {
+            if (ShooterBalanceTuningPanel.IsOpen)
+                return;
+
             UpdateLook();
 
             if (IsOnLadder() || ShouldDeferFpsLocomotion())

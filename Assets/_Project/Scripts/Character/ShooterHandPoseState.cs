@@ -59,6 +59,7 @@ namespace Shooter.Project.Character
             ResolveReferences();
             CachePoseSampler();
             BindToggleAction();
+            EnsureBalanceTuningPanel();
         }
 
         void OnEnable()
@@ -324,6 +325,12 @@ namespace Shooter.Project.Character
 
             _playerMap = inputActions.FindActionMap("Player", true);
             _toggleHandPose = _playerMap.FindAction("ToggleHandPose", false);
+        }
+
+        void EnsureBalanceTuningPanel()
+        {
+            if (GetComponent<ShooterBalanceTuningPanel>() == null)
+                gameObject.AddComponent<ShooterBalanceTuningPanel>();
         }
 
         void ResolveReferences()
