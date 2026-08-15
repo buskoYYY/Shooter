@@ -798,11 +798,24 @@ MonoBehaviour:
   fpsCharacterRoot: {fileID: 8937905704391999758}
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   jumpMotion: {fileID: 11400000, guid: 93be04a77e31740498d5c7d7e8286ab5, type: 2}
+  stopMotion: {fileID: 11400000, guid: df1c50775e86cd04d81a570dca084893, type: 2}
   leanMotion: {fileID: 11400000, guid: a493caf2a32529d4d88aff9ccf78e181, type: 2}
   crouchMotion: {fileID: 11400000, guid: fa23e63ff38a3bb4f9f7bca500ced7ce, type: 2}
   leanAngle: 25
   lookSensitivity: 0.15
   pitchClamp: 70
+  locomotionSmoothingStart: 3
+  locomotionSmoothingStop: 5
+  movingStartThreshold: 0.18
+  movingStopThreshold: 0.05
+  jumpBlendTime: 0.3
+  jumpPlayRate: 0.85
+  stopBlendTime: 0.35
+  stopPlayRate: 0.75
+  leanBlendTime: 0.35
+  leanPlayRate: 1
+  crouchBlendTime: 0.3
+  crouchPlayRate: 0.9
 --- !u!114 &2422158940464857524
 MonoBehaviour:
   m_ObjectHideFlags: 0

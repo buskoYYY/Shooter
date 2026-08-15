@@ -363,30 +363,30 @@ MonoBehaviour:
   freeAimSpace: 0
   useFreeAimProperty: UseFreeAim
   moveSwayPositionSpring:
-    damping: {x: 1, y: 1, z: 1}
-    stiffness: {x: 1, y: 1, z: 1}
+    damping: {x: 0.35, y: 0.3, z: 0.4}
+    stiffness: {x: 0.7, y: 0.8, z: 0.7}
     speed: {x: 1, y: 1, z: 1}
     scale: {x: 1, y: 1, z: 1}
   moveSwayRotationSpring:
-    damping: {x: 1, y: 1, z: 1}
-    stiffness: {x: 1, y: 1, z: 1}
+    damping: {x: 0.3, y: 0.3, z: 0.2}
+    stiffness: {x: 0.8, y: 0.8, z: 0.8}
     speed: {x: 1, y: 1, z: 1}
     scale: {x: 1, y: 1, z: 1}
-  moveSwayTargetDamping: 0
-  moveSwaySpace: 0
+  moveSwayTargetDamping: 15
+  moveSwaySpace: 2
   moveInputProperty: MoveInput
   aimSwayPositionSpring:
-    damping: {x: 1, y: 1, z: 1}
-    stiffness: {x: 1, y: 1, z: 1}
+    damping: {x: 0.5, y: 0.5, z: 0.5}
+    stiffness: {x: 0.6, y: 0.6, z: 0.6}
     speed: {x: 1, y: 1, z: 1}
     scale: {x: 1, y: 1, z: 1}
   aimSwayRotationSpring:
-    damping: {x: 1, y: 1, z: 1}
-    stiffness: {x: 1, y: 1, z: 1}
+    damping: {x: 0.3, y: 0.3, z: 0.4}
+    stiffness: {x: 0.7, y: 0.7, z: 0.8}
     speed: {x: 1, y: 1, z: 1}
     scale: {x: 1, y: 1, z: 1}
-  aimSwayTargetDamping: 0
-  aimSwaySpace: 0
+  aimSwayTargetDamping: 9
+  aimSwaySpace: 2
   mouseDeltaInputProperty: MouseDeltaInput
 --- !u!114 &3737666956648507545
 MonoBehaviour:

@@ -9,6 +9,7 @@ using KINEMATION.FPSAnimationFramework.Runtime.Layers.LookLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseOffsetLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.SwayLayer;
+using SwayVectorSpring = KINEMATION.FPSAnimationFramework.Runtime.Layers.SwayLayer.VectorSpring;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.TurnLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.ViewLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Camera;
@@ -695,6 +696,8 @@ namespace Shooter.Project.Editor
             var so = new SerializedObject(bridge);
             so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
+            so.FindProperty("stopMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_MoveStop.asset");
             so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Crouch.asset");
             so.FindProperty("leanAngle").floatValue = 25f;
@@ -885,13 +888,46 @@ namespace Shooter.Project.Editor
         static void ConfigureSwayLayerHead(FPSAnimatorProfile profile, KRig rig)
         {
             var head = rig.GetElementByName("head");
-            if (string.IsNullOrEmpty(head.name))
-                return;
-
             foreach (var layer in profile.settings)
             {
-                if (layer is SwayLayerSettings sway)
+                if (layer is not SwayLayerSettings sway)
+                    continue;
+
+                if (!string.IsNullOrEmpty(head.name))
                     sway.headBone = head;
+
+                sway.moveSwayPositionSpring = new SwayVectorSpring
+                {
+                    damping = new Vector3(0.35f, 0.3f, 0.4f),
+                    stiffness = new Vector3(0.7f, 0.8f, 0.7f),
+                    speed = Vector3.one,
+                    scale = Vector3.one
+                };
+                sway.moveSwayRotationSpring = new SwayVectorSpring
+                {
+                    damping = new Vector3(0.3f, 0.3f, 0.2f),
+                    stiffness = new Vector3(0.8f, 0.8f, 0.8f),
+                    speed = Vector3.one,
+                    scale = Vector3.one
+                };
+                sway.moveSwayTargetDamping = 15f;
+                sway.moveSwaySpace = ESpaceType.ComponentSpace;
+                sway.aimSwayPositionSpring = new SwayVectorSpring
+                {
+                    damping = new Vector3(0.5f, 0.5f, 0.5f),
+                    stiffness = new Vector3(0.6f, 0.6f, 0.6f),
+                    speed = Vector3.one,
+                    scale = Vector3.one
+                };
+                sway.aimSwayRotationSpring = new SwayVectorSpring
+                {
+                    damping = new Vector3(0.3f, 0.3f, 0.4f),
+                    stiffness = new Vector3(0.7f, 0.7f, 0.8f),
+                    speed = Vector3.one,
+                    scale = Vector3.one
+                };
+                sway.aimSwayTargetDamping = 9f;
+                sway.aimSwaySpace = ESpaceType.ComponentSpace;
             }
         }
 
@@ -967,6 +1003,8 @@ namespace Shooter.Project.Editor
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Jump.asset");
             if (jumpMotion != null)
                 so.FindProperty("jumpMotion").objectReferenceValue = jumpMotion;
+            so.FindProperty("stopMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
+                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_MoveStop.asset");
             so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
             so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
@@ -1034,6 +1072,7 @@ namespace Shooter.Project.Editor
 
             var so = new SerializedObject(tuning);
             so.FindProperty("handPoseState").objectReferenceValue = handPose;
+            so.FindProperty("locomotion").objectReferenceValue = playerRoot.GetComponent<ShooterCharacterController>();
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

@@ -18,18 +18,44 @@ namespace Shooter.Project.Character
     [DefaultExecutionOrder(-200)]
     public class ShooterCharacterController : MonoBehaviour
     {
+        public const float DefaultLocomotionSmoothingStart = 3f;
+        public const float DefaultLocomotionSmoothingStop = 5f;
+        public const float DefaultMovingStartThreshold = 0.18f;
+        public const float DefaultMovingStopThreshold = 0.05f;
+        public const float DefaultJumpBlendTime = 0.3f;
+        public const float DefaultJumpPlayRate = 0.85f;
+        public const float DefaultStopBlendTime = 0.35f;
+        public const float DefaultStopPlayRate = 0.75f;
+        public const float DefaultLeanBlendTime = 0.35f;
+        public const float DefaultLeanPlayRate = 1f;
+        public const float DefaultCrouchBlendTime = 0.3f;
+        public const float DefaultCrouchPlayRate = 0.9f;
+
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] IkMotionLayerSettings jumpMotion;
+        [SerializeField] IkMotionLayerSettings stopMotion;
         [SerializeField] IkMotionLayerSettings leanMotion;
         [SerializeField] IkMotionLayerSettings crouchMotion;
         [SerializeField] float leanAngle = 25f;
         [SerializeField] float lookSensitivity = 0.15f;
         [SerializeField] float pitchClamp = 70f;
-        [Tooltip("How quickly leg blend parameters follow input (demo default ~5).")]
-        [SerializeField] float locomotionSmoothing = 5f;
-        [Tooltip("Blend tree Velocity expects 0-1 from input, not m/s.")]
-        [SerializeField] float movingThreshold = 0.05f;
+        [Tooltip("How quickly leg blend parameters ramp up when starting to move.")]
+        [SerializeField] float locomotionSmoothingStart = DefaultLocomotionSmoothingStart;
+        [Tooltip("How quickly leg blend parameters ramp down when stopping.")]
+        [SerializeField] float locomotionSmoothingStop = DefaultLocomotionSmoothingStop;
+        [Tooltip("Blend tree Velocity must exceed this to enter Moving.")]
+        [SerializeField] float movingStartThreshold = DefaultMovingStartThreshold;
+        [Tooltip("Blend tree Velocity must fall below this to exit Moving.")]
+        [SerializeField] float movingStopThreshold = DefaultMovingStopThreshold;
+        [SerializeField] float jumpBlendTime = DefaultJumpBlendTime;
+        [SerializeField] float jumpPlayRate = DefaultJumpPlayRate;
+        [SerializeField] float stopBlendTime = DefaultStopBlendTime;
+        [SerializeField] float stopPlayRate = DefaultStopPlayRate;
+        [SerializeField] float leanBlendTime = DefaultLeanBlendTime;
+        [SerializeField] float leanPlayRate = DefaultLeanPlayRate;
+        [SerializeField] float crouchBlendTime = DefaultCrouchBlendTime;
+        [SerializeField] float crouchPlayRate = DefaultCrouchPlayRate;
 
         CharacterActor _characterActor;
         CharacterStateController _stateController;
@@ -46,9 +72,111 @@ namespace Shooter.Project.Character
         float _lastLeanInput;
         bool _wasGrounded = true;
         bool _wasCrouching;
+        bool _wasAnimatorMoving;
 
         public float Pitch => _mouseInput.y;
         public FPSCameraController FpsCamera => _fpsCamera;
+        public IkMotionLayerSettings JumpMotion => jumpMotion;
+        public IkMotionLayerSettings StopMotion => stopMotion;
+        public IkMotionLayerSettings LeanMotion => leanMotion;
+        public IkMotionLayerSettings CrouchMotion => crouchMotion;
+
+        public float LocomotionSmoothingStart
+        {
+            get => locomotionSmoothingStart;
+            set => locomotionSmoothingStart = Mathf.Max(0.5f, value);
+        }
+
+        public float LocomotionSmoothingStop
+        {
+            get => locomotionSmoothingStop;
+            set => locomotionSmoothingStop = Mathf.Max(0.5f, value);
+        }
+
+        public float MovingStartThreshold
+        {
+            get => movingStartThreshold;
+            set => movingStartThreshold = Mathf.Clamp(value, 0.01f, 0.5f);
+        }
+
+        public float MovingStopThreshold
+        {
+            get => movingStopThreshold;
+            set => movingStopThreshold = Mathf.Clamp(value, 0f, movingStartThreshold - 0.01f);
+        }
+
+        public float JumpBlendTime
+        {
+            get => jumpBlendTime;
+            set { jumpBlendTime = Mathf.Clamp(value, 0.05f, 1f); ApplyMotionTuning(); }
+        }
+
+        public float JumpPlayRate
+        {
+            get => jumpPlayRate;
+            set { jumpPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
+        }
+
+        public float StopBlendTime
+        {
+            get => stopBlendTime;
+            set { stopBlendTime = Mathf.Clamp(value, 0.05f, 1f); ApplyMotionTuning(); }
+        }
+
+        public float StopPlayRate
+        {
+            get => stopPlayRate;
+            set { stopPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
+        }
+
+        public float LeanBlendTime
+        {
+            get => leanBlendTime;
+            set { leanBlendTime = Mathf.Clamp(value, 0.05f, 1f); ApplyMotionTuning(); }
+        }
+
+        public float LeanPlayRate
+        {
+            get => leanPlayRate;
+            set { leanPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
+        }
+
+        public float CrouchBlendTime
+        {
+            get => crouchBlendTime;
+            set { crouchBlendTime = Mathf.Clamp(value, 0.05f, 1f); ApplyMotionTuning(); }
+        }
+
+        public float CrouchPlayRate
+        {
+            get => crouchPlayRate;
+            set { crouchPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
+        }
+
+        public void ResetMotionDefaults()
+        {
+            locomotionSmoothingStart = DefaultLocomotionSmoothingStart;
+            locomotionSmoothingStop = DefaultLocomotionSmoothingStop;
+            movingStartThreshold = DefaultMovingStartThreshold;
+            movingStopThreshold = DefaultMovingStopThreshold;
+            jumpBlendTime = DefaultJumpBlendTime;
+            jumpPlayRate = DefaultJumpPlayRate;
+            stopBlendTime = DefaultStopBlendTime;
+            stopPlayRate = DefaultStopPlayRate;
+            leanBlendTime = DefaultLeanBlendTime;
+            leanPlayRate = DefaultLeanPlayRate;
+            crouchBlendTime = DefaultCrouchBlendTime;
+            crouchPlayRate = DefaultCrouchPlayRate;
+            ApplyMotionTuning();
+        }
+
+        public void ApplyMotionTuning()
+        {
+            ApplyIkMotionTuning(jumpMotion, jumpBlendTime, jumpPlayRate);
+            ApplyIkMotionTuning(stopMotion, stopBlendTime, stopPlayRate);
+            ApplyIkMotionTuning(leanMotion, leanBlendTime, leanPlayRate);
+            ApplyIkMotionTuning(crouchMotion, crouchBlendTime, crouchPlayRate);
+        }
 
         public void ResetPitchForLadder()
         {
@@ -107,7 +235,8 @@ namespace Shooter.Project.Character
             EnsureFpsCameraApplyOnSelf();
             GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
 
-            // FPSPlayablesController.Update runs before FPSAnimator.Start — init early.
+            ApplyMotionTuning();
+
             if (_fpsAnimator != null)
                 _fpsAnimator.Initialize();
         }
@@ -210,8 +339,6 @@ namespace Shooter.Project.Character
             if (ShouldDeferFpsLocomotion())
                 return;
 
-            // Demo FPS AF: sprint disables spine stabilization, not the overlay pose.
-            // PlayablesWeight = 0 exposes rifle locomotion on the upper body (armed flash).
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
             _userInput.SetValue(LookLayerWeightProperty, sprinting ? 0.3f : 1f);
             _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
@@ -231,7 +358,7 @@ namespace Shooter.Project.Character
             if (Mathf.Approximately(leanValue, _lastLeanInput) || leanMotion == null || _fpsAnimator == null)
                 return;
 
-            _fpsAnimator.LinkAnimatorLayer(leanMotion);
+            PlayIkMotion(leanMotion);
             _lastLeanInput = leanValue;
         }
 
@@ -251,9 +378,9 @@ namespace Shooter.Project.Character
             bool grounded = _characterActor.IsGrounded;
 
             if (_wasGrounded && !grounded)
-                _fpsAnimator.LinkAnimatorLayer(jumpMotion);
+                PlayIkMotion(jumpMotion);
             else if (!_wasGrounded && grounded)
-                _fpsAnimator.LinkAnimatorLayer(jumpMotion);
+                PlayIkMotion(jumpMotion);
 
             _wasGrounded = grounded;
         }
@@ -267,30 +394,66 @@ namespace Shooter.Project.Character
             Vector2 moveInput = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
             Vector2 targetVelocity = inAir ? Vector2.zero : moveInput;
 
-            float blendAlpha = KMath.ExpDecayAlpha(locomotionSmoothing, Time.deltaTime);
+            float targetSpeed = targetVelocity.magnitude;
+            float currentSpeed = _animatorVelocity.magnitude;
+            bool accelerating = targetSpeed > currentSpeed + 0.01f;
+            float smoothing = accelerating ? locomotionSmoothingStart : locomotionSmoothingStop;
+            float blendAlpha = KMath.ExpDecayAlpha(smoothing, Time.deltaTime);
             _animatorVelocity = Vector2.Lerp(_animatorVelocity, targetVelocity, blendAlpha);
 
             float speed = Mathf.Clamp01(_animatorVelocity.magnitude);
-            bool moving = !inAir && speed > movingThreshold;
+            bool animatorMoving = EvaluateAnimatorMoving(speed, inAir);
             bool sprinting = _sprint != null && _sprint.IsPressed();
             bool crouching = _crouch != null && _crouch.IsPressed();
 
-            float targetSprint = sprinting && moving ? 1f : 0f;
+            float targetSprint = sprinting && animatorMoving ? 1f : 0f;
             _sprintWeight = Mathf.Lerp(_sprintWeight, targetSprint, blendAlpha);
 
             _animator.SetFloat(MoveXHash, _animatorVelocity.x);
             _animator.SetFloat(MoveYHash, _animatorVelocity.y);
             _animator.SetFloat(VelocityHash, speed);
             _animator.SetBool(InAirHash, inAir);
-            _animator.SetBool(MovingHash, moving);
+            _animator.SetBool(MovingHash, animatorMoving);
             _animator.SetBool(CrouchingHash, crouching);
             _animator.SetFloat(SprintingHash, _sprintWeight);
 
+            if (animatorMoving != _wasAnimatorMoving && !animatorMoving && stopMotion != null && _fpsAnimator != null)
+                PlayIkMotion(stopMotion);
+
+            _wasAnimatorMoving = animatorMoving;
+
             if (crouching != _wasCrouching && crouchMotion != null && _fpsAnimator != null)
-                _fpsAnimator.LinkAnimatorLayer(crouchMotion);
+                PlayIkMotion(crouchMotion);
 
             _wasCrouching = crouching;
         }
-    }
 
+        bool EvaluateAnimatorMoving(float speed, bool inAir)
+        {
+            if (inAir)
+                return false;
+
+            if (_wasAnimatorMoving)
+                return speed > movingStopThreshold;
+
+            return speed > movingStartThreshold;
+        }
+
+        void PlayIkMotion(IkMotionLayerSettings motion)
+        {
+            if (motion == null || _fpsAnimator == null)
+                return;
+
+            _fpsAnimator.LinkAnimatorLayer(motion);
+        }
+
+        static void ApplyIkMotionTuning(IkMotionLayerSettings motion, float blendTime, float playRate)
+        {
+            if (motion == null)
+                return;
+
+            motion.blendTime = blendTime;
+            motion.playRate = playRate;
+        }
+    }
 }

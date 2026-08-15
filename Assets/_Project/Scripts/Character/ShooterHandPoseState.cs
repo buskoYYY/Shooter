@@ -18,7 +18,9 @@ namespace Shooter.Project.Character
     public class ShooterHandPoseState : MonoBehaviour
     {
         const float SlotStopBlend = 0.08f;
-        const float DefaultTransitionBlend = 0.4f;
+        const float DefaultTransitionBlend = 0.45f;
+        const float DefaultOverlayBlendIn = 0.5f;
+        const float DefaultOverlayBlendOut = 0.25f;
 
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
@@ -47,11 +49,16 @@ namespace Shooter.Project.Character
         public bool IsTransitioning => _isTransitioning;
         public FPSAnimationAsset EquipClip => equipClip;
         public FPSAnimationAsset UnequipClip => unequipClip;
+        public FPSAnimationAsset ArmedOverlayPose => armedOverlayPose;
+        public FPSAnimationAsset UnarmedOverlayPose => unarmedOverlayPose;
+        public FPSAnimatorProfile FpsAnimatorProfile => fpsAnimatorProfile;
 
         public void ResetTransitionBlendDefaults()
         {
             SetAssetBlendTime(equipClip, DefaultTransitionBlend, DefaultTransitionBlend);
             SetAssetBlendTime(unequipClip, DefaultTransitionBlend, DefaultTransitionBlend);
+            SetAssetBlendTime(armedOverlayPose, DefaultOverlayBlendIn, DefaultOverlayBlendOut);
+            SetAssetBlendTime(unarmedOverlayPose, DefaultOverlayBlendIn, DefaultOverlayBlendOut);
         }
 
         void Awake()
