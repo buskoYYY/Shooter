@@ -19,9 +19,34 @@
 
 ---
 
-## 1. Locomotion — движение ног и blend tree
+## 1. Controller movement (CCP) — скорость самого персонажа
 
-Влияет на то, насколько плавно ноги и параметры аниматора (`Velocity`, `MoveX`, `MoveY`, `Moving`) реагируют на WASD.
+Это то, что заказчик имел в виду под «педалью газа»: **реальная скорость Character Controller Pro**, а не анимация ног.
+
+**Walk speed** (дефолт: 5 m/s, диапазон: 2–8)
+
+- Максимальная скорость **ходьбы** (WASD без Shift).
+
+**Sprint speed** (дефолт: 7.5 m/s, диапазон: walk–12)
+
+- Максимальная скорость **бега** (Shift).
+
+**Acceleration** (дефолт: 8, диапазон: 2–30)
+
+- Как быстро набирается скорость при нажатии WASD.
+- Меньше — медленный разгон «как у машины». Больше — резкий старт.
+- При 8 m/s² персонаж выходит на ~5 m/s примерно за 0.6 секунды.
+
+**Deceleration** (дефолт: 10, диапазон: 2–30)
+
+- Как быстро теряет скорость после отпускания клавиш.
+- Меньше — дольше «катится». Больше — быстрее останавливается.
+
+---
+
+## 2. Animation locomotion (legs) — анимация ног и blend tree
+
+Влияет только на **параметры аниматора** (`Velocity`, `MoveX`, `MoveY`, `Moving`), не на физическую скорость контроллера.
 
 **Start smoothing** (дефолт: 3, диапазон: 1–10)
 
@@ -47,7 +72,7 @@
 
 ---
 
-## 2. Weapon IK motions — движение оружия (IkMotion)
+## 3. Weapon IK motions — движение оружия (IkMotion)
 
 Настройки кивка/смещения оружия при событиях. У каждого блока два ползунка:
 
@@ -75,7 +100,7 @@
 
 ---
 
-## 3. Hand pose overlays — позы рук (клавиша T)
+## 4. Hand pose overlays — позы рук (клавиша T)
 
 Время смешивания overlay-поз верхней части тела. У каждого ассета:
 
@@ -100,7 +125,7 @@
 
 ---
 
-## 4. Weapon sway springs — покачивание оружия
+## 5. Weapon sway springs — покачивание оружия
 
 Пружины слоя Sway в FPS Animation Framework: качка оружия от **движения** и от **мыши**.
 
@@ -128,7 +153,7 @@
 
 ---
 
-## 5. Reset all to defaults
+## 6. Reset all to defaults
 
 Кнопка внизу панели сбрасывает **все** секции к заводским значениям проекта:
 
@@ -140,14 +165,18 @@
 
 ## Что крутить в первую очередь (подсказка)
 
-**Старт с места слишком резкий**
+**Старт с места слишком резкий (скорость персонажа)**
 
-- Уменьши **Start smoothing** (например 2–2.5).
-- Подними **Moving start threshold** (например 0.20–0.25).
+- Уменьши **Acceleration** в секции Controller movement (например 5–6).
+- Можно чуть снизить **Walk speed**.
+
+**Старт с места резкий только визуально (ноги)**
+
+- Уменьши **Start smoothing** в Animation locomotion.
 
 **Остановка дёргается**
 
-- Уменьши **Stop smoothing**.
+- Уменьши **Deceleration** в Controller movement (например 6–8) или **Stop smoothing** в Animation locomotion.
 - Подкрути **Stop** IK motion: blend 0.4–0.5, play rate 0.6–0.8.
 
 **Прыжок / приземление резкие**
@@ -176,6 +205,7 @@
 ## Связанные файлы в проекте
 
 - `Assets/_Project/Scripts/Character/ShooterBalanceTuningPanel.cs` — сама панель
-- `Assets/_Project/Scripts/Character/ShooterCharacterController.cs` — locomotion и IK motions
+- `Assets/_Project/Scripts/Character/ShooterCcpMovementTuning.cs` — разгон/торможение CCP
+- `Assets/_Project/Scripts/Character/ShooterCharacterController.cs` — анимация ног и IK motions
 - `Assets/_Project/Scripts/Character/ShooterHandPoseState.cs` — armed / unarmed (T)
 - `Assets/_Project/FPS/` — overlay-позы и профиль аниматора

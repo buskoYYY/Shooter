@@ -22,8 +22,8 @@ namespace Shooter.Project.Character
         public const float DefaultLocomotionSmoothingStop = 5f;
         public const float DefaultMovingStartThreshold = 0.18f;
         public const float DefaultMovingStopThreshold = 0.05f;
-        public const float DefaultJumpBlendTime = 0.3f;
-        public const float DefaultJumpPlayRate = 0.85f;
+        public const float DefaultJumpBlendTime = 0.15f;
+        public const float DefaultJumpPlayRate = 1f;
         public const float DefaultStopBlendTime = 0.35f;
         public const float DefaultStopPlayRate = 0.75f;
         public const float DefaultLeanBlendTime = 0.35f;
@@ -61,6 +61,7 @@ namespace Shooter.Project.Character
         CharacterStateController _stateController;
         NormalMovement _normalMovement;
         ShooterLadderFpsBridge _ladderBridge;
+        ShooterHandPoseState _handPoseState;
         FPSAnimator _fpsAnimator;
         UserInputController _userInput;
         Animator _animator;
@@ -70,9 +71,9 @@ namespace Shooter.Project.Character
         Vector2 _animatorVelocity;
         float _sprintWeight;
         float _lastLeanInput;
-        bool _wasGrounded = true;
         bool _wasCrouching;
         bool _wasAnimatorMoving;
+        bool _playedJumpMotionSinceLand;
 
         public float Pitch => _mouseInput.y;
         public FPSCameraController FpsCamera => _fpsCamera;
@@ -199,6 +200,7 @@ namespace Shooter.Project.Character
         static readonly int MovingHash = Animator.StringToHash("Moving");
         static readonly int CrouchingHash = Animator.StringToHash("Crouching");
         static readonly int SprintingHash = Animator.StringToHash("Sprinting");
+        static readonly int FullBodyWeightHash = Animator.StringToHash("FullBodyWeight");
 
         void Awake()
         {
@@ -206,6 +208,7 @@ namespace Shooter.Project.Character
             _stateController = GetComponentInChildren<CharacterStateController>();
             _normalMovement = GetComponentInChildren<NormalMovement>();
             _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
+            _handPoseState = GetComponent<ShooterHandPoseState>();
 
             if (fpsCharacterRoot == null)
             {
@@ -266,8 +269,45 @@ namespace Shooter.Project.Character
 
             ConfigureCcpForFps();
 
+            BindJumpEvents();
+        }
+
+        void OnDestroy()
+        {
+            UnbindJumpEvents();
+        }
+
+        void BindJumpEvents()
+        {
+            if (_normalMovement != null)
+                _normalMovement.OnJumpPerformed += HandleJumpPerformed;
+
             if (_characterActor != null)
-                _wasGrounded = _characterActor.IsGrounded;
+                _characterActor.OnGroundedStateEnter += HandleLanded;
+        }
+
+        void UnbindJumpEvents()
+        {
+            if (_normalMovement != null)
+                _normalMovement.OnJumpPerformed -= HandleJumpPerformed;
+
+            if (_characterActor != null)
+                _characterActor.OnGroundedStateEnter -= HandleLanded;
+        }
+
+        void HandleJumpPerformed()
+        {
+            _playedJumpMotionSinceLand = true;
+            PlayIkMotion(jumpMotion);
+        }
+
+        void HandleLanded(Vector3 _)
+        {
+            if (!_playedJumpMotionSinceLand)
+                return;
+
+            _playedJumpMotionSinceLand = false;
+            PlayIkMotion(jumpMotion);
         }
 
         void Update()
@@ -285,7 +325,6 @@ namespace Shooter.Project.Character
 
             SyncAnimatorFromCcp();
             UpdateFpsInput();
-            UpdateJumpLandMotion();
         }
 
         bool ShouldDeferFpsLocomotion() =>
@@ -303,7 +342,14 @@ namespace Shooter.Project.Character
             }
 
             if (_normalMovement != null)
+            {
                 _normalMovement.lookingDirectionParameters.changeLookingDirection = false;
+                ShooterCcpMovementTuning.ApplyDemoJumpSettings(_normalMovement);
+            }
+
+            var tuning = GetComponent<ShooterCcpMovementTuning>();
+            if (tuning != null)
+                tuning.ApplyTuning();
         }
 
         void UpdateLook()
@@ -341,9 +387,21 @@ namespace Shooter.Project.Character
 
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
             _userInput.SetValue(LookLayerWeightProperty, sprinting ? 0.3f : 1f);
-            _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
+            UpdatePlayablesWeight();
 
             UpdateLeanInput();
+        }
+
+        void UpdatePlayablesWeight()
+        {
+            if (_animator == null || _userInput == null)
+                return;
+
+            if (_handPoseState != null && _handPoseState.IsUnarmed)
+                _animator.SetFloat(FullBodyWeightHash, 1f);
+
+            float playablesWeight = 1f - _animator.GetFloat(FullBodyWeightHash);
+            _userInput.SetValue(FPSANames.PlayablesWeight, playablesWeight);
         }
 
         void UpdateLeanInput()
@@ -368,21 +426,6 @@ namespace Shooter.Project.Character
                 return;
 
             _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
-        }
-
-        void UpdateJumpLandMotion()
-        {
-            if (_characterActor == null || _fpsAnimator == null || jumpMotion == null)
-                return;
-
-            bool grounded = _characterActor.IsGrounded;
-
-            if (_wasGrounded && !grounded)
-                PlayIkMotion(jumpMotion);
-            else if (!_wasGrounded && grounded)
-                PlayIkMotion(jumpMotion);
-
-            _wasGrounded = grounded;
         }
 
         void SyncAnimatorFromCcp()

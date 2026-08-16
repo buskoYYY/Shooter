@@ -29,10 +29,13 @@ namespace Shooter.Project.Character
         [SerializeField] FPSAnimationAsset armedOverlayPose;
         [SerializeField] FPSAnimationAsset equipClip;
         [SerializeField] FPSAnimationAsset unequipClip;
+        [SerializeField] RuntimeAnimatorController armedLocomotionController;
+        [SerializeField] RuntimeAnimatorController unarmedLocomotionOverride;
         [SerializeField] bool startUnarmed = true;
 
         FPSPlayablesController _playablesController;
         PoseSamplerLayerSettings _poseSampler;
+        Animator _animator;
         InputActionMap _playerMap;
         InputAction _toggleHandPose;
         bool _isUnarmed;
@@ -83,6 +86,7 @@ namespace Shooter.Project.Character
         void Start()
         {
             _isUnarmed = startUnarmed;
+            ApplyLocomotionController(_isUnarmed);
             ApplyPoseInstant(startUnarmed ? unarmedOverlayPose : armedOverlayPose);
         }
 
@@ -142,6 +146,8 @@ namespace Shooter.Project.Character
 
             _isUnarmed = unarmed;
 
+            ApplyLocomotionController(unarmed);
+
             if (instant)
             {
                 StopActiveTransition();
@@ -190,6 +196,24 @@ namespace Shooter.Project.Character
 
             _isTransitioning = false;
             _transitionCoroutine = null;
+        }
+
+        void ApplyLocomotionController(bool unarmed)
+        {
+            if (_animator == null)
+                return;
+
+            RuntimeAnimatorController target = unarmed && unarmedLocomotionOverride != null
+                ? unarmedLocomotionOverride
+                : armedLocomotionController;
+
+            if (target == null || _animator.runtimeAnimatorController == target)
+                return;
+
+            _animator.runtimeAnimatorController = target;
+
+            if (!unarmed)
+                _animator.SetFloat(Animator.StringToHash("FullBodyWeight"), 0f);
         }
 
         void ApplyOverlayBlend(FPSAnimationAsset pose, float blendInTime)
@@ -366,6 +390,10 @@ namespace Shooter.Project.Character
                 return;
 
             _playablesController = fpsCharacterRoot.GetComponent<FPSPlayablesController>();
+            _animator = fpsCharacterRoot.GetComponent<Animator>();
+
+            if (armedLocomotionController == null && _animator != null)
+                armedLocomotionController = _animator.runtimeAnimatorController;
 
             if (fpsAnimatorProfile == null)
             {

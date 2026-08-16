@@ -57,10 +57,31 @@ namespace Shooter.Project.Editor
 
         const string UnarmedOverlayPosePath = FpsFolder + "/AA_Unarmed_OverlayPose_Humanoid.asset";
         const string ArmedOverlayPosePath = FpsFolder + "/AA_Rifle_OverlayPose_Humanoid.asset";
+        const string UnarmedLocomotionOverridePath = FpsFolder + "/FPSAnimator_Unarmed_Humanoid.overrideController";
         const string EquipClipPath = FpsFolder + "/AA_Rifle_Equip_Humanoid.asset";
         const string UnequipClipPath = FpsFolder + "/AA_Rifle_Unequip_Humanoid.asset";
 
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
+
+        [MenuItem("Shooter/Phase 2/Create Unarmed Locomotion Override")]
+        public static void CreateUnarmedLocomotionOverrideMenu()
+        {
+            var created = EnsureUnarmedLocomotionOverride();
+            if (created == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "Failed",
+                    "Could not create unarmed locomotion override.\nImport FPS demo (Phase 0).",
+                    "OK");
+                return;
+            }
+
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Done",
+                "Created:\n" + UnarmedLocomotionOverridePath,
+                "OK");
+        }
 
         [MenuItem("Shooter/Phase 2/Setup FPS on Player Prefab")]
         public static void SetupFpsOnPlayerPrefab()
@@ -1048,8 +1069,120 @@ namespace Shooter.Project.Editor
             so.FindProperty("armedOverlayPose").objectReferenceValue = armedPose;
             so.FindProperty("equipClip").objectReferenceValue = equipClip;
             so.FindProperty("unequipClip").objectReferenceValue = unequipClip;
+            so.FindProperty("armedLocomotionController").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(HumanoidControllerPath);
+            so.FindProperty("unarmedLocomotionOverride").objectReferenceValue =
+                EnsureUnarmedLocomotionOverride();
             so.FindProperty("startUnarmed").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static AnimatorOverrideController EnsureUnarmedLocomotionOverride()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(UnarmedLocomotionOverridePath);
+            if (existing != null)
+                return existing;
+
+            var baseController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(HumanoidControllerPath);
+            if (baseController == null)
+                return null;
+
+            var unarmedClips = LoadUnarmedLocomotionClips();
+            if (unarmedClips.Count == 0)
+                return null;
+
+            var overrideController = new AnimatorOverrideController(baseController);
+            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+
+            foreach (var originalPair in overrideController.clips)
+            {
+                AnimationClip original = originalPair.originalClip;
+                if (original == null)
+                    continue;
+
+                if (TryMapRifleClipToUnarmed(original.name, unarmedClips, out AnimationClip replacement))
+                    overrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(original, replacement));
+            }
+
+            if (overrides.Count == 0)
+                return null;
+
+            overrideController.ApplyOverrides(overrides);
+            AssetDatabase.CreateAsset(overrideController, UnarmedLocomotionOverridePath);
+            AssetDatabase.SaveAssets();
+            return overrideController;
+        }
+
+        static Dictionary<string, AnimationClip> LoadUnarmedLocomotionClips()
+        {
+            const string folder = "Assets/Demo/Animations/Locomotion/Humanoid/UnarmedSet/UnarmedLocomotion";
+            var clips = new Dictionary<string, AnimationClip>();
+
+            foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { folder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+                if (clip != null && !clip.name.StartsWith("__"))
+                    clips[clip.name] = clip;
+            }
+
+            foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { folder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+                {
+                    if (asset is AnimationClip clip && !clip.name.StartsWith("__"))
+                        clips[clip.name] = clip;
+                }
+            }
+
+            var runClip = LoadClipFromFbx(
+                "Assets/Demo/Animations/Locomotion/Humanoid/UnarmedSet/C_Unarmed_Run_Humanoid.fbx",
+                "C_Unarmed_Run_Humanoid");
+            if (runClip != null)
+                clips[runClip.name] = runClip;
+
+            return clips;
+        }
+
+        static bool TryMapRifleClipToUnarmed(
+            string rifleClipName,
+            Dictionary<string, AnimationClip> unarmedClips,
+            out AnimationClip unarmedClip)
+        {
+            unarmedClip = null;
+            if (string.IsNullOrEmpty(rifleClipName))
+                return false;
+
+            string targetName = rifleClipName switch
+            {
+                "C_Rifle_Idle_Humanoid" => "Unarmed_Idle",
+                "C_Rifle_Run_Fwd_Humanoid" => "Unarmed_Jog_Forward",
+                "C_Rifle_Run_Fwd_Left_Humanoid" => "Unarmed_Jog_Forward_45",
+                "C_Rifle_Run_Fwd_Right_Humanoid" => "Unarmed_Jog_Forward_-45",
+                "C_Rifle_Strafe_Right_Humanoid" => "Unarmed_Jog_Right",
+                "C_Rifle_Run_Bwd_Humanoid" => "Unarmed_Jog_Bwd",
+                "C_Rifle_Run_Bwd_Left_Humanoid" => "Unarmed_Jog_Bwd_-45",
+                "C_Rifle_Run_Bwd_Right_Humanoid" => "Unarmed_Jog_Bwd_45",
+                "C_Rifle_Sprint_Fwd_Humanoid" => "C_Unarmed_Run_Humanoid",
+                _ => null
+            };
+
+            if (targetName == null)
+                return false;
+
+            return unarmedClips.TryGetValue(targetName, out unarmedClip);
+        }
+
+        static AnimationClip LoadClipFromFbx(string fbxPath, string clipName)
+        {
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            {
+                if (asset is AnimationClip clip && clip.name == clipName)
+                    return clip;
+            }
+
+            return null;
         }
 
         static void SetupBalanceTuningPanel(GameObject playerRoot)
@@ -1066,13 +1199,8 @@ namespace Shooter.Project.Editor
             if (tuning == null)
                 tuning = playerRoot.AddComponent(tuningType);
 
-            System.Type handPoseType = typeof(ShooterCharacterController).Assembly.GetType(
-                "Shooter.Project.Character.ShooterHandPoseState");
-            Component handPose = handPoseType != null ? playerRoot.GetComponent(handPoseType) : null;
-
             var so = new SerializedObject(tuning);
-            so.FindProperty("handPoseState").objectReferenceValue = handPose;
-            so.FindProperty("locomotion").objectReferenceValue = playerRoot.GetComponent<ShooterCharacterController>();
+            so.FindProperty("ccpMovement").objectReferenceValue = playerRoot.GetComponent<ShooterCcpMovementTuning>();
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1091,6 +1219,15 @@ namespace Shooter.Project.Editor
             var normalMovement = states.GetComponent<NormalMovement>();
             if (normalMovement != null)
                 normalMovement.lookingDirectionParameters.changeLookingDirection = false;
+
+            var tuning = playerRoot.GetComponent<ShooterCcpMovementTuning>();
+            if (tuning == null)
+                tuning = playerRoot.AddComponent<ShooterCcpMovementTuning>();
+
+            tuning.ResetDefaults();
+            EditorUtility.SetDirty(tuning);
+            if (normalMovement != null)
+                EditorUtility.SetDirty(normalMovement);
         }
 
         static bool TryOpenTestSceneAndPlayer(out Scene scene, out GameObject player, out string error)

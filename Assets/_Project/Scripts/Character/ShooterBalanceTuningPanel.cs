@@ -1,6 +1,3 @@
-using KINEMATION.FPSAnimationFramework.Runtime.Layers.SwayLayer;
-using KINEMATION.FPSAnimationFramework.Runtime.Playables;
-using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,25 +10,29 @@ namespace Shooter.Project.Character
     [DisallowMultipleComponent]
     public class ShooterBalanceTuningPanel : MonoBehaviour
     {
-        [SerializeField] ShooterHandPoseState handPoseState;
-        [SerializeField] ShooterCharacterController locomotion;
+        // [SerializeField] ShooterHandPoseState handPoseState;
+        // [SerializeField] ShooterCharacterController locomotion;
+        [SerializeField] ShooterCcpMovementTuning ccpMovement;
         [SerializeField] bool visible;
 
-        Rect _windowRect = new Rect(20f, 20f, 420f, 560f);
+        Rect _windowRect = new Rect(20f, 20f, 360f, 260f);
         Vector2 _scroll;
-        SwayLayerSettings _swayLayer;
+        // SwayLayerSettings _swayLayer;
 
         public static bool IsOpen { get; private set; }
 
         void Awake()
         {
-            if (handPoseState == null)
-                handPoseState = GetComponent<ShooterHandPoseState>();
+            // if (handPoseState == null)
+            //     handPoseState = GetComponent<ShooterHandPoseState>();
 
-            if (locomotion == null)
-                locomotion = GetComponent<ShooterCharacterController>();
+            // if (locomotion == null)
+            //     locomotion = GetComponent<ShooterCharacterController>();
 
-            CacheSwayLayer();
+            if (ccpMovement == null)
+                ccpMovement = GetComponent<ShooterCcpMovementTuning>();
+
+            // CacheSwayLayer();
         }
 
         void OnDestroy()
@@ -75,25 +76,56 @@ namespace Shooter.Project.Character
             GUILayout.Label("F8 — show/hide this panel");
             GUILayout.Space(6f);
 
-            DrawLocomotionSection();
-            GUILayout.Space(8f);
-            DrawIkMotionSection();
-            GUILayout.Space(8f);
-            DrawOverlaySection();
-            GUILayout.Space(8f);
-            DrawSwaySection();
+            DrawControllerMovementSection();
+
+            // GUILayout.Space(8f);
+            // DrawAnimationLocomotionSection();
+            // GUILayout.Space(8f);
+            // DrawIkMotionSection();
+            // GUILayout.Space(8f);
+            // DrawOverlaySection();
+            // GUILayout.Space(8f);
+            // DrawSwaySection();
 
             GUILayout.Space(10f);
-            if (GUILayout.Button("Reset all to defaults"))
+            if (GUILayout.Button("Reset to defaults"))
                 ResetAllDefaults();
 
             GUILayout.EndScrollView();
             GUI.DragWindow();
         }
 
-        void DrawLocomotionSection()
+        void DrawControllerMovementSection()
         {
-            GUILayout.Label("Locomotion", GUI.skin.box);
+            GUILayout.Label("Controller movement (CCP)", GUI.skin.box);
+
+            if (ccpMovement == null)
+            {
+                GUILayout.Label("ShooterCcpMovementTuning not found.");
+                return;
+            }
+
+            GUILayout.Label($"Walk speed: {ccpMovement.BaseSpeedLimit:0.0} m/s");
+            ccpMovement.BaseSpeedLimit = GUILayout.HorizontalSlider(
+                ccpMovement.BaseSpeedLimit, 2f, 8f);
+
+            GUILayout.Label($"Sprint speed: {ccpMovement.BoostSpeedLimit:0.0} m/s");
+            ccpMovement.BoostSpeedLimit = GUILayout.HorizontalSlider(
+                ccpMovement.BoostSpeedLimit, ccpMovement.BaseSpeedLimit, 12f);
+
+            GUILayout.Label($"Acceleration: {ccpMovement.StableGroundedAcceleration:0.0}");
+            ccpMovement.StableGroundedAcceleration = GUILayout.HorizontalSlider(
+                ccpMovement.StableGroundedAcceleration, 2f, 30f);
+
+            GUILayout.Label($"Deceleration: {ccpMovement.StableGroundedDeceleration:0.0}");
+            ccpMovement.StableGroundedDeceleration = GUILayout.HorizontalSlider(
+                ccpMovement.StableGroundedDeceleration, 2f, 30f);
+        }
+
+        /*
+        void DrawAnimationLocomotionSection()
+        {
+            GUILayout.Label("Animation locomotion (legs)", GUI.skin.box);
 
             if (locomotion == null)
             {
@@ -187,11 +219,35 @@ namespace Shooter.Project.Character
             _swayLayer.aimSwayRotationSpring = aimRot;
         }
 
-        void ResetAllDefaults()
+        static void DrawIkMotion(string label, float blendTime, float playRate,
+            System.Action<float> setBlend, System.Action<float> setPlayRate)
         {
-            locomotion?.ResetMotionDefaults();
-            handPoseState?.ResetTransitionBlendDefaults();
-            ResetSwayDefaults();
+            GUILayout.Label(label, GUI.skin.box);
+            GUILayout.Label($"Blend: {blendTime:0.00}s");
+            setBlend(GUILayout.HorizontalSlider(blendTime, 0.05f, 1f));
+            GUILayout.Label($"Play rate: {playRate:0.00}");
+            setPlayRate(GUILayout.HorizontalSlider(playRate, 0.25f, 2f));
+        }
+
+        static void DrawTransitionAsset(string label, FPSAnimationAsset asset)
+        {
+            GUILayout.Label(label, GUI.skin.box);
+
+            if (asset == null)
+            {
+                GUILayout.Label("Asset not assigned.");
+                return;
+            }
+
+            BlendTime blend = asset.blendTime;
+
+            GUILayout.Label($"Blend In:  {blend.blendInTime:0.00}s");
+            blend.blendInTime = GUILayout.HorizontalSlider(blend.blendInTime, 0.05f, 1.5f);
+
+            GUILayout.Label($"Blend Out: {blend.blendOutTime:0.00}s");
+            blend.blendOutTime = GUILayout.HorizontalSlider(blend.blendOutTime, 0.05f, 1.5f);
+
+            asset.blendTime = blend;
         }
 
         void ResetSwayDefaults()
@@ -252,15 +308,14 @@ namespace Shooter.Project.Character
                 }
             }
         }
+        */
 
-        static void DrawIkMotion(string label, float blendTime, float playRate,
-            System.Action<float> setBlend, System.Action<float> setPlayRate)
+        void ResetAllDefaults()
         {
-            GUILayout.Label(label, GUI.skin.box);
-            GUILayout.Label($"Blend: {blendTime:0.00}s");
-            setBlend(GUILayout.HorizontalSlider(blendTime, 0.05f, 1f));
-            GUILayout.Label($"Play rate: {playRate:0.00}");
-            setPlayRate(GUILayout.HorizontalSlider(playRate, 0.25f, 2f));
+            ccpMovement?.ResetDefaults();
+            // locomotion?.ResetMotionDefaults();
+            // handPoseState?.ResetTransitionBlendDefaults();
+            // ResetSwayDefaults();
         }
 
         static bool WasF8PressedThisFrame()
@@ -278,27 +333,6 @@ namespace Shooter.Project.Character
             }
 
             return false;
-        }
-
-        static void DrawTransitionAsset(string label, FPSAnimationAsset asset)
-        {
-            GUILayout.Label(label, GUI.skin.box);
-
-            if (asset == null)
-            {
-                GUILayout.Label("Asset not assigned.");
-                return;
-            }
-
-            BlendTime blend = asset.blendTime;
-
-            GUILayout.Label($"Blend In:  {blend.blendInTime:0.00}s");
-            blend.blendInTime = GUILayout.HorizontalSlider(blend.blendInTime, 0.05f, 1.5f);
-
-            GUILayout.Label($"Blend Out: {blend.blendOutTime:0.00}s");
-            blend.blendOutTime = GUILayout.HorizontalSlider(blend.blendOutTime, 0.05f, 1.5f);
-
-            asset.blendTime = blend;
         }
 
         void SetVisible(bool open)
@@ -335,9 +369,11 @@ namespace Shooter.Project.Character
             if (handPose == null)
                 DontDestroyOnLoad(host);
 
-            var panel = host.GetComponent<ShooterBalanceTuningPanel>();
-            if (panel == null)
-                panel = host.AddComponent<ShooterBalanceTuningPanel>();
+            if (host.GetComponent<ShooterBalanceTuningPanel>() == null)
+                host.AddComponent<ShooterBalanceTuningPanel>();
+
+            if (handPose != null && handPose.GetComponent<ShooterCcpMovementTuning>() == null)
+                handPose.gameObject.AddComponent<ShooterCcpMovementTuning>();
         }
     }
 }

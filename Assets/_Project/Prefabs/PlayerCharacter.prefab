@@ -715,6 +715,54 @@ PrefabInstance:
       propertyPath: lookingDirectionParameters.changeLookingDirection
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: planarMovementParameters.baseSpeedLimit
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: planarMovementParameters.boostSpeedLimit
+      value: 7.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: planarMovementParameters.stableGroundedAcceleration
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: planarMovementParameters.stableGroundedDeceleration
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.jumpApexHeight
+      value: 0.8888889
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.jumpApexDuration
+      value: 0.4444444
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.cancelJumpOnRelease
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.preGroundedJumpTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.postGroundedJumpTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.availableNotGroundedJumps
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.jumpSpeed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: verticalMovementParameters.gravity
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063291, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: movementReferenceParameters.externalReference
       value: 
@@ -769,6 +817,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 9922334455667788994}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7733445566778899005}
     - targetCorrespondingSourceObject: {fileID: 6289874670575315051, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7556114334140695970}
@@ -808,8 +859,8 @@ MonoBehaviour:
   locomotionSmoothingStop: 5
   movingStartThreshold: 0.18
   movingStopThreshold: 0.05
-  jumpBlendTime: 0.3
-  jumpPlayRate: 0.85
+  jumpBlendTime: 0.15
+  jumpPlayRate: 1
   stopBlendTime: 0.35
   stopPlayRate: 0.75
   leanBlendTime: 0.35
@@ -1008,9 +1059,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8a9b0c1d2e34156a7b8c9d0e1f23457, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterBalanceTuningPanel
-  handPoseState: {fileID: 7722334455667788992}
-  toggleKey: 608
+  ccpMovement: {fileID: 7733445566778899005}
   visible: 0
+--- !u!114 &7733445566778899005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c0d8bd58dbaeb2478cba299081b19db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterCcpMovementTuning
+  baseSpeedLimit: 5
+  boostSpeedLimit: 7.5
+  stableGroundedAcceleration: 8
+  stableGroundedDeceleration: 10
+  jumpApexHeight: 0.8888889
+  jumpApexDuration: 0.4444444
 --- !u!114 &8812334455667788993
 MonoBehaviour:
   m_ObjectHideFlags: 0
