@@ -1205,8 +1205,13 @@ namespace Shooter.Project.Editor
             if (tuning == null)
                 tuning = playerRoot.AddComponent(tuningType);
 
+            var ladderTuning = playerRoot.GetComponent<ShooterLadderApproachTuning>();
+            if (ladderTuning == null)
+                ladderTuning = playerRoot.AddComponent<ShooterLadderApproachTuning>();
+
             var so = new SerializedObject(tuning);
             so.FindProperty("ccpMovement").objectReferenceValue = playerRoot.GetComponent<ShooterCcpMovementTuning>();
+            so.FindProperty("ladderApproach").objectReferenceValue = ladderTuning;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

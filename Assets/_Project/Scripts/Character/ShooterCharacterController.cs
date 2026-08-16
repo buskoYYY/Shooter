@@ -317,7 +317,7 @@ namespace Shooter.Project.Character
 
             UpdateLook();
 
-            if (IsOnLadder() || ShouldDeferFpsLocomotion())
+            if (IsInLadderState() || ShouldDeferFpsLocomotion())
             {
                 SyncMouseInputOnly();
                 return;
@@ -330,8 +330,13 @@ namespace Shooter.Project.Character
         bool ShouldDeferFpsLocomotion() =>
             _ladderBridge != null && _ladderBridge.ShouldBlockFpsPlayables;
 
-        bool IsOnLadder() =>
+        bool IsInLadderState() =>
             _stateController != null && _stateController.CurrentState is LadderClimbing;
+
+        bool IsMountedOnLadder() =>
+            IsInLadderState() &&
+            _stateController.CurrentState is LadderClimbing ladder &&
+            !ladder.IsApproachingEntry;
 
         void ConfigureCcpForFps()
         {
@@ -362,7 +367,7 @@ namespace Shooter.Project.Character
             _mouseInput.y -= lookDelta.y;
             _mouseInput.y = Mathf.Clamp(_mouseInput.y, -pitchClamp, pitchClamp);
 
-            if (IsOnLadder())
+            if (IsMountedOnLadder())
                 return;
 
             _mouseInput.x += lookDelta.x;

@@ -74,6 +74,39 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         [SerializeField]
         protected string idleStateName = "Idle";
+
+        [Header("Smooth entry")]
+
+        [SerializeField]
+        protected bool useSmoothApproach = true;
+
+        [SerializeField]
+        protected float approachDuration = 0.4f;
+
+        [SerializeField]
+        protected float approachSnapDistance = 0.05f;
+
+        public const float DefaultApproachDuration = 0.4f;
+        public const float DefaultApproachSnapDistance = 0.05f;
+
+        public float ApproachDuration
+        {
+            get => approachDuration;
+            set => approachDuration = Mathf.Clamp(value, 0.05f, 2f);
+        }
+
+        public float ApproachSnapDistance
+        {
+            get => approachSnapDistance;
+            set => approachSnapDistance = Mathf.Clamp(value, 0.01f, 0.5f);
+        }
+
+        public void ResetApproachDefaults()
+        {
+            useSmoothApproach = true;
+            approachDuration = DefaultApproachDuration;
+            approachSnapDistance = DefaultApproachSnapDistance;
+        }
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -94,7 +127,11 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected bool forceExit = false;
         protected AnimatorStateInfo animatorStateInfo;
         protected bool isBottom = false;
+        protected bool approachingEntry = false;
+        protected float approachElapsed = 0f;
+        protected Vector3 approachStart = Vector3.zero;
 
+        public bool IsApproachingEntry => approachingEntry;
 
         public override void CheckExitTransition()
         {
@@ -168,18 +205,31 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             CharacterActor.Velocity = Vector3.zero;
             CharacterActor.IsKinematic = true;
-            CharacterActor.alwaysNotGrounded = true;
 
             currentClimbingAnimation = isBottom ? 0 : currentLadder.ClimbingAnimations;
 
             targetPosition = isBottom ? currentLadder.BottomReference.position : currentLadder.TopReference.position;
-
-            //CharacterActor.SetYaw(currentLadder.FacingDirectionVector);
             CharacterActor.Forward = currentLadder.FacingDirectionVector;
 
-            CharacterActor.Position = targetPosition;
+            float distance = Vector3.Distance(CharacterActor.Position, targetPosition);
+            if (useSmoothApproach && distance > approachSnapDistance)
+            {
+                approachingEntry = true;
+                approachElapsed = 0f;
+                approachStart = CharacterActor.Position;
+                return;
+            }
 
-            // Root motion
+            CompleteLadderEntry();
+        }
+
+        void CompleteLadderEntry()
+        {
+            approachingEntry = false;
+            CharacterActor.alwaysNotGrounded = true;
+            CharacterActor.Position = targetPosition;
+            CharacterActor.Forward = currentLadder.FacingDirectionVector;
+
             CharacterActor.SetUpRootMotion(
                 true,
                 PhysicsActor.RootMotionVelocityType.SetVelocity,
@@ -194,6 +244,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void ExitBehaviour(float dt, CharacterState toState)
         {
+            approachingEntry = false;
             CharacterActor.Up = Vector3.up;
             forceExit = false;
             CharacterActor.IsKinematic = false;
@@ -230,6 +281,26 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void UpdateBehaviour(float dt)
         {
+            if (approachingEntry)
+            {
+                approachElapsed += dt;
+                float duration = Mathf.Max(0.01f, approachDuration);
+                float t = Mathf.Clamp01(approachElapsed / duration);
+                t = t * t * (3f - 2f * t);
+
+                CharacterActor.Position = Vector3.Lerp(approachStart, targetPosition, t);
+                CharacterActor.Forward = Vector3.Slerp(
+                    CharacterActor.Forward,
+                    currentLadder.FacingDirectionVector,
+                    t
+                );
+
+                if (t >= 1f || Vector3.Distance(CharacterActor.Position, targetPosition) <= approachSnapDistance)
+                    CompleteLadderEntry();
+
+                return;
+            }
+
             animatorStateInfo = CharacterActor.Animator.GetCurrentAnimatorStateInfo(0);
             switch (state)
             {

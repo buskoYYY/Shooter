@@ -55,7 +55,9 @@ namespace Shooter.Project.Character
         Coroutine _ladderSetupCoroutine;
 
         bool IsOnLadder =>
-            _stateController != null && _stateController.CurrentState is LadderClimbing;
+            _stateController != null &&
+            _stateController.CurrentState is LadderClimbing ladder &&
+            !ladder.IsApproachingEntry;
 
         Animator CharacterAnimator => _characterActor != null ? _characterActor.Animator : _animator;
 

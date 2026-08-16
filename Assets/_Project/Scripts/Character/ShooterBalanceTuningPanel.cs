@@ -13,9 +13,10 @@ namespace Shooter.Project.Character
         // [SerializeField] ShooterHandPoseState handPoseState;
         // [SerializeField] ShooterCharacterController locomotion;
         [SerializeField] ShooterCcpMovementTuning ccpMovement;
+        [SerializeField] ShooterLadderApproachTuning ladderApproach;
         [SerializeField] bool visible;
 
-        Rect _windowRect = new Rect(20f, 20f, 360f, 260f);
+        Rect _windowRect = new Rect(20f, 20f, 360f, 340f);
         Vector2 _scroll;
         // SwayLayerSettings _swayLayer;
 
@@ -31,6 +32,9 @@ namespace Shooter.Project.Character
 
             if (ccpMovement == null)
                 ccpMovement = GetComponent<ShooterCcpMovementTuning>();
+
+            if (ladderApproach == null)
+                ladderApproach = GetComponent<ShooterLadderApproachTuning>();
 
             // CacheSwayLayer();
         }
@@ -78,6 +82,9 @@ namespace Shooter.Project.Character
 
             DrawControllerMovementSection();
 
+            GUILayout.Space(8f);
+            DrawLadderApproachSection();
+
             // GUILayout.Space(8f);
             // DrawAnimationLocomotionSection();
             // GUILayout.Space(8f);
@@ -120,6 +127,25 @@ namespace Shooter.Project.Character
             GUILayout.Label($"Deceleration: {ccpMovement.StableGroundedDeceleration:0.0}");
             ccpMovement.StableGroundedDeceleration = GUILayout.HorizontalSlider(
                 ccpMovement.StableGroundedDeceleration, 2f, 30f);
+        }
+
+        void DrawLadderApproachSection()
+        {
+            GUILayout.Label("Ladder approach", GUI.skin.box);
+
+            if (ladderApproach == null)
+            {
+                GUILayout.Label("ShooterLadderApproachTuning not found.");
+                return;
+            }
+
+            GUILayout.Label($"Approach duration: {ladderApproach.ApproachDuration:0.00} s");
+            ladderApproach.ApproachDuration = GUILayout.HorizontalSlider(
+                ladderApproach.ApproachDuration, 0.1f, 1.5f);
+
+            GUILayout.Label($"Snap distance: {ladderApproach.ApproachSnapDistance:0.00} m");
+            ladderApproach.ApproachSnapDistance = GUILayout.HorizontalSlider(
+                ladderApproach.ApproachSnapDistance, 0.01f, 0.25f);
         }
 
         /*
@@ -313,6 +339,7 @@ namespace Shooter.Project.Character
         void ResetAllDefaults()
         {
             ccpMovement?.ResetDefaults();
+            ladderApproach?.ResetDefaults();
             // locomotion?.ResetMotionDefaults();
             // handPoseState?.ResetTransitionBlendDefaults();
             // ResetSwayDefaults();
@@ -374,6 +401,9 @@ namespace Shooter.Project.Character
 
             if (handPose != null && handPose.GetComponent<ShooterCcpMovementTuning>() == null)
                 handPose.gameObject.AddComponent<ShooterCcpMovementTuning>();
+
+            if (handPose != null && handPose.GetComponent<ShooterLadderApproachTuning>() == null)
+                handPose.gameObject.AddComponent<ShooterLadderApproachTuning>();
         }
     }
 }

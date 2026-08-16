@@ -820,6 +820,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7733445566778899005}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6644556677889900112}
     - targetCorrespondingSourceObject: {fileID: 6289874670575315051, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7556114334140695970}
@@ -1060,7 +1063,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterBalanceTuningPanel
   ccpMovement: {fileID: 7733445566778899005}
+  ladderApproach: {fileID: 6644556677889900112}
   visible: 0
+--- !u!114 &6644556677889900112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2b3c4d5e6f7489012345678abcdef01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterLadderApproachTuning
+  approachDuration: 0.4
+  approachSnapDistance: 0.05
 --- !u!114 &7733445566778899005
 MonoBehaviour:
   m_ObjectHideFlags: 0

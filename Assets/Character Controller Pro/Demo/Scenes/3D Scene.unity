@@ -6675,6 +6675,9 @@ MonoBehaviour:
   entryStateName: Entry
   exitStateName: Exit
   idleStateName: Idle
+  useSmoothApproach: 1
+  approachDuration: 0.4
+  approachSnapDistance: 0.05
 --- !u!114 &1257029329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9270,6 +9273,10 @@ PrefabInstance:
       value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 5692461112932620692, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: approachDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5692461112932620692, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: overrideAnimatorController
       value: 1
       objectReference: {fileID: 0}
@@ -9280,6 +9287,10 @@ PrefabInstance:
     - target: {fileID: 7560834919083424682, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7733445566778899005, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: stableGroundedAcceleration
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8221746002412247961, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_Enabled
