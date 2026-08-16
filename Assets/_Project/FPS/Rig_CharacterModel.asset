@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c9c04639ae548bdb0a8e927492d029d, type: 3}
   m_Name: Rig_CharacterModel
   m_EditorClassIdentifier: KAnimationCore.Runtime::KINEMATION.Shared.KAnimationCore.Runtime.Rig.KRig
-  targetAnimator: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
+  targetAnimator: {fileID: 9100000, guid: c4e5f6a7b8d94321a0f1e2d3c4b5a697, type: 2}
   rigHierarchy:
   - name: root
     index: 0

@@ -399,6 +399,10 @@ namespace Shooter.Project.Character
 
             if (_handPoseState != null && _handPoseState.IsUnarmed)
                 _animator.SetFloat(FullBodyWeightHash, 1f);
+            else if (_characterActor != null && !_characterActor.IsGrounded)
+                _animator.SetFloat(FullBodyWeightHash, 1f);
+            else if (_handPoseState != null && !_handPoseState.IsUnarmed)
+                _animator.SetFloat(FullBodyWeightHash, 0f);
 
             float playablesWeight = 1f - _animator.GetFloat(FullBodyWeightHash);
             _userInput.SetValue(FPSANames.PlayablesWeight, playablesWeight);

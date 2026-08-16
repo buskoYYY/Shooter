@@ -706,7 +706,7 @@ PrefabInstance:
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: runtimeAnimatorController
       value: 
-      objectReference: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
+      objectReference: {fileID: 9100000, guid: c4e5f6a7b8d94321a0f1e2d3c4b5a697, type: 2}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: overrideAnimatorController
       value: 0
@@ -1011,7 +1011,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterLadderFpsBridge
   fpsCharacterRoot: {fileID: 8937905704391999758}
-  locomotionController: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
+  locomotionController: {fileID: 9100000, guid: c4e5f6a7b8d94321a0f1e2d3c4b5a697, type: 2}
   fpsAnimatorProfile: {fileID: 11400000, guid: 4a142f9f52fc91f4c84fd23af0c5675c, type: 2}
 --- !u!114 &8822334455667788991
 MonoBehaviour:
@@ -1177,7 +1177,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 70b165214a68c65428af65a49a82895b, type: 2}
+      objectReference: {fileID: 9100000, guid: c4e5f6a7b8d94321a0f1e2d3c4b5a697, type: 2}
     - target: {fileID: 5866666021909216657, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       propertyPath: m_UpdateMode
       value: 1

@@ -46,6 +46,9 @@ namespace Shooter.Project.Editor
         const string HumanoidControllerPath =
             "Assets/Demo/Animations/Locomotion/FPSAnimator_Humanoid.controller";
 
+        const string ProjectHumanoidControllerPath =
+            FpsFolder + "/FPSAnimator_Humanoid.controller";
+
         const string UpperBodyMaskPath =
             "Assets/Demo/Animations/Masks/UpperBody_Humanoid.mask";
 
@@ -224,13 +227,13 @@ namespace Shooter.Project.Editor
                 return false;
 
             var inputConfig = AssetDatabase.LoadAssetAtPath<UserInputConfig>(InputConfigPath);
-            var animatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(HumanoidControllerPath);
+            var animatorController = ShooterAnimatorJumpSetup.EnsureProjectHumanoidController();
             var upperBodyMask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
 
             if (inputConfig == null || animatorController == null || upperBodyMask == null)
             {
-                error = "InputConfig, FPSAnimator_Humanoid controller, or UpperBody_Humanoid mask not found. Import FPS demo (Phase 0).";
+                error = "InputConfig, project FPSAnimator_Humanoid controller, or UpperBody_Humanoid mask not found. Run Shooter → Phase 2 → Add Humanoid Jump Animation Layer.";
                 return false;
             }
 
@@ -1070,7 +1073,7 @@ namespace Shooter.Project.Editor
             so.FindProperty("equipClip").objectReferenceValue = equipClip;
             so.FindProperty("unequipClip").objectReferenceValue = unequipClip;
             so.FindProperty("armedLocomotionController").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(HumanoidControllerPath);
+                ShooterAnimatorJumpSetup.EnsureProjectHumanoidController();
             so.FindProperty("unarmedLocomotionOverride").objectReferenceValue =
                 EnsureUnarmedLocomotionOverride();
             so.FindProperty("startUnarmed").boolValue = true;
@@ -1079,13 +1082,16 @@ namespace Shooter.Project.Editor
 
         static AnimatorOverrideController EnsureUnarmedLocomotionOverride()
         {
-            var existing = AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(UnarmedLocomotionOverridePath);
-            if (existing != null)
-                return existing;
-
-            var baseController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(HumanoidControllerPath);
+            RuntimeAnimatorController baseController = ShooterAnimatorJumpSetup.EnsureProjectHumanoidController();
             if (baseController == null)
                 return null;
+
+            var existing = AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(UnarmedLocomotionOverridePath);
+            if (existing != null && existing.runtimeAnimatorController == baseController)
+                return existing;
+
+            if (existing != null)
+                AssetDatabase.DeleteAsset(UnarmedLocomotionOverridePath);
 
             var unarmedClips = LoadUnarmedLocomotionClips();
             if (unarmedClips.Count == 0)
