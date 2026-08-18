@@ -28,6 +28,32 @@ namespace Shooter.Project.Character
         public const float DefaultStopPlayRate = 0.75f;
         public const float DefaultCrouchBlendTime = 0.3f;
         public const float DefaultCrouchPlayRate = 0.9f;
+        public const float DefaultStabilizationWeight = 0f;
+        public const float DefaultLookLayerWeightUnarmed = 0.3f;
+        public const float DefaultLookLayerWeightArmed = 1f;
+        public const float LegacyStabilizationWeight = 1f;
+        public const float LegacyLookLayerWeight = 1f;
+
+        public static bool UseLegacySlouchedPosture { get; private set; }
+
+        public static string PostureCompareLabel =>
+            UseLegacySlouchedPosture ? "Legacy (slouched)" : "Current (straight)";
+
+        public static void TogglePostureCompareMode() =>
+            UseLegacySlouchedPosture = !UseLegacySlouchedPosture;
+
+        public static void GetActivePostureWeights(bool isArmed, out float stabilizationWeight, out float lookLayerWeight)
+        {
+            if (UseLegacySlouchedPosture)
+            {
+                stabilizationWeight = LegacyStabilizationWeight;
+                lookLayerWeight = LegacyLookLayerWeight;
+                return;
+            }
+
+            stabilizationWeight = DefaultStabilizationWeight;
+            lookLayerWeight = isArmed ? DefaultLookLayerWeightArmed : DefaultLookLayerWeightUnarmed;
+        }
 
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
@@ -249,6 +275,7 @@ namespace Shooter.Project.Character
             ConfigureCcpForFps();
 
             BindJumpEvents();
+            SyncFpsLayerWeights();
         }
 
         void OnDestroy()
@@ -389,7 +416,6 @@ namespace Shooter.Project.Character
                 return;
 
             Vector2 lookDelta = _look != null ? _look.ReadValue<Vector2>() * lookSensitivity : Vector2.zero;
-            bool sprinting = _sprint != null && _sprint.IsPressed();
 
             _userInput.SetValue(FPSANames.MouseDeltaInput, new Vector4(lookDelta.x, lookDelta.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
@@ -399,14 +425,24 @@ namespace Shooter.Project.Character
             if (ShouldDeferFpsLocomotion())
                 return;
 
-            _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
-            _userInput.SetValue(LookLayerWeightProperty, sprinting ? 0.3f : 1f);
-            UpdateTurnInPlaceWeight();
-            UpdatePlayablesWeight();
+            ApplyFpsLayerWeights();
         }
 
         public void SyncFpsLayerWeights()
         {
+            ApplyFpsLayerWeights();
+        }
+
+        void ApplyFpsLayerWeights()
+        {
+            if (_userInput == null)
+                return;
+
+            bool isArmed = _handPoseState == null || !_handPoseState.IsUnarmed;
+            GetActivePostureWeights(isArmed, out float stabilizationWeight, out float lookLayerWeight);
+            _userInput.SetValue(FPSANames.StabilizationWeight, stabilizationWeight);
+            _userInput.SetValue(LookLayerWeightProperty, lookLayerWeight);
+            UpdateTurnInPlaceWeight();
             UpdatePlayablesWeight();
         }
 

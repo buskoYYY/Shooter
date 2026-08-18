@@ -18,10 +18,10 @@ MonoBehaviour:
     defaultValue: 1
     interpolationSpeed: 0
   - name: StabilizationWeight
-    defaultValue: 1
+    defaultValue: 0
     interpolationSpeed: 7
   - name: LookLayerWeight
-    defaultValue: 1
+    defaultValue: 0.3
     interpolationSpeed: 7
   - name: TurnInPlaceWeight
     defaultValue: 1

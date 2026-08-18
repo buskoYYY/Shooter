@@ -14,6 +14,7 @@ namespace Shooter.Project.Character
         // [SerializeField] ShooterCharacterController locomotion;
         [SerializeField] ShooterCcpMovementTuning ccpMovement;
         [SerializeField] ShooterLadderApproachTuning ladderApproach;
+        [SerializeField] ShooterCharacterController characterController;
         [SerializeField] bool visible;
 
         Rect _windowRect = new Rect(20f, 20f, 360f, 340f);
@@ -36,6 +37,9 @@ namespace Shooter.Project.Character
             if (ladderApproach == null)
                 ladderApproach = GetComponent<ShooterLadderApproachTuning>();
 
+            if (characterController == null)
+                characterController = GetComponent<ShooterCharacterController>();
+
             // CacheSwayLayer();
         }
 
@@ -49,6 +53,12 @@ namespace Shooter.Project.Character
 
         void Update()
         {
+            if (WasF9PressedThisFrame())
+            {
+                ShooterCharacterController.TogglePostureCompareMode();
+                characterController?.SyncFpsLayerWeights();
+            }
+
             if (WasF8PressedThisFrame())
                 SetVisible(!visible);
         }
@@ -71,6 +81,7 @@ namespace Shooter.Project.Character
         void DrawClosedHint()
         {
             GUI.Box(new Rect(8f, 8f, 180f, 22f), "F8 — balance tuning");
+            GUI.Box(new Rect(8f, 34f, 320f, 22f), $"F9 — posture: {ShooterCharacterController.PostureCompareLabel}");
         }
 
         void DrawWindow(int id)
@@ -78,6 +89,7 @@ namespace Shooter.Project.Character
             _scroll = GUILayout.BeginScrollView(_scroll);
 
             GUILayout.Label("F8 — show/hide this panel");
+            GUILayout.Label($"F9 — posture A/B: {ShooterCharacterController.PostureCompareLabel}");
             GUILayout.Space(6f);
 
             DrawControllerMovementSection();
@@ -345,9 +357,13 @@ namespace Shooter.Project.Character
             // ResetSwayDefaults();
         }
 
-        static bool WasF8PressedThisFrame()
+        static bool WasF8PressedThisFrame() => WasKeyPressedThisFrame(Key.F8);
+
+        static bool WasF9PressedThisFrame() => WasKeyPressedThisFrame(Key.F9);
+
+        static bool WasKeyPressedThisFrame(Key key)
         {
-            if (Keyboard.current != null && Keyboard.current.f8Key.wasPressedThisFrame)
+            if (Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame)
                 return true;
 
             for (int i = 0; i < InputSystem.devices.Count; i++)
@@ -355,7 +371,7 @@ namespace Shooter.Project.Character
                 if (InputSystem.devices[i] is not Keyboard keyboard)
                     continue;
 
-                if (keyboard.f8Key.wasPressedThisFrame)
+                if (keyboard[key].wasPressedThisFrame)
                     return true;
             }
 

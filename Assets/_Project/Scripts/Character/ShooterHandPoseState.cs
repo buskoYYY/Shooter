@@ -41,6 +41,7 @@ namespace Shooter.Project.Character
         FPSPlayablesController _playablesController;
         PoseSamplerLayerSettings _poseSampler;
         Animator _animator;
+        ShooterCharacterController _characterController;
         InputActionMap _playerMap;
         InputAction _toggleHandPose;
         bool _isUnarmed;
@@ -77,6 +78,7 @@ namespace Shooter.Project.Character
             CachePoseSampler();
             BindToggleAction();
             EnsureBalanceTuningPanel();
+            _characterController = GetComponent<ShooterCharacterController>();
         }
 
         void OnEnable()
@@ -166,6 +168,7 @@ namespace Shooter.Project.Character
             _isUnarmed = unarmed;
 
             ApplyLocomotionController(unarmed);
+            _characterController?.SyncFpsLayerWeights();
 
             if (instant)
             {
@@ -212,6 +215,8 @@ namespace Shooter.Project.Character
 
             ClearSlotAnimations();
             ForceOverlayPoseFullWeight();
+
+            _characterController?.SyncFpsLayerWeights();
 
             _isTransitioning = false;
             _transitionCoroutine = null;

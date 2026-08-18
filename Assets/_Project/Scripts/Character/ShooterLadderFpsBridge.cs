@@ -456,8 +456,13 @@ namespace Shooter.Project.Character
             if (_userInput == null)
                 return;
 
-            _userInput.SetValue(FPSANames.StabilizationWeight, 1f);
-            _userInput.SetValue(LookLayerWeightProperty, 1f);
+            bool isArmed = _handPoseState == null || !_handPoseState.IsUnarmed;
+            ShooterCharacterController.GetActivePostureWeights(
+                isArmed,
+                out float stabilizationWeight,
+                out float lookLayerWeight);
+            _userInput.SetValue(FPSANames.StabilizationWeight, stabilizationWeight);
+            _userInput.SetValue(LookLayerWeightProperty, lookLayerWeight);
         }
 
         void RestorePlayablesWeight()
