@@ -150,7 +150,7 @@ namespace Shooter.Project.Editor
             AnimatorState start = stateMachine.AddState("JumpStart", new Vector3(300f, 120f, 0f));
             start.motion = jumpStart;
             start.speed = 1.3f;
-            start.cycleOffset = 0.5f;
+            start.cycleOffset = 0f;
 
             AnimatorState loop = stateMachine.AddState("JumpLoop", new Vector3(300f, 240f, 0f));
             loop.motion = jumpLoop;
@@ -163,7 +163,7 @@ namespace Shooter.Project.Editor
 
             AnimatorStateTransition emptyToStart = empty.AddTransition(start);
             emptyToStart.hasExitTime = false;
-            emptyToStart.duration = 0.1f;
+            emptyToStart.duration = 0f;
             emptyToStart.AddCondition(AnimatorConditionMode.If, 0f, "InAir");
 
             AnimatorStateTransition startToLoop = start.AddTransition(loop);

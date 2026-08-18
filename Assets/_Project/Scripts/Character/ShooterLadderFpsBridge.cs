@@ -462,7 +462,14 @@ namespace Shooter.Project.Character
 
         void RestorePlayablesWeight()
         {
-            _userInput?.SetValue(FPSANames.PlayablesWeight, 1f);
+            if (_shooterController != null)
+            {
+                _shooterController.SyncFpsLayerWeights();
+                return;
+            }
+
+            float weight = _handPoseState != null && _handPoseState.IsUnarmed ? 0f : 1f;
+            _userInput?.SetValue(FPSANames.PlayablesWeight, weight);
         }
 
         void RestoreFpsInputWeights()
@@ -577,10 +584,10 @@ namespace Shooter.Project.Character
             }
 
             WarmUpAnimatorGraph();
+            _handPoseState?.RefreshLocomotionAfterExternalSwap();
             _handPoseState?.FinalizePoseAfterFpsRestore();
             _headHide?.RefreshHeadHide();
-            RestoreFpsLookWeights();
-            RestorePlayablesWeight();
+            RestoreFpsInputWeights();
             _cameraApply?.ForceRefresh();
             return _fpsAnimator != null && _fpsAnimator.HasLinkedProfile;
         }

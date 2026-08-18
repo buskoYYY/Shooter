@@ -21,6 +21,11 @@ namespace Shooter.Project.Character
         const float DefaultTransitionBlend = 0.45f;
         const float DefaultOverlayBlendIn = 0.5f;
         const float DefaultOverlayBlendOut = 0.25f;
+        const string TurnInPlaceLayerName = "TurnInPlace";
+
+        static readonly int TurnLeftHash = Animator.StringToHash("TurnLeft");
+        static readonly int TurnRightHash = Animator.StringToHash("TurnRight");
+        static readonly int MovingHash = Animator.StringToHash("Moving");
 
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
@@ -42,6 +47,7 @@ namespace Shooter.Project.Character
         bool _toggleRequested;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
+        int _turnInPlaceLayerIndex = -1;
 
         static FieldInfo OverlayPoseMixerField;
         static FieldInfo OverlayActiveIndexField;
@@ -50,6 +56,7 @@ namespace Shooter.Project.Character
 
         public bool IsUnarmed => _isUnarmed;
         public bool IsTransitioning => _isTransitioning;
+        public float TurnInPlaceWeight => EvaluateTurnInPlaceWeight();
         public FPSAnimationAsset EquipClip => equipClip;
         public FPSAnimationAsset UnequipClip => unequipClip;
         public FPSAnimationAsset ArmedOverlayPose => armedOverlayPose;
@@ -101,6 +108,9 @@ namespace Shooter.Project.Character
 
         void LateUpdate()
         {
+            if (_animator != null && _isUnarmed && !_isTransitioning)
+                ApplyFullBodyWeightForCurrentState();
+
             if (!_toggleRequested)
                 return;
 
@@ -111,6 +121,15 @@ namespace Shooter.Project.Character
         public void SetUnarmed() => SetHandPose(true);
 
         public void SetArmed() => SetHandPose(false);
+
+        /// <summary>
+        /// Re-applies locomotion controller and pose sampler after an external animator swap (e.g. ladder exit).
+        /// </summary>
+        public void RefreshLocomotionAfterExternalSwap()
+        {
+            ApplyLocomotionController(_isUnarmed);
+            SyncPoseSamplerSettings(_isUnarmed ? unarmedOverlayPose : armedOverlayPose);
+        }
 
         /// <summary>
         /// Sync profile pose sampler before FPS layers link (e.g. ladder exit).
@@ -208,12 +227,54 @@ namespace Shooter.Project.Character
                 : armedLocomotionController;
 
             if (target == null || _animator.runtimeAnimatorController == target)
+            {
+                ApplyFullBodyWeightForCurrentState();
                 return;
+            }
 
             _animator.runtimeAnimatorController = target;
+            ApplyFullBodyWeightForCurrentState();
+        }
 
-            if (!unarmed)
-                _animator.SetFloat(Animator.StringToHash("FullBodyWeight"), 0f);
+        void ApplyFullBodyWeightForCurrentState()
+        {
+            if (_animator == null)
+                return;
+
+            _animator.SetFloat(Animator.StringToHash("FullBodyWeight"), _isUnarmed ? 1f : 0f);
+            ApplyTurnInPlaceLayerWeight();
+        }
+
+        void ApplyTurnInPlaceLayerWeight()
+        {
+            if (_animator == null)
+                return;
+
+            if (_turnInPlaceLayerIndex < 0)
+                _turnInPlaceLayerIndex = _animator.GetLayerIndex(TurnInPlaceLayerName);
+
+            if (_turnInPlaceLayerIndex < 0)
+                return;
+
+            float weight = EvaluateTurnInPlaceWeight();
+            _animator.SetLayerWeight(_turnInPlaceLayerIndex, weight);
+
+            if (weight <= 0f)
+            {
+                _animator.ResetTrigger(TurnLeftHash);
+                _animator.ResetTrigger(TurnRightHash);
+            }
+        }
+
+        float EvaluateTurnInPlaceWeight()
+        {
+            if (!_isUnarmed)
+                return 1f;
+
+            if (_animator == null)
+                return 1f;
+
+            return _animator.GetBool(MovingHash) ? 0f : 1f;
         }
 
         void ApplyOverlayBlend(FPSAnimationAsset pose, float blendInTime)

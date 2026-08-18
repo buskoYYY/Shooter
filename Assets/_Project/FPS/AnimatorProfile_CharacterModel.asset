@@ -574,7 +574,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.TurnLayer.TurnLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: TurnInPlaceWeight
+    mode: 0
+    clampMin: 0
+    source: 2
   linkDynamically: 0
   isStandalone: 1
   characterRootBone:

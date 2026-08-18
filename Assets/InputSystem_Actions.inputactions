@@ -87,15 +87,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Lean",
-                    "type": "Value",
-                    "id": "96591a0b-ac6e-49ed-9c2d-84c82cbd26da",
-                    "expectedControlType": "Axis",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
                     "name": "ToggleHandPose",
                     "type": "Button",
                     "id": "e8a4c2f1-9b3d-4e5a-8c7f-1d2e3f4a5b6c",
@@ -488,28 +479,6 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b8e4a1c2-3d5f-4a6b-9c0d-1e2f3a4b5c6d",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Lean",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "c9f5b2d3-4e6a-5b7c-0d1e-2f3a4b5c6d7e",
-                    "path": "<Keyboard>/e",
-                    "interactions": "",
-                    "processors": "Scale(factor=-1)",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Lean",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

@@ -23,6 +23,9 @@ MonoBehaviour:
   - name: LookLayerWeight
     defaultValue: 1
     interpolationSpeed: 7
+  - name: TurnInPlaceWeight
+    defaultValue: 1
+    interpolationSpeed: 0
   - name: LeanInput
     defaultValue: 0
     interpolationSpeed: 7

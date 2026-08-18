@@ -9290,7 +9290,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7733445566778899005, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: stableGroundedAcceleration
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8221746002412247961, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_Enabled

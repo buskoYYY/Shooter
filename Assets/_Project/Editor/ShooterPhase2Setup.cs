@@ -86,6 +86,12 @@ namespace Shooter.Project.Editor
                 "OK");
         }
 
+        public static void BatchCreateUnarmedLocomotionOverride()
+        {
+            EnsureUnarmedLocomotionOverride();
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Shooter/Phase 2/Setup FPS on Player Prefab")]
         public static void SetupFpsOnPlayerPrefab()
         {
@@ -718,13 +724,10 @@ namespace Shooter.Project.Editor
                 return;
 
             var so = new SerializedObject(bridge);
-            so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
-                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
             so.FindProperty("stopMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_MoveStop.asset");
             so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Crouch.asset");
-            so.FindProperty("leanAngle").floatValue = 25f;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1029,11 +1032,8 @@ namespace Shooter.Project.Editor
                 so.FindProperty("jumpMotion").objectReferenceValue = jumpMotion;
             so.FindProperty("stopMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_MoveStop.asset");
-            so.FindProperty("leanMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
-                "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Lean.asset");
             so.FindProperty("crouchMotion").objectReferenceValue = AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(
                 "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Crouch.asset");
-            so.FindProperty("leanAngle").floatValue = 25f;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

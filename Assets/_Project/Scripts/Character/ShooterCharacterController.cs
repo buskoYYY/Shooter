@@ -26,8 +26,6 @@ namespace Shooter.Project.Character
         public const float DefaultJumpPlayRate = 1f;
         public const float DefaultStopBlendTime = 0.35f;
         public const float DefaultStopPlayRate = 0.75f;
-        public const float DefaultLeanBlendTime = 0.35f;
-        public const float DefaultLeanPlayRate = 1f;
         public const float DefaultCrouchBlendTime = 0.3f;
         public const float DefaultCrouchPlayRate = 0.9f;
 
@@ -35,9 +33,7 @@ namespace Shooter.Project.Character
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] IkMotionLayerSettings jumpMotion;
         [SerializeField] IkMotionLayerSettings stopMotion;
-        [SerializeField] IkMotionLayerSettings leanMotion;
         [SerializeField] IkMotionLayerSettings crouchMotion;
-        [SerializeField] float leanAngle = 25f;
         [SerializeField] float lookSensitivity = 0.15f;
         [SerializeField] float pitchClamp = 70f;
         [Tooltip("How quickly leg blend parameters ramp up when starting to move.")]
@@ -52,8 +48,6 @@ namespace Shooter.Project.Character
         [SerializeField] float jumpPlayRate = DefaultJumpPlayRate;
         [SerializeField] float stopBlendTime = DefaultStopBlendTime;
         [SerializeField] float stopPlayRate = DefaultStopPlayRate;
-        [SerializeField] float leanBlendTime = DefaultLeanBlendTime;
-        [SerializeField] float leanPlayRate = DefaultLeanPlayRate;
         [SerializeField] float crouchBlendTime = DefaultCrouchBlendTime;
         [SerializeField] float crouchPlayRate = DefaultCrouchPlayRate;
 
@@ -70,16 +64,17 @@ namespace Shooter.Project.Character
         Vector2 _mouseInput;
         Vector2 _animatorVelocity;
         float _sprintWeight;
-        float _lastLeanInput;
         bool _wasCrouching;
         bool _wasAnimatorMoving;
         bool _playedJumpMotionSinceLand;
+        int _inAirLayerIndex = -1;
+
+        static readonly int JumpStartStateHash = Animator.StringToHash("JumpStart");
 
         public float Pitch => _mouseInput.y;
         public FPSCameraController FpsCamera => _fpsCamera;
         public IkMotionLayerSettings JumpMotion => jumpMotion;
         public IkMotionLayerSettings StopMotion => stopMotion;
-        public IkMotionLayerSettings LeanMotion => leanMotion;
         public IkMotionLayerSettings CrouchMotion => crouchMotion;
 
         public float LocomotionSmoothingStart
@@ -130,18 +125,6 @@ namespace Shooter.Project.Character
             set { stopPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
         }
 
-        public float LeanBlendTime
-        {
-            get => leanBlendTime;
-            set { leanBlendTime = Mathf.Clamp(value, 0.05f, 1f); ApplyMotionTuning(); }
-        }
-
-        public float LeanPlayRate
-        {
-            get => leanPlayRate;
-            set { leanPlayRate = Mathf.Clamp(value, 0.25f, 2f); ApplyMotionTuning(); }
-        }
-
         public float CrouchBlendTime
         {
             get => crouchBlendTime;
@@ -164,8 +147,6 @@ namespace Shooter.Project.Character
             jumpPlayRate = DefaultJumpPlayRate;
             stopBlendTime = DefaultStopBlendTime;
             stopPlayRate = DefaultStopPlayRate;
-            leanBlendTime = DefaultLeanBlendTime;
-            leanPlayRate = DefaultLeanPlayRate;
             crouchBlendTime = DefaultCrouchBlendTime;
             crouchPlayRate = DefaultCrouchPlayRate;
             ApplyMotionTuning();
@@ -175,7 +156,6 @@ namespace Shooter.Project.Character
         {
             ApplyIkMotionTuning(jumpMotion, jumpBlendTime, jumpPlayRate);
             ApplyIkMotionTuning(stopMotion, stopBlendTime, stopPlayRate);
-            ApplyIkMotionTuning(leanMotion, leanBlendTime, leanPlayRate);
             ApplyIkMotionTuning(crouchMotion, crouchBlendTime, crouchPlayRate);
         }
 
@@ -189,9 +169,9 @@ namespace Shooter.Project.Character
         InputAction _look;
         InputAction _sprint;
         InputAction _crouch;
-        InputAction _lean;
 
         const string LookLayerWeightProperty = "LookLayerWeight";
+        const string TurnInPlaceWeightProperty = "TurnInPlaceWeight";
 
         static readonly int InAirHash = Animator.StringToHash("InAir");
         static readonly int MoveXHash = Animator.StringToHash("MoveX");
@@ -232,7 +212,6 @@ namespace Shooter.Project.Character
                 _look = _playerMap.FindAction("Look", true);
                 _sprint = _playerMap.FindAction("Sprint", true);
                 _crouch = _playerMap.FindAction("Crouch", true);
-                _lean = _playerMap.FindAction("Lean", false);
             }
 
             EnsureFpsCameraApplyOnSelf();
@@ -298,16 +277,34 @@ namespace Shooter.Project.Character
         void HandleJumpPerformed()
         {
             _playedJumpMotionSinceLand = true;
+            ApplyJumpBodyAnimationImmediate();
             PlayIkMotion(jumpMotion);
         }
 
         void HandleLanded(Vector3 _)
         {
+            if (_animator != null)
+                _animator.SetBool(InAirHash, false);
+
             if (!_playedJumpMotionSinceLand)
                 return;
 
             _playedJumpMotionSinceLand = false;
             PlayIkMotion(jumpMotion);
+        }
+
+        void ApplyJumpBodyAnimationImmediate()
+        {
+            if (_animator == null)
+                return;
+
+            _animator.SetBool(InAirHash, true);
+
+            if (_inAirLayerIndex < 0)
+                _inAirLayerIndex = _animator.GetLayerIndex("InAir");
+
+            if (_inAirLayerIndex >= 0)
+                _animator.Play(JumpStartStateHash, _inAirLayerIndex, 0f);
         }
 
         void Update()
@@ -325,6 +322,17 @@ namespace Shooter.Project.Character
 
             SyncAnimatorFromCcp();
             UpdateFpsInput();
+        }
+
+        void LateUpdate()
+        {
+            if (ShooterBalanceTuningPanel.IsOpen || _userInput == null)
+                return;
+
+            if (IsInLadderState() || ShouldDeferFpsLocomotion())
+                return;
+
+            SyncFpsLayerWeights();
         }
 
         bool ShouldDeferFpsLocomotion() =>
@@ -386,15 +394,32 @@ namespace Shooter.Project.Character
             _userInput.SetValue(FPSANames.MouseDeltaInput, new Vector4(lookDelta.x, lookDelta.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MouseInput, new Vector4(_mouseInput.x, _mouseInput.y, 0f, 0f));
             _userInput.SetValue(FPSANames.MoveInput, new Vector4(_animatorVelocity.x, _animatorVelocity.y, 0f, 0f));
+            _userInput.SetValue(FPSANames.LeanInput, 0f);
 
             if (ShouldDeferFpsLocomotion())
                 return;
 
             _userInput.SetValue(FPSANames.StabilizationWeight, sprinting ? 0f : 1f);
             _userInput.SetValue(LookLayerWeightProperty, sprinting ? 0.3f : 1f);
+            UpdateTurnInPlaceWeight();
             UpdatePlayablesWeight();
+        }
 
-            UpdateLeanInput();
+        public void SyncFpsLayerWeights()
+        {
+            UpdatePlayablesWeight();
+        }
+
+        void UpdateTurnInPlaceWeight()
+        {
+            if (_userInput == null)
+                return;
+
+            float weight = _handPoseState != null
+                ? _handPoseState.TurnInPlaceWeight
+                : 1f;
+
+            _userInput.SetValue(TurnInPlaceWeightProperty, weight);
         }
 
         void UpdatePlayablesWeight()
@@ -413,22 +438,6 @@ namespace Shooter.Project.Character
             _userInput.SetValue(FPSANames.PlayablesWeight, playablesWeight);
         }
 
-        void UpdateLeanInput()
-        {
-            if (_userInput == null)
-                return;
-
-            float leanAxis = _lean != null ? _lean.ReadValue<float>() : 0f;
-            float leanValue = leanAxis * leanAngle;
-            _userInput.SetValue(FPSANames.LeanInput, leanValue);
-
-            if (Mathf.Approximately(leanValue, _lastLeanInput) || leanMotion == null || _fpsAnimator == null)
-                return;
-
-            PlayIkMotion(leanMotion);
-            _lastLeanInput = leanValue;
-        }
-
         void SyncMouseInputOnly()
         {
             if (_userInput == null)
@@ -442,7 +451,7 @@ namespace Shooter.Project.Character
             if (_animator == null || _characterActor == null)
                 return;
 
-            bool inAir = !_characterActor.IsGrounded;
+            bool inAir = _characterActor != null && !_characterActor.IsGrounded;
             Vector2 moveInput = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
             Vector2 targetVelocity = inAir ? Vector2.zero : moveInput;
 
