@@ -46,6 +46,7 @@ namespace Shooter.Project.Character
         InputAction _toggleHandPose;
         bool _isUnarmed;
         bool _toggleRequested;
+        bool _simulateToggleOnStart;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
         int _turnInPlaceLayerIndex = -1;
@@ -74,6 +75,9 @@ namespace Shooter.Project.Character
 
         void Awake()
         {
+            if (startUnarmed)
+                _simulateToggleOnStart = true;
+
             ResolveReferences();
             CachePoseSampler();
             BindToggleAction();
@@ -94,6 +98,13 @@ namespace Shooter.Project.Character
 
         void Start()
         {
+            if (_simulateToggleOnStart)
+            {
+                _simulateToggleOnStart = false;
+                SimulateToggleHandPosePress();
+                return;
+            }
+
             _isUnarmed = startUnarmed;
             ApplyLocomotionController(_isUnarmed);
             ApplyPoseInstant(startUnarmed ? unarmedOverlayPose : armedOverlayPose);
@@ -117,6 +128,14 @@ namespace Shooter.Project.Character
                 return;
 
             _toggleRequested = false;
+            SetHandPose(!_isUnarmed);
+        }
+
+        /// <summary>
+        /// Same code path as pressing ToggleHandPose (T).
+        /// </summary>
+        void SimulateToggleHandPosePress()
+        {
             SetHandPose(!_isUnarmed);
         }
 
