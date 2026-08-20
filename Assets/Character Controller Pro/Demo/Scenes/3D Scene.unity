@@ -9180,6 +9180,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3092281030074489716, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3692846861316279136, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_Enabled
       value: 0

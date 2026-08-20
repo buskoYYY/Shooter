@@ -47,6 +47,7 @@ namespace Shooter.Project.Character
         bool _isUnarmed;
         bool _toggleRequested;
         bool _simulateToggleOnStart;
+        bool _snapStartOverlay;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
         int _turnInPlaceLayerIndex = -1;
@@ -101,6 +102,7 @@ namespace Shooter.Project.Character
             if (_simulateToggleOnStart)
             {
                 _simulateToggleOnStart = false;
+                _snapStartOverlay = true;
                 SimulateToggleHandPosePress();
                 return;
             }
@@ -223,14 +225,31 @@ namespace Shooter.Project.Character
 
             // Clear leftover slot/override motion from previous toggles — avoids twisted hands stacking up.
             ClearSlotAnimations();
+
+            bool snapStart = _snapStartOverlay;
+            _snapStartOverlay = false;
+
+            if (snapStart)
+            {
+                SyncPoseSamplerSettings(targetPose);
+                ApplyPoseInstant(targetPose);
+            }
+
             yield return null;
             ClearSlotAnimations();
 
             SyncPoseSamplerSettings(targetPose);
-            float blendIn = GetTransitionBlendIn(toUnarmed);
-            ApplyOverlayBlend(targetPose, blendIn);
 
-            yield return new WaitForSeconds(Mathf.Max(blendIn, 0.05f));
+            if (snapStart)
+            {
+                ApplyPoseInstant(targetPose);
+            }
+            else
+            {
+                float blendIn = GetTransitionBlendIn(toUnarmed);
+                ApplyOverlayBlend(targetPose, blendIn);
+                yield return new WaitForSeconds(Mathf.Max(blendIn, 0.05f));
+            }
 
             ClearSlotAnimations();
             ForceOverlayPoseFullWeight();
