@@ -1,5 +1,6 @@
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
+using Lightbug.CharacterControllerPro.Implementation;
 using UnityEngine;
 
 namespace Shooter.Project.Character
@@ -7,6 +8,7 @@ namespace Shooter.Project.Character
     /// <summary>
     /// Delays the CCP jump input so JumpStart can play a short crouch "spring" before takeoff.
     /// Also used by ShooterInputHandler — do not feed Jump to CCP until the wind-up finishes.
+    /// Ladder jump-off bypasses the wind-up (Space must reach ShooterLadderFpsBridge immediately).
     /// </summary>
     [DefaultExecutionOrder(-210)]
     [DisallowMultipleComponent]
@@ -18,7 +20,9 @@ namespace Shooter.Project.Character
         [SerializeField] float crouchDelay = DefaultCrouchDelay;
 
         CharacterActor _characterActor;
+        CharacterStateController _stateController;
         ShooterCharacterController _characterController;
+        ShooterLadderFpsBridge _ladderBridge;
         NormalMovement _normalMovement;
 
         bool _windupActive;
@@ -37,7 +41,9 @@ namespace Shooter.Project.Character
         void Awake()
         {
             _characterActor = GetComponent<CharacterActor>();
+            _stateController = GetComponentInChildren<CharacterStateController>();
             _characterController = GetComponent<ShooterCharacterController>();
+            _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
             _normalMovement = GetComponentInChildren<NormalMovement>();
         }
 
@@ -46,7 +52,7 @@ namespace Shooter.Project.Character
             if (!_windupActive)
                 return;
 
-            if (_characterActor == null || !_characterActor.IsGrounded)
+            if (_characterActor == null || !_characterActor.IsGrounded || IsOnLadder())
             {
                 CancelWindup();
                 return;
@@ -67,6 +73,14 @@ namespace Shooter.Project.Character
         {
             bool rawStarted = rawPressed && !_rawJumpWasPressed;
             _rawJumpWasPressed = rawPressed;
+
+            // Ladder jump-off reads CharacterActions.jump.Started — must not be gated.
+            if (IsOnLadder())
+            {
+                if (_windupActive)
+                    CancelWindup();
+                return rawPressed;
+            }
 
             if (_fireJump)
             {
@@ -91,6 +105,14 @@ namespace Shooter.Project.Character
             return false;
         }
 
+        bool IsOnLadder()
+        {
+            if (_ladderBridge != null && _ladderBridge.IsLadderModeActive)
+                return true;
+
+            return _stateController != null && _stateController.CurrentState is LadderClimbing;
+        }
+
         void BeginWindup()
         {
             _windupActive = true;
@@ -109,7 +131,6 @@ namespace Shooter.Project.Character
 
         bool IsMovementCrouched()
         {
-            // NormalMovement keeps crouch private; approximate via body height when available.
             if (_characterActor == null)
                 return false;
 

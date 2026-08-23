@@ -17,6 +17,7 @@ namespace Shooter.Project.Character
         [SerializeField] ShooterCharacterController characterController;
         [SerializeField] ShooterFpsCameraApply fpsCamera;
         [SerializeField] ShooterJumpWindup jumpWindup;
+        [SerializeField] ShooterBodySizeTuning bodySize;
         [SerializeField] bool visible;
 
         Rect _windowRect = new Rect(20f, 20f, 380f, 420f);
@@ -47,6 +48,9 @@ namespace Shooter.Project.Character
 
             if (jumpWindup == null)
                 jumpWindup = GetComponent<ShooterJumpWindup>();
+
+            if (bodySize == null)
+                bodySize = GetComponent<ShooterBodySizeTuning>();
 
             // CacheSwayLayer();
         }
@@ -103,6 +107,9 @@ namespace Shooter.Project.Character
             DrawControllerMovementSection();
 
             GUILayout.Space(8f);
+            DrawBodySizeSection();
+
+            GUILayout.Space(8f);
             DrawJumpWindupSection();
 
             GUILayout.Space(8f);
@@ -153,6 +160,24 @@ namespace Shooter.Project.Character
             GUILayout.Label($"Deceleration: {ccpMovement.StableGroundedDeceleration:0.0}");
             ccpMovement.StableGroundedDeceleration = GUILayout.HorizontalSlider(
                 ccpMovement.StableGroundedDeceleration, 2f, 30f);
+        }
+
+        void DrawBodySizeSection()
+        {
+            GUILayout.Label("Capsule (CharacterBody)", GUI.skin.box);
+
+            if (bodySize == null)
+            {
+                GUILayout.Label("ShooterBodySizeTuning not found.");
+                return;
+            }
+
+            GUILayout.Label("Edit Width here — NOT CapsuleCollider (CCP overwrites it).");
+            GUILayout.Label($"Width (diameter): {bodySize.Width:0.00} m  → radius {bodySize.Width * 0.5f:0.00}");
+            bodySize.Width = GUILayout.HorizontalSlider(bodySize.Width, 0.4f, 1.0f);
+
+            GUILayout.Label($"Height: {bodySize.Height:0.00} m");
+            bodySize.Height = GUILayout.HorizontalSlider(bodySize.Height, 1.4f, 2.2f);
         }
 
         void DrawJumpWindupSection()
@@ -413,6 +438,7 @@ namespace Shooter.Project.Character
             ladderApproach?.ResetDefaults();
             fpsCamera?.ResetLadderCameraDefaults();
             jumpWindup?.ResetDefaults();
+            bodySize?.ResetDefaults();
             // locomotion?.ResetMotionDefaults();
             // handPoseState?.ResetTransitionBlendDefaults();
             // ResetSwayDefaults();
@@ -484,6 +510,9 @@ namespace Shooter.Project.Character
 
             if (handPose != null && handPose.GetComponent<ShooterJumpWindup>() == null)
                 handPose.gameObject.AddComponent<ShooterJumpWindup>();
+
+            if (handPose != null && handPose.GetComponent<ShooterBodySizeTuning>() == null)
+                handPose.gameObject.AddComponent<ShooterBodySizeTuning>();
         }
     }
 }

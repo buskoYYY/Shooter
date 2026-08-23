@@ -332,6 +332,10 @@ Player (Root)
 - [x] `ShooterJumpWindup` + `ShooterInputHandler` — Space → wind-up → Jump в CCP
 - [x] F8: **Crouch delay**
 
+### Капсула / стены
+
+CCP берёт размер из **CharacterBody → Width** (диаметр), не из Unity CapsuleCollider. Правка коллайдера в инспекторе сбрасывается. Дефолт демо был Width **0.5**; сейчас **0.72** через `ShooterBodySizeTuning` + F8 **Capsule**.
+
 ---
 
 ## Задача 1.2 — Камера на лестнице (без взгляда в стену и дрожи)

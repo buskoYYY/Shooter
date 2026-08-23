@@ -256,6 +256,7 @@ namespace Shooter.Project.Character
 
             EnsureFpsCameraApplyOnSelf();
             EnsureJumpWindupOnSelf();
+            EnsureBodySizeTuningOnSelf();
             GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
 
             ApplyMotionTuning();
@@ -278,6 +279,17 @@ namespace Shooter.Project.Character
                 return;
 
             gameObject.AddComponent<ShooterJumpWindup>();
+        }
+
+        void EnsureBodySizeTuningOnSelf()
+        {
+            if (GetComponent<ShooterBodySizeTuning>() != null)
+                return;
+
+            if (GetComponent<CharacterBody>() == null)
+                return;
+
+            gameObject.AddComponent<ShooterBodySizeTuning>();
         }
 
         void OnEnable()

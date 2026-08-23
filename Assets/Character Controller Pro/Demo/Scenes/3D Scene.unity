@@ -9276,6 +9276,14 @@ PrefabInstance:
       propertyPath: field of view
       value: 80
       objectReference: {fileID: 0}
+    - target: {fileID: 5497991049634893988, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: m_Height
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5497991049634893988, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: m_Center.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5692461112932620692, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: approachDuration
       value: 1
