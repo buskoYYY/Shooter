@@ -7,7 +7,7 @@ namespace Shooter.Project.Character
     /// CCP collision size comes from CharacterBody (Width / Height), not the CapsuleCollider.
     /// Editing CapsuleCollider alone is overwritten at runtime — use this instead.
     /// </summary>
-    [DefaultExecutionOrder(-250)]
+    [DefaultExecutionOrder(50)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterBody))]
     public class ShooterBodySizeTuning : MonoBehaviour
@@ -23,6 +23,7 @@ namespace Shooter.Project.Character
 
         CharacterBody _characterBody;
         CharacterActor _characterActor;
+        bool _actorReady;
 
         public float Width
         {
@@ -47,20 +48,24 @@ namespace Shooter.Project.Character
 
         void Awake()
         {
-            _characterBody = GetComponent<CharacterBody>();
-            _characterActor = GetComponent<CharacterActor>();
-            ApplyTuning();
+            CacheRefs();
+            // Only write BodySize here — CharacterActor.Rigidbody is not ready yet if we were
+            // added from another Awake (EnsureBodySizeTuningOnSelf).
+            ApplyBodySizeOnly();
         }
 
         void Start()
         {
-            // CapsuleCollider Size is synced from BodySize after CharacterActor init.
+            _actorReady = true;
             ApplyTuning();
         }
 
         void OnEnable()
         {
-            ApplyTuning();
+            if (_actorReady)
+                ApplyTuning();
+            else
+                ApplyBodySizeOnly();
         }
 
         public void ResetDefaults()
@@ -72,23 +77,36 @@ namespace Shooter.Project.Character
 
         public void ApplyTuning()
         {
-            if (_characterBody == null)
-                _characterBody = GetComponent<CharacterBody>();
+            ApplyBodySizeOnly();
 
-            if (_characterActor == null)
-                _characterActor = GetComponent<CharacterActor>();
+            if (!Application.isPlaying || !_actorReady)
+                return;
 
+            CacheRefs();
+            if (_characterActor == null || _characterActor.RigidbodyComponent == null)
+                return;
+
+            _characterActor.SetSize(new Vector2(width, height), CharacterActor.SizeReferenceType.Bottom);
+        }
+
+        void ApplyBodySizeOnly()
+        {
+            CacheRefs();
             if (_characterBody == null)
                 return;
 
             width = Mathf.Clamp(width, 0.35f, 1.2f);
             height = Mathf.Max(height, width + CharacterConstants.ColliderMinBottomOffset);
+            _characterBody.BodySize = new Vector2(width, height);
+        }
 
-            Vector2 size = new Vector2(width, height);
-            _characterBody.BodySize = size;
+        void CacheRefs()
+        {
+            if (_characterBody == null)
+                _characterBody = GetComponent<CharacterBody>();
 
-            if (_characterActor != null && Application.isPlaying)
-                _characterActor.SetSize(size, CharacterActor.SizeReferenceType.Bottom);
+            if (_characterActor == null)
+                _characterActor = GetComponent<CharacterActor>();
         }
     }
 }

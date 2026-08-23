@@ -256,7 +256,6 @@ namespace Shooter.Project.Character
 
             EnsureFpsCameraApplyOnSelf();
             EnsureJumpWindupOnSelf();
-            EnsureBodySizeTuningOnSelf();
             GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
 
             ApplyMotionTuning();
@@ -304,6 +303,8 @@ namespace Shooter.Project.Character
 
         void Start()
         {
+            EnsureBodySizeTuningOnSelf();
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
