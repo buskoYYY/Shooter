@@ -18,8 +18,8 @@ namespace Shooter.Project.Character
     [DefaultExecutionOrder(-200)]
     public class ShooterCharacterController : MonoBehaviour
     {
-        public const float DefaultLocomotionSmoothingStart = 3f;
-        public const float DefaultLocomotionSmoothingStop = 5f;
+        public const float DefaultLocomotionSmoothingStart = 7f;
+        public const float DefaultLocomotionSmoothingStop = 8f;
         public const float DefaultMovingStartThreshold = 0.18f;
         public const float DefaultMovingStopThreshold = 0.05f;
         public const float DefaultJumpBlendTime = 0.15f;

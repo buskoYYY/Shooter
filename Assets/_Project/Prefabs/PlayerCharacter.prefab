@@ -733,11 +733,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedAcceleration
-      value: 8
+      value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedDeceleration
-      value: 10
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: verticalMovementParameters.jumpApexHeight
@@ -864,8 +864,8 @@ MonoBehaviour:
   crouchMotion: {fileID: 11400000, guid: fa23e63ff38a3bb4f9f7bca500ced7ce, type: 2}
   lookSensitivity: 0.15
   pitchClamp: 70
-  locomotionSmoothingStart: 3
-  locomotionSmoothingStop: 5
+  locomotionSmoothingStart: 7
+  locomotionSmoothingStop: 8
   movingStartThreshold: 0.18
   movingStopThreshold: 0.05
   jumpBlendTime: 0.15
@@ -1097,8 +1097,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterCcpMovementTuning
   baseSpeedLimit: 5
   boostSpeedLimit: 7.5
-  stableGroundedAcceleration: 8
-  stableGroundedDeceleration: 10
+  stableGroundedAcceleration: 22
+  stableGroundedDeceleration: 24
   jumpApexHeight: 0.8888889
   jumpApexDuration: 0.4444444
 --- !u!114 &8812334455667788993

@@ -155,11 +155,12 @@ namespace Shooter.Project.Character
 
             GUILayout.Label($"Acceleration: {ccpMovement.StableGroundedAcceleration:0.0}");
             ccpMovement.StableGroundedAcceleration = GUILayout.HorizontalSlider(
-                ccpMovement.StableGroundedAcceleration, 2f, 30f);
+                ccpMovement.StableGroundedAcceleration, 8f, 50f);
 
             GUILayout.Label($"Deceleration: {ccpMovement.StableGroundedDeceleration:0.0}");
             ccpMovement.StableGroundedDeceleration = GUILayout.HorizontalSlider(
-                ccpMovement.StableGroundedDeceleration, 2f, 30f);
+                ccpMovement.StableGroundedDeceleration, 8f, 50f);
+            GUILayout.Label("Higher accel = snappier turn while walking.");
         }
 
         void DrawBodySizeSection()
