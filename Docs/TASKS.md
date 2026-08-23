@@ -135,6 +135,30 @@ CCP отвечает за **где** персонаж. FPS AF — за **как 
 
 ---
 
+### Три слоя позы (руки — не «просто Animator»)
+
+Руки в кадре складываются из **трёх систем сразу**. Если чинить только одну — проблема уезжает в другую.
+
+| Слой | Что это | Что пишет руки |
+|------|---------|----------------|
+| **1. Animator / locomotion** | `FPSAnimator_Humanoid` (+ опциональный unarmed override) | Idle / run / sprint клипы. Rifle-клипы держат руки «как с АКМ», даже если overlay уже unarmed. |
+| **2. Playables overlay** | `FPSPlayablesController` + `PlayPose` | Armed / unarmed поза, equip / unequip. Вес: `PlayablesWeight`. |
+| **3. PoseSampler + IK** | слой в Animator Profile | При init **всегда** `PlayPose(poseToSample)`. `defaultWeaponPose` — винтовочный hold. IK WeaponBone тянет руки к этой кости. |
+
+**Два разных «веса» — их нельзя путать:**
+
+| Параметр | За что отвечает | Unarmed | Armed |
+|----------|-----------------|---------|-------|
+| `LookLayerWeight` / `StabilizationWeight` | осанка, наклон торса от взгляда (F9 = старая сутулость) | Look **0.3**, Stab **0** | Look **1**, Stab **0** |
+| `FullBodyWeight` / `PlayablesWeight` | тело из locomotion vs overlay рук | FBW **1** → Playables **0** | FBW **0** → Playables **1** |
+
+`PlayablesWeight` в коде = `1 - FullBodyWeight`.  
+Rifle **sprint-клип** сам пишет `FullBodyWeight = 0` → на кадр включает overlay. Если в overlay-миксере ещё armed-поза — в первом спринте торчат винтовочные руки.
+
+F9 (`UseLegacySlouchedPosture`) — **static-флаг**. Без domain reload он переживает Stop/Play и стартует игру в сутулой «винтовочной» осанке, хотя стейт уже unarmed.
+
+---
+
 ## Задача 1 — Полное тело + FPS-движение (CCP + FPS AF + Motion Warping)
 
 **Цель:** Character Controller Pro — физика и логика движения. FPS Animation Framework — процедурное тело (поворот, IK, sway). Motion Warping — интеракты и карабканье на препятствия. Вид от первого лица. Оружие — позже.
@@ -259,13 +283,13 @@ Player (Root)
 - [x] **Character Controller Pro** — импортирован (`Assets/Character Controller Pro/`)
 - [x] **FPS Animation Framework** — импортирован (`Assets/KINEMATION/FPSAnimationFramework/`)
 - [x] **Motion Warping** — импортирован (`Assets/KINEMATION/MotionWarping/`)
-- [x] Модель персонажа — `Character_model.fbx`
+- [x] Модель персонажа — `Character_model.fbx` (Humanoid)
 - [x] **ShooterInputHandler** + Editor setup (`Assets/_Project/Scripts/`, `Assets/_Project/Editor/`)
-- [x] FPS AF Demo package скачан в `Assets/_Project/Downloads/`
-- [ ] Demo Content FPS AF — **импортировать в Unity** (Phase 0 menu)
-- [ ] Префаб `PlayerCharacter` — **создать через Run Full Setup**
-- [ ] Тестовая сцена `PlayerTest` — **создать через Run Full Setup**
-- [ ] Play Mode тест движения — **не проверен**
+- [x] Префаб `PlayerCharacter`, сцена `PlayerTest`
+- [x] **ShooterCharacterController** — мост CCP ↔ FPS AF
+- [x] **ShooterHandPoseState** — T armed/unarmed; старт unarmed без рывка рук (см. Задачу 1.1)
+- [x] **ShooterLadderFpsBridge** — лестницы
+- [x] Play Mode: WASD, мышь, бег, присед, прыжок, первый спринт без вспышки винтовки
 
 ### Документация ассетов
 
@@ -282,6 +306,9 @@ Player (Root)
 3. **Root motion конфликт** — и CCP LadderClimbing, и Motion Warping используют root motion. Важно не включать оба одновременно.
 4. **Retarget анимаций** — demo FPS AF использует Mixamo-скелет; `Character_model` может иметь другую иерархию костей. Wizard поможет, но анимации могут потребовать retarget.
 5. **Execution Order** — CCP (FixedUpdate) → Animator → FPS AF layers → Motion Warping (LateUpdate).
+6. **KINEMATION из коробки — armed.** Unarmed у нас не отдельный режим пакета, а переключение поверх винтовки (`ShooterHandPoseState`). Чинить «только старт» или «только спринт» по отдельности нельзя — это один mixer.
+7. **`[DefaultExecutionOrder]` на скрипте Unity игнорирует**, если в `.meta` другой `executionOrder`. У `ShooterHandPoseState` в meta долго стояло **0**, поэтому FPS init (`ShooterCharacterController` = **-200**) всегда успевал поднять armed overlay до нашего `Start`.
+8. **Не выключать `Animator.enabled`**, чтобы «спрятать» руки. `FPSAnimator.Update` при обратном включении вызывает `RebuildPlayables()` → PoseSampler снова `PlayPose` → вспышка рук. `animator.speed = 0` PlayableGraph не останавливает. Прятать меши — мигание камеры (кадр как до Play).
 
 ### Следующая задача (запланировано)
 
@@ -289,4 +316,70 @@ Player (Root)
 
 ---
 
-*Последнее обновление: 6 августа 2026 — Фаза 0–1 (код + setup menu)*
+## Задача 1.2 — Камера на лестнице (без взгляда в стену и дрожи)
+
+**Цель:** вход на лестницу не дёргает камеру в стену. Во время лазания камера не трясётся от анимации головы.
+
+### Что нужно сделать
+
+- [x] Плавно доворачивать камеру к лестнице, без мгновенного pitch/yaw snap
+- [x] Смотреть чуть вверх по перекладинам, а не в упор в стену
+- [x] Отвязать камеру от кости головы на время climb — позиция от капсулы, с демпфом
+- [x] После слезания вернуть камеру к голове без резкого скачка
+
+### Что уже сделано
+
+- [x] `ShooterFpsCameraApply` — ladder-камера в голове (не на капсуле); yaw мгновенный; оффсет вперёд убран (из‑за него была видна куртка)
+- [x] `ShooterFpsHeadHide` — на лестнице прячет `Jacket1` / `Backpack2`, иначе entry-анимация показывает грудь
+- [x] Плавный взгляд в стену: approach крутит yaw от текущего forward (больше не snap на Interact); pitch blend ~0.4 с
+- [x] `ShooterCharacterController` — pitch к лестнице blend’ится; мышь вверх/вниз по-прежнему работает; yaw на лестнице не конфликтует с approach
+- [x] `ShooterLadderFpsBridge` — больше не сбрасывает pitch в 0 и не форсит камеру в момент входа
+
+Код: `Assets/_Project/Scripts/Character/ShooterFpsCameraApply.cs`.
+
+---
+
+## Задача 1.1 — Unarmed как визуальный старт (без ломания спринта)
+
+**Цель:** игра начинается с опущенными руками, без анимации «снял винтовку». Первый спринт / прыжок / атака не должны вспыхивать armed-позой.
+
+**Почему это было сложно:** пакет стартует как **armed** (overlay `PlayablesWeight = 1`, `FullBodyWeight = 0`, PoseSampler `PlayPose`, `defaultWeaponPose` = rifle hold). Настоящий **T** чинит спринт, потому что кладёт unarmed-позу в overlay-mixer и делает `ForceOverlayPoseFullWeight`. Цена — на старте виден blend/рывок рук.
+
+### Что нужно сделать
+
+- [x] Переключение armed / unarmed по **T** (`ShooterHandPoseState`)
+- [x] Старт визуально unarmed, без unequip-анимации
+- [x] Первый спринт без винтовочных рук (тот же resync, что у T)
+- [x] Не ломать прыжок, атаку, look/осанку
+- [ ] На префабе по желанию прописать `unarmedLocomotionOverride` — сейчас поле часто пустое, `ApplyLocomotionController` no-op; не трогать, пока спринт ок
+
+### Что уже сделано
+
+- [x] `ShooterHandPoseState` — overlay, equip/unequip, locomotion swap, TurnInPlace
+- [x] `startUnarmed` на префабе
+- [x] Старт: внутренне как нажатие **T** (`SimulateToggleHandPosePress`), но overlay **snap** (`_snapStartOverlay`), без blend ~0.45 с
+- [x] Look: unarmed 0.3 / armed 1.0; Stabilization 0; F9 сбрасывается (не залипает между Play)
+- [x] `PlayablesWeight = 1 - FullBodyWeight`; в unarmed скрипт держит FBW = 1, в прыжке тоже 1
+
+### Проблемы, с которыми столкнулись, и как решили
+
+Круг был один: **чиним старт unarmed → в первом спринте торчат руки; чиним спринт фейковым T → на старте рывок/unequip.** Стопка патчей (FBW, override, freeze Animator, прятать меши) ломала ноги/камеру/атаку. Рабочая база — фейковый T; последняя правка только убрала **видимый blend**.
+
+| Симптом | Почему так | Что не сработало | Что сработало |
+|---------|------------|------------------|---------------|
+| Спавн как armed, потом «снял оружие» | `ShooterCharacterController.Awake` (−200) вызывает `FPSAnimator.Initialize()` → PoseSampler `PlayPose`. `HandPose.Start` (meta order **0**) потом имитирует **T** с blend 0.45 с | Ставить `_isUnarmed` в Awake и вызывать `SetHandPose(true)` — early-out, resync mixer не происходит | Оставить внутренний путь **T** (`_isUnarmed` сначала false), не делать early-out |
+| Рывок рук в начале | `PlayPose(unarmed overlay)` с `blendInTime` 0.45–0.5 с: mixer едет из rifle idle в руки вниз. Клип overlay — `Unarmed_Idle`, не unequip; выглядит как убирание оружия | `animator.enabled = false` на 2 с; `speed = 0`; прятать рендереры; `Play("Standing")`; нулить PlayablesWeight | Тот же coroutine, что у T (`ClearSlot` → кадр → `ClearSlot` → snap → `ForceOverlayPoseFullWeight`), но **без** `ApplyOverlayBlend`. Флаг `_snapStartOverlay` |
+| Первый спринт — руки «как с АКМ», второй раз нормально | Sprint-клип пишет `FullBodyWeight = 0` → `PlayablesWeight = 1`. Overlay включается. Если mixer ещё с init-позой armed — вспышка. После настоящего T в mixer уже unarmed | Жёстко `PlayablesWeight = 0` в unarmed (ломает T); смена locomotion override на префабе (носки при атаке); skip fake T | Не пропускать resync T. Snap на старте **после** тех же `ClearSlot` + `ForceOverlay`, что и у клавиши T |
+| Поза «как F9» на старте / в конце бега | F9 = `LookLayerWeight`/`StabilizationWeight` = 1 (static). `stopMotion` — IK на WeaponBone при остановке | Крутить offset камеры (`ShooterFpsCameraApply`) — на armed-кадр не влияет | Look 0.3 unarmed / 1 armed; Stab 0; в unarmed не запускать `stopMotion`; сбрасывать F9 при Play |
+| Руки на мгновение после включения Animator | `FPSAnimator.Update`: animator был выкл → вкл → **`RebuildPlayables()`** → PoseSampler `Initialize` → снова `PlayPose` с blend. Graph живёт отдельно от `Animator.enabled` | Считать, что Animator «запомнил клип» | Не выключать Animator. Freeze/hide не использовать для старта |
+| Мигание камеры | Скрытие mesh на старте: первый кадр как Scene view / pre-Play camera | — | Не трогать рендереры и `ShooterFpsCameraApply` ради рук |
+| Носки при атаке + рывок рук | Подключили `FPSAnimator_Unarmed_Humanoid.overrideController`; Standing/sprint мапы пересеклись с rifle-клипами | Чинить старт через замену locomotion controller | Откат. Override на префабе **не** заполнять, пока нет отдельной задачи |
+| Instant `SetHandPose(true)` без coroutine | Snap в `Start` раньше, чем PoseSampler доигрывает init-blend; либо `_isUnarmed` уже true → early-out. Mixer не фиксирует unarmed | Одна строка `instant: true` без `ClearSlot`/ожидания кадра | Snap **внутри** того же `TransitionToPose`, с yield на кадр и повторным `ForceOverlay` |
+
+**Итог (август 2026):** не делать unarmed «настоящей базой KINEMATION» и не выключать анимацию. Внутри старт = переход armed → unarmed как **T**, визуально = мгновенный overlay snap. Прыжок этот путь не трогает.
+
+Код: `Assets/_Project/Scripts/Character/ShooterHandPoseState.cs` (`Start`, `_snapStartOverlay`, `TransitionToPose`). Веса: `ShooterCharacterController.UpdatePlayablesWeight` / `ApplyFpsLayerWeights`.
+
+---
+
+*Последнее обновление: 21 августа 2026 — камера на лестнице (плавный взгляд, без дрожи от головы)*

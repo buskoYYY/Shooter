@@ -9301,6 +9301,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: ladderBackOffset
+      value: -0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: cameraLocalOffset.y
       value: -0.15
       objectReference: {fileID: 0}

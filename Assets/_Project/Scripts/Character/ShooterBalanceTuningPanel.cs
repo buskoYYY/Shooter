@@ -15,9 +15,10 @@ namespace Shooter.Project.Character
         [SerializeField] ShooterCcpMovementTuning ccpMovement;
         [SerializeField] ShooterLadderApproachTuning ladderApproach;
         [SerializeField] ShooterCharacterController characterController;
+        [SerializeField] ShooterFpsCameraApply fpsCamera;
         [SerializeField] bool visible;
 
-        Rect _windowRect = new Rect(20f, 20f, 360f, 340f);
+        Rect _windowRect = new Rect(20f, 20f, 380f, 420f);
         Vector2 _scroll;
         // SwayLayerSettings _swayLayer;
 
@@ -39,6 +40,9 @@ namespace Shooter.Project.Character
 
             if (characterController == null)
                 characterController = GetComponent<ShooterCharacterController>();
+
+            if (fpsCamera == null)
+                fpsCamera = GetComponent<ShooterFpsCameraApply>();
 
             // CacheSwayLayer();
         }
@@ -96,6 +100,9 @@ namespace Shooter.Project.Character
 
             GUILayout.Space(8f);
             DrawLadderApproachSection();
+
+            GUILayout.Space(8f);
+            DrawLadderCameraSection();
 
             // GUILayout.Space(8f);
             // DrawAnimationLocomotionSection();
@@ -158,6 +165,35 @@ namespace Shooter.Project.Character
             GUILayout.Label($"Snap distance: {ladderApproach.ApproachSnapDistance:0.00} m");
             ladderApproach.ApproachSnapDistance = GUILayout.HorizontalSlider(
                 ladderApproach.ApproachSnapDistance, 0.01f, 0.25f);
+        }
+
+        void DrawLadderCameraSection()
+        {
+            GUILayout.Label("Ladder camera", GUI.skin.box);
+
+            if (fpsCamera == null)
+            {
+                GUILayout.Label("ShooterFpsCameraApply not found.");
+                return;
+            }
+
+            GUILayout.Label("Yaw follows character (smooth approach). Pitch blends separately.");
+            GUILayout.Label("Jacket stays hidden — these only soften the wall stare.");
+
+            GUILayout.Label($"Look pitch: {fpsCamera.LadderLookPitch:0} deg");
+            fpsCamera.LadderLookPitch = GUILayout.HorizontalSlider(
+                fpsCamera.LadderLookPitch, -35f, 10f);
+
+            GUILayout.Label($"Pitch blend: {fpsCamera.LadderLookSmoothTime:0.00} s (higher = softer into wall)");
+            fpsCamera.LadderLookSmoothTime = GUILayout.HorizontalSlider(
+                fpsCamera.LadderLookSmoothTime, 0.1f, 0.8f);
+
+            GUILayout.Label($"Bob damp: {fpsCamera.LadderBobSmoothTime:0.00} s");
+            fpsCamera.LadderBobSmoothTime = GUILayout.HorizontalSlider(
+                fpsCamera.LadderBobSmoothTime, 0.01f, 0.2f);
+
+            if (GUILayout.Button("Reset ladder camera defaults"))
+                fpsCamera.ResetLadderCameraDefaults();
         }
 
         /*
@@ -352,6 +388,7 @@ namespace Shooter.Project.Character
         {
             ccpMovement?.ResetDefaults();
             ladderApproach?.ResetDefaults();
+            fpsCamera?.ResetLadderCameraDefaults();
             // locomotion?.ResetMotionDefaults();
             // handPoseState?.ResetTransitionBlendDefaults();
             // ResetSwayDefaults();

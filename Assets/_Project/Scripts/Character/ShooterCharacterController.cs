@@ -90,6 +90,10 @@ namespace Shooter.Project.Character
         Vector2 _mouseInput;
         Vector2 _animatorVelocity;
         float _sprintWeight;
+        bool _ladderPitchBlendActive;
+        float _ladderPitchTarget;
+        float _ladderPitchSmoothTime = 0.35f;
+        float _ladderPitchVelocity;
         bool _wasCrouching;
         bool _wasAnimatorMoving;
         bool _playedJumpMotionSinceLand;
@@ -185,9 +189,18 @@ namespace Shooter.Project.Character
             ApplyIkMotionTuning(crouchMotion, crouchBlendTime, crouchPlayRate);
         }
 
-        public void ResetPitchForLadder()
+        public void BeginLadderPitchBlend(float targetPitch, float smoothTime)
         {
-            _mouseInput.y = 0f;
+            _ladderPitchBlendActive = true;
+            _ladderPitchTarget = Mathf.Clamp(targetPitch, -pitchClamp, pitchClamp);
+            _ladderPitchSmoothTime = Mathf.Max(0.05f, smoothTime);
+            _ladderPitchVelocity = 0f;
+        }
+
+        public void EndLadderPitchBlend()
+        {
+            _ladderPitchBlendActive = false;
+            _ladderPitchVelocity = 0f;
         }
 
         InputActionMap _playerMap;
@@ -368,11 +381,6 @@ namespace Shooter.Project.Character
         bool IsInLadderState() =>
             _stateController != null && _stateController.CurrentState is LadderClimbing;
 
-        bool IsMountedOnLadder() =>
-            IsInLadderState() &&
-            _stateController.CurrentState is LadderClimbing ladder &&
-            !ladder.IsApproachingEntry;
-
         void ConfigureCcpForFps()
         {
             if (_stateController != null)
@@ -402,7 +410,27 @@ namespace Shooter.Project.Character
             _mouseInput.y -= lookDelta.y;
             _mouseInput.y = Mathf.Clamp(_mouseInput.y, -pitchClamp, pitchClamp);
 
-            if (IsMountedOnLadder())
+            if (_ladderPitchBlendActive)
+            {
+                if (Mathf.Abs(lookDelta.y) > 0.05f)
+                {
+                    _ladderPitchBlendActive = false;
+                }
+                else
+                {
+                    _mouseInput.y = Mathf.SmoothDamp(
+                        _mouseInput.y,
+                        _ladderPitchTarget,
+                        ref _ladderPitchVelocity,
+                        _ladderPitchSmoothTime);
+                    _mouseInput.y = Mathf.Clamp(_mouseInput.y, -pitchClamp, pitchClamp);
+
+                    if (Mathf.Abs(_mouseInput.y - _ladderPitchTarget) < 0.15f)
+                        _ladderPitchBlendActive = false;
+                }
+            }
+
+            if (IsInLadderState())
                 return;
 
             _mouseInput.x += lookDelta.x;

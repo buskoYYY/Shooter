@@ -130,6 +130,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected bool approachingEntry = false;
         protected float approachElapsed = 0f;
         protected Vector3 approachStart = Vector3.zero;
+        protected Vector3 approachStartForward = Vector3.forward;
 
         public bool IsApproachingEntry => approachingEntry;
 
@@ -209,7 +210,6 @@ namespace Lightbug.CharacterControllerPro.Demo
             currentClimbingAnimation = isBottom ? 0 : currentLadder.ClimbingAnimations;
 
             targetPosition = isBottom ? currentLadder.BottomReference.position : currentLadder.TopReference.position;
-            CharacterActor.Forward = currentLadder.FacingDirectionVector;
 
             float distance = Vector3.Distance(CharacterActor.Position, targetPosition);
             if (useSmoothApproach && distance > approachSnapDistance)
@@ -217,9 +217,11 @@ namespace Lightbug.CharacterControllerPro.Demo
                 approachingEntry = true;
                 approachElapsed = 0f;
                 approachStart = CharacterActor.Position;
+                approachStartForward = CharacterActor.Forward;
                 return;
             }
 
+            CharacterActor.Forward = currentLadder.FacingDirectionVector;
             CompleteLadderEntry();
         }
 
@@ -290,7 +292,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
                 CharacterActor.Position = Vector3.Lerp(approachStart, targetPosition, t);
                 CharacterActor.Forward = Vector3.Slerp(
-                    CharacterActor.Forward,
+                    approachStartForward,
                     currentLadder.FacingDirectionVector,
                     t
                 );

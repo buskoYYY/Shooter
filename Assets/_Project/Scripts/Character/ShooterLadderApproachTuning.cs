@@ -10,7 +10,7 @@ namespace Shooter.Project.Character
     [DisallowMultipleComponent]
     public class ShooterLadderApproachTuning : MonoBehaviour
     {
-        public const float DefaultApproachDuration = LadderClimbing.DefaultApproachDuration;
+        public const float DefaultApproachDuration = 0.55f;
         public const float DefaultApproachSnapDistance = LadderClimbing.DefaultApproachSnapDistance;
 
         [SerializeField] float approachDuration = DefaultApproachDuration;

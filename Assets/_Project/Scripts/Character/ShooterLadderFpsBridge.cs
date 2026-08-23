@@ -49,6 +49,8 @@ namespace Shooter.Project.Character
         public bool IsLadderModeActive => _ladderModeActive;
         public bool IsRestoringFps => _isRestoringFps;
         public bool ShouldBlockFpsPlayables => _ladderModeActive || _isRestoringFps;
+        public bool ShouldUseLadderCamera =>
+            _stateController != null && _stateController.CurrentState is LadderClimbing;
         bool _jumpPressed;
         bool _applyRootMotionWasEnabled;
         Coroutine _restoreFpsCoroutine;
@@ -183,6 +185,9 @@ namespace Shooter.Project.Character
 
         void HandleStateChange(CharacterState from, CharacterState to)
         {
+            if (to is LadderClimbing)
+                _headHide?.SetLadderBodyHidden(true);
+
             if (from is LadderClimbing)
                 ExitLadderMode();
         }
@@ -212,13 +217,7 @@ namespace Shooter.Project.Character
                 _userInput.SetValue(LookLayerWeightProperty, 0f);
             }
 
-            _shooterController?.ResetPitchForLadder();
-
-            if (_cameraApply != null)
-            {
-                _cameraApply.PrepareCameraBeforeInit();
-                _cameraApply.ForceRefresh();
-            }
+            _headHide?.SetLadderBodyHidden(true);
 
             _ladderSetupCoroutine = StartCoroutine(SetupLadderModeRoutine());
         }
@@ -430,6 +429,7 @@ namespace Shooter.Project.Character
             _isRestoringFps = true;
             _ladderModeActive = false;
             HoldFpsOverlayUntilRestored();
+            _headHide?.SetLadderBodyHidden(false);
 
             if (TryRestoreFpsStack())
             {
