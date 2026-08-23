@@ -130,6 +130,9 @@ namespace Shooter.Project.Character
                 planar.boostSpeedLimit = tuning.boostSpeedLimit;
                 planar.stableGroundedAcceleration = tuning.stableGroundedAcceleration;
                 planar.stableGroundedDeceleration = tuning.stableGroundedDeceleration;
+                // No mid-air steering: keep takeoff planar velocity, ignore move input while airborne.
+                planar.notGroundedAcceleration = 0f;
+                planar.notGroundedDeceleration = 0f;
             }
 
             ApplyDemoJumpSettings(movement, tuning?.jumpApexHeight, tuning?.jumpApexDuration);
@@ -152,6 +155,10 @@ namespace Shooter.Project.Character
             vertical.postGroundedJumpTime = 0f;
             vertical.availableNotGroundedJumps = 0;
             vertical.UpdateParameters();
+
+            var planar = movement.planarMovementParameters;
+            planar.notGroundedAcceleration = 0f;
+            planar.notGroundedDeceleration = 0f;
         }
     }
 }

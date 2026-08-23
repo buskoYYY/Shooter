@@ -97,6 +97,7 @@ namespace Shooter.Project.Character
         bool _wasCrouching;
         bool _wasAnimatorMoving;
         bool _playedJumpMotionSinceLand;
+        bool _jumpWindupVisualActive;
         int _inAirLayerIndex = -1;
 
         static readonly int JumpStartStateHash = Animator.StringToHash("JumpStart");
@@ -254,6 +255,7 @@ namespace Shooter.Project.Character
             }
 
             EnsureFpsCameraApplyOnSelf();
+            EnsureJumpWindupOnSelf();
             GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
 
             ApplyMotionTuning();
@@ -268,6 +270,14 @@ namespace Shooter.Project.Character
                 return;
 
             gameObject.AddComponent<ShooterFpsCameraApply>();
+        }
+
+        void EnsureJumpWindupOnSelf()
+        {
+            if (GetComponent<ShooterJumpWindup>() != null)
+                return;
+
+            gameObject.AddComponent<ShooterJumpWindup>();
         }
 
         void OnEnable()
@@ -317,14 +327,46 @@ namespace Shooter.Project.Character
         void HandleJumpPerformed()
         {
             _playedJumpMotionSinceLand = true;
-            ApplyJumpBodyAnimationImmediate();
+
+            if (!_jumpWindupVisualActive)
+                ApplyJumpBodyAnimationImmediate();
+            else
+                EnsureInAirFlag();
+
+            _jumpWindupVisualActive = false;
             PlayIkMotion(jumpMotion);
+        }
+
+        public void BeginJumpWindupVisual()
+        {
+            _jumpWindupVisualActive = true;
+            ApplyJumpBodyAnimationImmediate();
+            PlayIkMotion(crouchMotion);
+        }
+
+        public void CancelJumpWindupVisual()
+        {
+            if (!_jumpWindupVisualActive)
+                return;
+
+            _jumpWindupVisualActive = false;
+
+            if (_animator != null && (_characterActor == null || _characterActor.IsGrounded))
+                _animator.SetBool(InAirHash, false);
+        }
+
+        void EnsureInAirFlag()
+        {
+            if (_animator != null)
+                _animator.SetBool(InAirHash, true);
         }
 
         void HandleLanded(Vector3 _)
         {
             if (_animator != null)
                 _animator.SetBool(InAirHash, false);
+
+            _jumpWindupVisualActive = false;
 
             if (!_playedJumpMotionSinceLand)
                 return;

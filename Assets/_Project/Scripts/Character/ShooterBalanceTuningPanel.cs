@@ -16,6 +16,7 @@ namespace Shooter.Project.Character
         [SerializeField] ShooterLadderApproachTuning ladderApproach;
         [SerializeField] ShooterCharacterController characterController;
         [SerializeField] ShooterFpsCameraApply fpsCamera;
+        [SerializeField] ShooterJumpWindup jumpWindup;
         [SerializeField] bool visible;
 
         Rect _windowRect = new Rect(20f, 20f, 380f, 420f);
@@ -43,6 +44,9 @@ namespace Shooter.Project.Character
 
             if (fpsCamera == null)
                 fpsCamera = GetComponent<ShooterFpsCameraApply>();
+
+            if (jumpWindup == null)
+                jumpWindup = GetComponent<ShooterJumpWindup>();
 
             // CacheSwayLayer();
         }
@@ -99,6 +103,9 @@ namespace Shooter.Project.Character
             DrawControllerMovementSection();
 
             GUILayout.Space(8f);
+            DrawJumpWindupSection();
+
+            GUILayout.Space(8f);
             DrawLadderApproachSection();
 
             GUILayout.Space(8f);
@@ -146,6 +153,22 @@ namespace Shooter.Project.Character
             GUILayout.Label($"Deceleration: {ccpMovement.StableGroundedDeceleration:0.0}");
             ccpMovement.StableGroundedDeceleration = GUILayout.HorizontalSlider(
                 ccpMovement.StableGroundedDeceleration, 2f, 30f);
+        }
+
+        void DrawJumpWindupSection()
+        {
+            GUILayout.Label("Jump (crouch spring)", GUI.skin.box);
+
+            if (jumpWindup == null)
+            {
+                GUILayout.Label("ShooterJumpWindup not found.");
+                return;
+            }
+
+            GUILayout.Label($"Crouch delay: {jumpWindup.CrouchDelay:0.00} s");
+            jumpWindup.CrouchDelay = GUILayout.HorizontalSlider(
+                jumpWindup.CrouchDelay, 0.05f, 0.35f);
+            GUILayout.Label("Air strafe is off (planar air accel = 0).");
         }
 
         void DrawLadderApproachSection()
@@ -389,6 +412,7 @@ namespace Shooter.Project.Character
             ccpMovement?.ResetDefaults();
             ladderApproach?.ResetDefaults();
             fpsCamera?.ResetLadderCameraDefaults();
+            jumpWindup?.ResetDefaults();
             // locomotion?.ResetMotionDefaults();
             // handPoseState?.ResetTransitionBlendDefaults();
             // ResetSwayDefaults();
@@ -457,6 +481,9 @@ namespace Shooter.Project.Character
 
             if (handPose != null && handPose.GetComponent<ShooterLadderApproachTuning>() == null)
                 handPose.gameObject.AddComponent<ShooterLadderApproachTuning>();
+
+            if (handPose != null && handPose.GetComponent<ShooterJumpWindup>() == null)
+                handPose.gameObject.AddComponent<ShooterJumpWindup>();
         }
     }
 }

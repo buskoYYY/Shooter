@@ -22,6 +22,7 @@ namespace Shooter.Project.Input
         InputAction _crouch;
         InputAction _interact;
         bool _fpsLookHandledExternally;
+        ShooterJumpWindup _jumpWindup;
 
         void Awake()
         {
@@ -38,7 +39,10 @@ namespace Shooter.Project.Input
             _sprint = _playerMap.FindAction("Sprint", true);
             _crouch = _playerMap.FindAction("Crouch", true);
             _interact = _playerMap.FindAction("Interact", true);
-            _fpsLookHandledExternally = GetComponent<ShooterCharacterController>() != null;
+            _fpsLookHandledExternally = GetComponentInParent<ShooterCharacterController>() != null
+                || GetComponent<ShooterCharacterController>() != null;
+            _jumpWindup = GetComponentInParent<ShooterJumpWindup>()
+                ?? GetComponent<ShooterJumpWindup>();
         }
 
         void OnEnable()
@@ -58,7 +62,7 @@ namespace Shooter.Project.Input
 
             return actionName switch
             {
-                "Jump" => _jump.IsPressed(),
+                "Jump" => ResolveJump(),
                 "Run" => _sprint.IsPressed(),
                 "Interact" => _interact.IsPressed(),
                 "Crouch" => _crouch.IsPressed(),
@@ -66,6 +70,18 @@ namespace Shooter.Project.Input
                 "Jet Pack" => false,
                 _ => false
             };
+        }
+
+        bool ResolveJump()
+        {
+            bool raw = _jump != null && _jump.IsPressed();
+            if (_jumpWindup == null)
+            {
+                _jumpWindup = GetComponentInParent<ShooterJumpWindup>()
+                    ?? GetComponent<ShooterJumpWindup>();
+            }
+
+            return _jumpWindup != null ? _jumpWindup.ResolveJumpPressed(raw) : raw;
         }
 
         public override float GetFloat(string actionName)
