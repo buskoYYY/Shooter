@@ -22,6 +22,7 @@ namespace Shooter.Project.Character
         public const float DefaultLocomotionSmoothingStop = 8f;
         public const float DefaultMovingStartThreshold = 0.18f;
         public const float DefaultMovingStopThreshold = 0.05f;
+        public const float DefaultTurnInPlaceLocomotionSmoothing = 2.5f;
         public const float DefaultJumpBlendTime = 0.15f;
         public const float DefaultJumpPlayRate = 1f;
         public const float DefaultStopBlendTime = 0.35f;
@@ -70,6 +71,8 @@ namespace Shooter.Project.Character
         [SerializeField] float movingStartThreshold = DefaultMovingStartThreshold;
         [Tooltip("Blend tree Velocity must fall below this to exit Moving.")]
         [SerializeField] float movingStopThreshold = DefaultMovingStopThreshold;
+        [Tooltip("Slower leg blend ramp when starting to move during a turn-in-place step.")]
+        [SerializeField] float turnInPlaceLocomotionSmoothing = DefaultTurnInPlaceLocomotionSmoothing;
         [SerializeField] float jumpBlendTime = DefaultJumpBlendTime;
         [SerializeField] float jumpPlayRate = DefaultJumpPlayRate;
         [SerializeField] float stopBlendTime = DefaultStopBlendTime;
@@ -125,6 +128,9 @@ namespace Shooter.Project.Character
             get => movingStartThreshold;
             set => movingStartThreshold = Mathf.Clamp(value, 0.01f, 0.5f);
         }
+
+        public bool HasMoveInput =>
+            _move != null && _move.ReadValue<Vector2>().sqrMagnitude > 0.01f;
 
         public float MovingStopThreshold
         {
@@ -578,11 +584,21 @@ namespace Shooter.Project.Character
             float currentSpeed = _animatorVelocity.magnitude;
             bool accelerating = targetSpeed > currentSpeed + 0.01f;
             float smoothing = accelerating ? locomotionSmoothingStart : locomotionSmoothingStop;
+
+            if (_handPoseState != null
+                && _handPoseState.IsUnarmed
+                && _handPoseState.IsTurnInPlacePlaying()
+                && targetSpeed > 0.01f)
+            {
+                smoothing = Mathf.Min(smoothing, turnInPlaceLocomotionSmoothing);
+            }
+
             float blendAlpha = KMath.ExpDecayAlpha(smoothing, Time.deltaTime);
             _animatorVelocity = Vector2.Lerp(_animatorVelocity, targetVelocity, blendAlpha);
 
             float speed = Mathf.Clamp01(_animatorVelocity.magnitude);
             bool animatorMoving = EvaluateAnimatorMoving(speed, inAir);
+            _handPoseState?.TickTurnInPlaceBlend(animatorMoving, HasMoveInput);
             bool sprinting = _sprint != null && _sprint.IsPressed();
             bool crouching = _crouch != null && _crouch.IsPressed();
 

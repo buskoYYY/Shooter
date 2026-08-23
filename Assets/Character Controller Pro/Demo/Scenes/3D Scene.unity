@@ -9196,6 +9196,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3804788901806876029, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: bodySize.x
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3804788901806876030, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_LocalPosition.x
       value: -82.51424
@@ -9302,7 +9306,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7733445566778899005, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: stableGroundedAcceleration
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 8221746002412247961, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_Enabled
@@ -9319,6 +9323,10 @@ PrefabInstance:
     - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: cameraLocalOffset.z
       value: -0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: ladderBobSmoothTime
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: 9176093836267626186, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: fpsAnimatorProfile

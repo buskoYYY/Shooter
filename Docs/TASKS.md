@@ -213,7 +213,7 @@ Player (Root)
 
 #### Фаза 1 — Базовый персонаж CCP (≈1–2 ч)
 > Документация: [Organize the character hierarchy](https://lightbug14.gitbook.io/ccp/how-to.../implementation/organize-the-character-hierarchy.md)  
-> **Авто-setup:** `Shooter → Phase 1 → Run Full Setup` (см. `Assets/_Project/PHASE1_SETUP.md`)
+> **Авто-setup:** `Shooter → Phase 1 → Run Full Setup` (см. [PHASE1_SETUP.md](PHASE1_SETUP.md))
 
 - [x] Скрипт **ShooterInputHandler** — мост Unity Input System → CCP
 - [x] Editor-меню **Shooter/Phase 1** — создание префаба и тестовой сцены
@@ -227,7 +227,7 @@ Player (Root)
 
 #### Фаза 2 — FPS Animation Framework: настройка тела (≈2–3 ч)
 > Документация: [Character Rig](https://kinemation.gitbook.io/scriptable-animation-system/workflow/character-rig.md) → [Profiles and Layers](https://kinemation.gitbook.io/scriptable-animation-system/workflow/profiles-and-layers.md)  
-> **Авто-setup:** `Shooter → Phase 2 → Run Full Phase 2 Setup` (см. `Assets/_Project/PHASE2_SETUP.md`)
+> **Авто-setup:** `Shooter → Phase 2 → Run Full Phase 2 Setup` (см. [PHASE2_SETUP.md](PHASE2_SETUP.md))
 
 - [x] Editor-меню **Shooter/Phase 2** — Rig, Profile, IK, FPS-компоненты, камера
 - [x] **ShooterCharacterController** — мост CCP ↔ FPS AF (input, yaw, animator sync)
@@ -249,12 +249,14 @@ Player (Root)
 - [x] FPS-поворот: yaw на корне, pitch через FPS AF
 - [x] CCP `changeLookingDirection = false`, External Reference → корень игрока
 - [x] При спринте: `StabilizationWeight = 0`, `PlayablesWeight = 0`
+- [x] Полировка: прыжок (wind-up, без air-strafe), crouch transitions, отзывчивость разгона
+- [x] Разворот на месте → ходьба без резкого среза анимации (Задача 1.4)
 - [ ] Проверить в Play: движение + поворот тела + sway + IK ног на склоне
-- [ ] Полировка: прыжок/приземление, crouch transitions, чувствительность мыши
+- [ ] Чувствительность мыши — финальный pass по желанию заказчика
 
 #### Фаза 4 — Лестницы через CCP (≈1–2 ч)
 > CCP Demo: `LadderClimbing.cs` — готовый state с root motion + IK  
-> **Авто-setup:** `Shooter → Phase 4 → Run Full Phase 4 Setup` (см. `Assets/_Project/PHASE4_SETUP.md`)
+> **Авто-setup:** `Shooter → Phase 4 → Run Full Phase 4 Setup` (см. [PHASE4_SETUP.md](PHASE4_SETUP.md))
 
 - [x] **ShooterLadderFpsBridge** — отключение Turn/Sway/Look на лестнице, restore FPS controller после
 - [x] Editor-меню **Shooter/Phase 4** — LadderClimbing state + TestLadder в сцене
@@ -288,8 +290,10 @@ Player (Root)
 - [x] Префаб `PlayerCharacter`, сцена `PlayerTest`
 - [x] **ShooterCharacterController** — мост CCP ↔ FPS AF
 - [x] **ShooterHandPoseState** — T armed/unarmed; старт unarmed без рывка рук (см. Задачу 1.1)
-- [x] **ShooterLadderFpsBridge** — лестницы
-- [x] Play Mode: WASD, мышь, бег, присед, прыжок, первый спринт без вспышки винтовки
+- [x] **ShooterLadderFpsBridge** — лестницы + polish камеры (Задача 1.2)
+- [x] **ShooterBalanceTuningPanel** — F8 dev-панель баланса (см. [BALANCE_TUNING_PANEL.md](BALANCE_TUNING_PANEL.md))
+- [x] **ShooterCcpMovementTuning** / **ShooterBodySizeTuning** / **ShooterJumpWindup** — тюнинг движения
+- [x] Play Mode: WASD, мышь, бег, присед, прыжок с пружиной, лестница, unarmed/armed (T)
 
 ### Документация ассетов
 
@@ -334,7 +338,32 @@ Player (Root)
 
 ### Капсула / стены
 
-CCP берёт размер из **CharacterBody → Width** (диаметр), не из Unity CapsuleCollider. Правка коллайдера в инспекторе сбрасывается. Дефолт демо был Width **0.5**; сейчас **0.72** через `ShooterBodySizeTuning` + F8 **Capsule**.
+CCP берёт размер из **CharacterBody → Width** (диаметр), не из Unity CapsuleCollider. Правка коллайдера в инспекторе сбрасывается. Дефолт демо был Width **0.5**; сейчас **0.72** через `ShooterBodySizeTuning` + F8 **Capsule**. `SetSize` вызывается в **Start** (не Awake), иначе NRE до готовности Rigidbody.
+
+---
+
+## Задача 1.4 — Полировка locomotion (разгон, капсула, разворот на месте)
+
+**Цель:** отзывчивое движение без «ватности» при смене направления; капсула не проваливается в стены; разворот ногами плавно переходит в ходьбу, если нажать W в середине шага.
+
+### Что нужно сделать
+
+- [x] Поднять CCP accel/decel и smoothing аниматора — быстрее реакция при повороте во время ходьбы
+- [x] Ширина капсулы через CharacterBody (не CapsuleCollider)
+- [x] Плавный blend-out слоя TurnInPlace при старте движения во время разворота
+- [x] Замедлить набор `Velocity` в аниматоре, пока играет turn-in-place
+
+### Что уже сделано
+
+- [x] `ShooterCcpMovementTuning` — accel **22**, decel **24** (было ~8/10 у демо-настройки проекта)
+- [x] `ShooterCharacterController` — locomotion smoothing start/stop **7 / 8** (было 3 / 5)
+- [x] `ShooterBodySizeTuning` — Width **0.72**, Height **1.9**; F8 **Capsule (CharacterBody)**
+- [x] `ShooterHandPoseState` — `TickTurnInPlaceBlend`: fade-out слоя TurnInPlace ~**0.35 с**; триггеры TurnLeft/TurnRight сбрасываются только после fade и когда клип не играет
+- [x] `ShooterCharacterController` — при активном turn-in-place и вводе движения `Velocity` набирается медленнее (`turnInPlaceLocomotionSmoothing` ≈ **2.5**)
+
+**Сценарий проверки:** стоя на месте (unarmed), повернуть мышь вбок → ноги начинают перебираться → сразу W. Ходьба должна накладываться плавно, без мгновенного среза turn-клипа.
+
+Код: `ShooterHandPoseState.cs`, `ShooterCharacterController.cs`, `ShooterCcpMovementTuning.cs`, `ShooterBodySizeTuning.cs`.
 
 ---
 
@@ -404,4 +433,4 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ---
 
-*Последнее обновление: 23 августа 2026 — прыжок: без air-strafe, crouch wind-up ~0.14 с*
+*Последнее обновление: 23 августа 2026 — движение (Задачи 1.2–1.4): лестница, прыжок, locomotion, turn-in-place. Следующий этап — Задача 2 (оружие).*

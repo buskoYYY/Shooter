@@ -21,11 +21,12 @@ namespace Shooter.Project.Character
         const float DefaultTransitionBlend = 0.45f;
         const float DefaultOverlayBlendIn = 0.5f;
         const float DefaultOverlayBlendOut = 0.25f;
+        const float DefaultTurnInPlaceFadeOutDuration = 0.35f;
         const string TurnInPlaceLayerName = "TurnInPlace";
+        const string TurnInPlaceEmptyStateName = "Empty";
 
         static readonly int TurnLeftHash = Animator.StringToHash("TurnLeft");
         static readonly int TurnRightHash = Animator.StringToHash("TurnRight");
-        static readonly int MovingHash = Animator.StringToHash("Moving");
 
         [SerializeField] Transform fpsCharacterRoot;
         [SerializeField] InputActionAsset inputActions;
@@ -51,6 +52,8 @@ namespace Shooter.Project.Character
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
         int _turnInPlaceLayerIndex = -1;
+        float _turnInPlaceLayerWeight = 1f;
+        float _turnInPlaceFadeOutDuration = DefaultTurnInPlaceFadeOutDuration;
 
         static FieldInfo OverlayPoseMixerField;
         static FieldInfo OverlayActiveIndexField;
@@ -59,12 +62,41 @@ namespace Shooter.Project.Character
 
         public bool IsUnarmed => _isUnarmed;
         public bool IsTransitioning => _isTransitioning;
-        public float TurnInPlaceWeight => EvaluateTurnInPlaceWeight();
+        public float TurnInPlaceWeight => _turnInPlaceLayerWeight;
         public FPSAnimationAsset EquipClip => equipClip;
         public FPSAnimationAsset UnequipClip => unequipClip;
         public FPSAnimationAsset ArmedOverlayPose => armedOverlayPose;
         public FPSAnimationAsset UnarmedOverlayPose => unarmedOverlayPose;
         public FPSAnimatorProfile FpsAnimatorProfile => fpsAnimatorProfile;
+
+        public bool IsTurnInPlacePlaying()
+        {
+            if (_animator == null || _turnInPlaceLayerIndex < 0 || !_isUnarmed)
+                return false;
+
+            if (_animator.IsInTransition(_turnInPlaceLayerIndex))
+            {
+                AnimatorStateInfo current = _animator.GetCurrentAnimatorStateInfo(_turnInPlaceLayerIndex);
+                AnimatorStateInfo next = _animator.GetNextAnimatorStateInfo(_turnInPlaceLayerIndex);
+                return !current.IsName(TurnInPlaceEmptyStateName) || !next.IsName(TurnInPlaceEmptyStateName);
+            }
+
+            return !_animator.GetCurrentAnimatorStateInfo(_turnInPlaceLayerIndex).IsName(TurnInPlaceEmptyStateName);
+        }
+
+        public void TickTurnInPlaceBlend(bool animatorMoving, bool hasMoveInput)
+        {
+            if (!_isUnarmed)
+            {
+                _turnInPlaceLayerWeight = 1f;
+                return;
+            }
+
+            bool wantsLocomotion = animatorMoving || hasMoveInput;
+            float target = wantsLocomotion ? 0f : 1f;
+            float fadeStep = Time.deltaTime / Mathf.Max(0.01f, _turnInPlaceFadeOutDuration);
+            _turnInPlaceLayerWeight = Mathf.MoveTowards(_turnInPlaceLayerWeight, target, fadeStep);
+        }
 
         public void ResetTransitionBlendDefaults()
         {
@@ -299,25 +331,14 @@ namespace Shooter.Project.Character
             if (_turnInPlaceLayerIndex < 0)
                 return;
 
-            float weight = EvaluateTurnInPlaceWeight();
+            float weight = _isUnarmed ? _turnInPlaceLayerWeight : 1f;
             _animator.SetLayerWeight(_turnInPlaceLayerIndex, weight);
 
-            if (weight <= 0f)
+            if (weight <= 0.001f && !IsTurnInPlacePlaying())
             {
                 _animator.ResetTrigger(TurnLeftHash);
                 _animator.ResetTrigger(TurnRightHash);
             }
-        }
-
-        float EvaluateTurnInPlaceWeight()
-        {
-            if (!_isUnarmed)
-                return 1f;
-
-            if (_animator == null)
-                return 1f;
-
-            return _animator.GetBool(MovingHash) ? 0f : 1f;
         }
 
         void ApplyOverlayBlend(FPSAnimationAsset pose, float blendInTime)
