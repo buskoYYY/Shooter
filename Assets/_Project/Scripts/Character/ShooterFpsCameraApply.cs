@@ -5,19 +5,21 @@ using UnityEngine;
 namespace Shooter.Project.Character
 {
     /// <summary>
-    /// Stabilizes FPS camera after FPS AF (FPSCameraController + FPSAnimator LateUpdate at order 0).
-    /// Camera Local Offset on this component is the source of truth — edits on FPS Camera transform are overridden every frame.
-    /// On ladders the camera stays in the head (not the capsule). Yaw locks to the character instantly;
-    /// only vertical bob is lightly damped so climb anim does not shake the view.
+    /// Drives FPS camera after KINEMATION (FPSAnimator LateUpdate order 0).
+    /// Camera is unparented from the head bone so Animator rotation does not affect Camera.transform
+    /// (wild euler values break world/occlusion culling). Each LateUpdate: follow head position,
+    /// apply look rotation from character yaw + pitch only.
     /// </summary>
-    [DefaultExecutionOrder(100)]
+    [DefaultExecutionOrder(500)]
     [RequireComponent(typeof(ShooterCharacterController))]
     public class ShooterFpsCameraApply : MonoBehaviour
     {
-        [Tooltip("Eye offset from the head bone (local space). Edit here, not on FPS Camera transform.")]
+        [Tooltip("Eye offset from the head bone (character-aligned). Edit here, not on FPS Camera transform.")]
         [SerializeField] Vector3 cameraLocalOffset = new Vector3(0f, 0.06f, 0.04f);
         [Tooltip("Default FPS field of view. Demo humanoid uses 80; 60 feels too zoomed in.")]
         [SerializeField] float defaultFieldOfView = 80f;
+        [Tooltip("If true, camera is detached from head and follows it in LateUpdate (fixes culling).")]
+        [SerializeField] bool detachFromHeadAnimation = true;
 
         public const float DefaultLadderLookSmoothTime = 0.4f;
         public const float DefaultLadderLookPitch = -18f;
@@ -38,10 +40,13 @@ namespace Shooter.Project.Character
         const float ExitBlendFinishAngle = 1.25f;
 
         static FieldInfo DefaultPositionField;
+        static FieldInfo CameraBoneField;
 
         ShooterCharacterController _character;
         ShooterLadderFpsBridge _ladderBridge;
         FPSCameraController _fpsCamera;
+        Transform _head;
+        bool _detached;
 
         bool _ladderCameraActive;
         bool _exitBlendActive;
@@ -90,16 +95,15 @@ namespace Shooter.Project.Character
 
         void Awake()
         {
-            _character = GetComponent<ShooterCharacterController>();
-            _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
+            ResolveRefs();
         }
 
         void Start()
         {
-            if (_character != null)
-                _fpsCamera = _character.FpsCamera;
-
+            ResolveRefs();
+            EnsureDetachedFromHead();
             ApplyDefaultFieldOfView();
+            ApplyCamera();
         }
 
 #if UNITY_EDITOR
@@ -112,8 +116,12 @@ namespace Shooter.Project.Character
             if (fpsCamera == null)
                 return;
 
-            fpsCamera.localPosition = cameraLocalOffset;
-            fpsCamera.localRotation = Quaternion.identity;
+            // Prefab still parents camera under head; runtime detach handles Play Mode.
+            if (fpsCamera.parent != null && fpsCamera.parent.name.IndexOf("head", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                fpsCamera.localPosition = cameraLocalOffset;
+                fpsCamera.localRotation = Quaternion.identity;
+            }
         }
 
         [ContextMenu("Copy Offset From FPS Camera Transform")]
@@ -128,24 +136,34 @@ namespace Shooter.Project.Character
         }
 #endif
 
+        void ResolveRefs()
+        {
+            if (_character == null)
+                _character = GetComponent<ShooterCharacterController>();
+
+            if (_ladderBridge == null)
+                _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
+
+            if (_fpsCamera == null)
+            {
+                if (_character != null && _character.FpsCamera != null)
+                    _fpsCamera = _character.FpsCamera;
+                else
+                    _fpsCamera = GetComponentInChildren<FPSCameraController>(true);
+            }
+        }
+
         Transform FindFpsCamera()
         {
-            if (_fpsCamera != null)
-                return _fpsCamera.transform;
-
-            if (_character != null && _character.FpsCamera != null)
-                return _character.FpsCamera.transform;
-
-            var fpsCameraController = GetComponentInChildren<FPSCameraController>(true);
-            return fpsCameraController != null ? fpsCameraController.transform : null;
+            ResolveRefs();
+            return _fpsCamera != null ? _fpsCamera.transform : null;
         }
 
         /// <summary>Call before FPSCameraController.Initialize so _defaultPosition matches the offset.</summary>
         public void PrepareCameraBeforeInit()
         {
-            if (_fpsCamera == null && _character != null)
-                _fpsCamera = _character.FpsCamera;
-
+            ResolveRefs();
+            EnsureDetachedFromHead();
             ApplyCamera();
             ApplyDefaultFieldOfView();
             SyncFpsCameraDefaultPosition();
@@ -153,9 +171,9 @@ namespace Shooter.Project.Character
 
         public void ForceRefresh()
         {
-            if (_fpsCamera == null && _character != null)
-                _fpsCamera = _character.FpsCamera;
-
+            ResolveRefs();
+            _detached = false;
+            EnsureDetachedFromHead();
             ApplyCamera();
             ApplyDefaultFieldOfView();
             SyncFpsCameraDefaultPosition();
@@ -163,12 +181,16 @@ namespace Shooter.Project.Character
 
         void LateUpdate()
         {
+            ResolveRefs();
+
             bool wantLadder = ShouldUseLadderCamera();
             if (wantLadder && !_ladderCameraActive)
                 BeginLadderCamera();
             else if (!wantLadder && _ladderCameraActive)
                 EndLadderCamera();
 
+            // After FPSAnimator / FPSCameraController (order 0): final pose for rendering + culling.
+            EnsureDetachedFromHead();
             ApplyCamera();
         }
 
@@ -182,9 +204,7 @@ namespace Shooter.Project.Character
 
         void BeginLadderCamera()
         {
-            if (_fpsCamera == null && _character != null)
-                _fpsCamera = _character.FpsCamera;
-
+            ResolveRefs();
             if (_fpsCamera == null || _character == null)
                 return;
 
@@ -213,9 +233,7 @@ namespace Shooter.Project.Character
 
         void ApplyCamera()
         {
-            if (_fpsCamera == null && _character != null)
-                _fpsCamera = _character.FpsCamera;
-
+            ResolveRefs();
             if (_fpsCamera == null || _character == null)
                 return;
 
@@ -234,12 +252,90 @@ namespace Shooter.Project.Character
             ApplyHeadCamera();
         }
 
+        void EnsureDetachedFromHead()
+        {
+            if (!detachFromHeadAnimation)
+                return;
+
+            ResolveRefs();
+            if (_fpsCamera == null || _character == null)
+                return;
+
+            Transform cam = _fpsCamera.transform;
+            Transform playerRoot = _character.transform;
+
+            if (_head == null)
+            {
+                if (cam.parent != null && cam.parent != playerRoot && IsHeadLike(cam.parent))
+                    _head = cam.parent;
+                else
+                    _head = FindHeadBone();
+            }
+
+            ClearCameraBoneBinding();
+
+            // Re-check every call: something may reparent, or first Awake call ran before refs were ready.
+            if (cam.parent != playerRoot)
+            {
+                GetHeadCameraPose(out Vector3 worldPos, out Quaternion worldRot);
+                cam.SetParent(playerRoot, worldPositionStays: true);
+                cam.SetPositionAndRotation(worldPos, worldRot);
+            }
+
+            _detached = cam.parent == playerRoot;
+            if (_detached)
+                SyncFpsCameraDefaultPosition();
+        }
+
+        static bool IsHeadLike(Transform t)
+        {
+            if (t == null)
+                return false;
+
+            string n = t.name;
+            return n.IndexOf("head", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        Transform FindHeadBone()
+        {
+            if (_character == null)
+                return null;
+
+            Transform root = _character.transform;
+            Transform[] all = root.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (string.Equals(all[i].name, "head", System.StringComparison.OrdinalIgnoreCase))
+                    return all[i];
+            }
+
+            return null;
+        }
+
+        void ClearCameraBoneBinding()
+        {
+            if (_fpsCamera == null)
+                return;
+
+            CameraBoneField ??= typeof(FPSCameraController).GetField(
+                "cameraBone",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (CameraBoneField == null)
+                return;
+
+            if (CameraBoneField.GetValue(_fpsCamera) != null)
+                CameraBoneField.SetValue(_fpsCamera, null);
+        }
+
         void ApplyHeadCamera()
         {
             Transform cam = _fpsCamera.transform;
-            cam.localPosition = cameraLocalOffset;
-            cam.localRotation = Quaternion.identity;
-            cam.rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
+            GetHeadCameraPose(out Vector3 worldPos, out Quaternion lookRotation);
+            cam.SetPositionAndRotation(worldPos, lookRotation);
+            // FPSCameraController.Update() resets localPosition to _defaultPosition — keep it in sync
+            // so mid-frame transform (and culling) stay at the eye, not at a stale offset.
+            SyncFpsCameraDefaultPosition();
         }
 
         void ApplyLadderCamera()
@@ -247,16 +343,14 @@ namespace Shooter.Project.Character
             Transform cam = _fpsCamera.transform;
             GetHeadCameraPose(out Vector3 headPos, out Quaternion lookRotation);
 
-            // Stay inside the head — never use capsule offset (that is what showed the jacket).
             _smoothedPosition = Vector3.SmoothDamp(
                 _smoothedPosition,
                 headPos,
                 ref _positionVelocity,
                 ladderBobSmoothTime);
 
-            cam.position = _smoothedPosition;
-            // Instant yaw from character — any yaw lag looks at the jacket from outside.
-            cam.rotation = lookRotation;
+            cam.SetPositionAndRotation(_smoothedPosition, lookRotation);
+            SyncFpsCameraDefaultPosition();
         }
 
         void ApplyExitBlendCamera()
@@ -270,8 +364,8 @@ namespace Shooter.Project.Character
                 ref _positionVelocity,
                 ladderExitSmoothTime);
 
-            cam.position = _smoothedPosition;
-            cam.rotation = targetRotation;
+            cam.SetPositionAndRotation(_smoothedPosition, targetRotation);
+            SyncFpsCameraDefaultPosition();
 
             if ((cam.position - targetPosition).sqrMagnitude <= ExitBlendFinishDistance * ExitBlendFinishDistance &&
                 Quaternion.Angle(cam.rotation, targetRotation) <= ExitBlendFinishAngle)
@@ -283,11 +377,13 @@ namespace Shooter.Project.Character
 
         void GetHeadCameraPose(out Vector3 position, out Quaternion rotation)
         {
-            Transform head = _fpsCamera.transform.parent;
-            if (head != null)
-                position = head.TransformPoint(cameraLocalOffset);
+            // Position follows the head (bob), but offset is character-aligned — not head bone rotation.
+            // Rotation is look only (yaw from body + pitch from mouse) — independent of Animator.
+            if (_head != null)
+                position = _head.position + _character.transform.rotation * cameraLocalOffset;
             else
-                position = _character.transform.position + _character.transform.up * 1.6f;
+                position = _character.transform.position + _character.transform.up * 1.6f
+                    + _character.transform.rotation * cameraLocalOffset;
 
             rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
         }
@@ -311,7 +407,7 @@ namespace Shooter.Project.Character
                 "_defaultPosition",
                 BindingFlags.Instance | BindingFlags.NonPublic);
 
-            DefaultPositionField?.SetValue(_fpsCamera, cameraLocalOffset);
+            DefaultPositionField?.SetValue(_fpsCamera, _fpsCamera.transform.localPosition);
         }
     }
 }

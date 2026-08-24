@@ -433,4 +433,10 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ---
 
-*Последнее обновление: 23 августа 2026 — движение (Задачи 1.2–1.4): лестница, прыжок, locomotion, turn-in-place. Следующий этап — Задача 2 (оружие).*
+### Камера и culling (авг 2026)
+
+FPS Camera больше **не дочерняя к кости head** в Play Mode (`ShooterFpsCameraApply`): отвязывается к корню игрока, в **LateUpdate (order 500)** ставит world position у головы и rotation = yaw тела + pitch мыши. `cameraBone` у `FPSCameraController` обнуляется, чтобы Animator не крутил Camera.transform (ломало world culling). Ответ KINEMATION support может предложить другое — наш обходной путь совместим с ожиданием «rotation в LateUpdate».
+
+---
+
+*Последнее обновление: 24 августа 2026 — FPS-камера отвязана от анимации головы (culling). Следующий этап — Задача 2 (оружие).*

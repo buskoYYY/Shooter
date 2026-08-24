@@ -9196,6 +9196,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3804788901806876027, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: stepUpDistance
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 3804788901806876029, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: bodySize.x
       value: 1
@@ -9313,16 +9317,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
-      propertyPath: ladderBackOffset
-      value: -0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
-      propertyPath: cameraLocalOffset.y
-      value: -0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: cameraLocalOffset.z
-      value: -0.02
+      value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: 8822334455667788991, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: ladderBobSmoothTime
