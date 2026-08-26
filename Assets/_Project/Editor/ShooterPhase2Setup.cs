@@ -1163,13 +1163,15 @@ namespace Shooter.Project.Editor
             string targetName = rifleClipName switch
             {
                 "C_Rifle_Idle_Humanoid" => "Unarmed_Idle",
-                "C_Rifle_Run_Fwd_Humanoid" => "Unarmed_Jog_Forward",
-                "C_Rifle_Run_Fwd_Left_Humanoid" => "Unarmed_Jog_Forward_45",
-                "C_Rifle_Run_Fwd_Right_Humanoid" => "Unarmed_Jog_Forward_-45",
-                "C_Rifle_Strafe_Right_Humanoid" => "Unarmed_Jog_Right",
-                "C_Rifle_Run_Bwd_Humanoid" => "Unarmed_Jog_Bwd",
-                "C_Rifle_Run_Bwd_Left_Humanoid" => "Unarmed_Jog_Bwd_-45",
-                "C_Rifle_Run_Bwd_Right_Humanoid" => "Unarmed_Jog_Bwd_45",
+                // All move directions use run — Jog clips have almost no arm swing.
+                "C_Rifle_Run_Fwd_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Fwd_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Fwd_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Strafe_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Strafe_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Bwd_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Bwd_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Bwd_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
                 "C_Rifle_Sprint_Fwd_Humanoid" => "C_Unarmed_Run_Humanoid",
                 _ => null
             };

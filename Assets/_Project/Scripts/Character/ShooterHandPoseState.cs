@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer;
@@ -54,6 +55,15 @@ namespace Shooter.Project.Character
         int _turnInPlaceLayerIndex = -1;
         float _turnInPlaceLayerWeight = 1f;
         float _turnInPlaceFadeOutDuration = DefaultTurnInPlaceFadeOutDuration;
+
+        AnimatorOverrideController _runtimeLocomotionOverride;
+        List<KeyValuePair<AnimationClip, AnimationClip>> _unarmedClipOverrides;
+        List<KeyValuePair<AnimationClip, AnimationClip>> _armedClipOverrides;
+
+        static readonly int StandingStateHash = Animator.StringToHash("Standing");
+        static readonly int EmptyStateHash = Animator.StringToHash("Empty");
+        static readonly int InAirBoolHash = Animator.StringToHash("InAir");
+
 
         static FieldInfo OverlayPoseMixerField;
         static FieldInfo OverlayActiveIndexField;
@@ -182,6 +192,12 @@ namespace Shooter.Project.Character
         /// </summary>
         public void RefreshLocomotionAfterExternalSwap()
         {
+            if (_animator != null && _runtimeLocomotionOverride != null
+                && _animator.runtimeAnimatorController != _runtimeLocomotionOverride)
+            {
+                _animator.runtimeAnimatorController = _runtimeLocomotionOverride;
+            }
+
             ApplyLocomotionController(_isUnarmed);
             SyncPoseSamplerSettings(_isUnarmed ? unarmedOverlayPose : armedOverlayPose);
         }
@@ -297,18 +313,98 @@ namespace Shooter.Project.Character
             if (_animator == null)
                 return;
 
-            RuntimeAnimatorController target = unarmed && unarmedLocomotionOverride != null
-                ? unarmedLocomotionOverride
-                : armedLocomotionController;
-
-            if (target == null || _animator.runtimeAnimatorController == target)
+            if (!EnsureRuntimeLocomotionOverride())
             {
+                // Fallback: legacy controller swap (may hitch pose — keep as last resort).
+                RuntimeAnimatorController target = unarmed && unarmedLocomotionOverride != null
+                    ? unarmedLocomotionOverride
+                    : armedLocomotionController;
+
+                if (target != null && _animator.runtimeAnimatorController != target)
+                {
+                    _animator.runtimeAnimatorController = target;
+                    ResetLocomotionAnimatorPose();
+                }
+
                 ApplyFullBodyWeightForCurrentState();
                 return;
             }
 
-            _animator.runtimeAnimatorController = target;
+            _runtimeLocomotionOverride.ApplyOverrides(unarmed ? _unarmedClipOverrides : _armedClipOverrides);
+
+            // Clearing InAir/Standing after clip remap — stuck JumpStart legs were from controller swaps.
+            if (!unarmed)
+                ResetLocomotionAnimatorPose();
+
             ApplyFullBodyWeightForCurrentState();
+        }
+
+        bool EnsureRuntimeLocomotionOverride()
+        {
+            if (_runtimeLocomotionOverride != null)
+                return true;
+
+            if (_animator == null || unarmedLocomotionOverride == null)
+                return false;
+
+            RuntimeAnimatorController baseController = armedLocomotionController;
+            if (baseController is AnimatorOverrideController existingOverride)
+                baseController = existingOverride.runtimeAnimatorController;
+
+            if (baseController == null)
+                baseController = unarmedLocomotionOverride is AnimatorOverrideController templateBase
+                    ? templateBase.runtimeAnimatorController
+                    : null;
+
+            if (baseController == null)
+                return false;
+
+            // Runtime instance — never ApplyOverrides on the project asset (would dirty it).
+            _runtimeLocomotionOverride = new AnimatorOverrideController(baseController)
+            {
+                name = "Runtime_UnarmedLocomotion"
+            };
+
+            _unarmedClipOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            _armedClipOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+
+            if (unarmedLocomotionOverride is AnimatorOverrideController template)
+            {
+                foreach (var pair in template.clips)
+                {
+                    AnimationClip original = pair.originalClip;
+                    if (original == null)
+                        continue;
+
+                    AnimationClip unarmedClip = pair.overrideClip != null ? pair.overrideClip : original;
+                    _unarmedClipOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(original, unarmedClip));
+                    _armedClipOverrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(original, original));
+                }
+            }
+
+            if (_unarmedClipOverrides.Count == 0)
+            {
+                _runtimeLocomotionOverride = null;
+                return false;
+            }
+
+            _animator.runtimeAnimatorController = _runtimeLocomotionOverride;
+            return true;
+        }
+
+        void ResetLocomotionAnimatorPose()
+        {
+            if (_animator == null)
+                return;
+
+            _animator.SetBool(InAirBoolHash, false);
+
+            int inAirLayer = _animator.GetLayerIndex("InAir");
+            if (inAirLayer >= 0)
+                _animator.Play(EmptyStateHash, inAirLayer, 0f);
+
+            _animator.Play(StandingStateHash, 0, 0f);
+            _animator.Update(0f);
         }
 
         void ApplyFullBodyWeightForCurrentState()

@@ -402,7 +402,8 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 - [x] Старт визуально unarmed, без unequip-анимации
 - [x] Первый спринт без винтовочных рук (тот же resync, что у T)
 - [x] Не ломать прыжок, атаку, look/осанку
-- [ ] На префабе по желанию прописать `unarmedLocomotionOverride` — сейчас поле часто пустое, `ApplyLocomotionController` no-op; не трогать, пока спринт ок
+- [x] На префабе прописан `unarmedLocomotionOverride` (`FPSAnimator_Unarmed_Humanoid`) — jog с махом рук без оружия
+- [x] `IkLayer` / Additive / Sway маскируются `FullBodyWeight` (Mask): в unarmed hand IK не прибивает кисти к weapon targets
 
 ### Что уже сделано
 
@@ -424,7 +425,7 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 | Поза «как F9» на старте / в конце бега | F9 = `LookLayerWeight`/`StabilizationWeight` = 1 (static). `stopMotion` — IK на WeaponBone при остановке | Крутить offset камеры (`ShooterFpsCameraApply`) — на armed-кадр не влияет | Look 0.3 unarmed / 1 armed; Stab 0; в unarmed не запускать `stopMotion`; сбрасывать F9 при Play |
 | Руки на мгновение после включения Animator | `FPSAnimator.Update`: animator был выкл → вкл → **`RebuildPlayables()`** → PoseSampler `Initialize` → снова `PlayPose` с blend. Graph живёт отдельно от `Animator.enabled` | Считать, что Animator «запомнил клип» | Не выключать Animator. Freeze/hide не использовать для старта |
 | Мигание камеры | Скрытие mesh на старте: первый кадр как Scene view / pre-Play camera | — | Не трогать рендереры и `ShooterFpsCameraApply` ради рук |
-| Носки при атаке + рывок рук | Подключили `FPSAnimator_Unarmed_Humanoid.overrideController`; Standing/sprint мапы пересеклись с rifle-клипами | Чинить старт через замену locomotion controller | Откат. Override на префабе **не** заполнять, пока нет отдельной задачи |
+| Носки при атаке + рывок рук | Подключили `FPSAnimator_Unarmed_Humanoid.overrideController`; Standing/sprint мапы пересеклись с rifle-клипами | Чинить старт через замену locomotion controller | Откат. **Позже (авг 2026):** override снова на префабе для маха рук; attack-клипы в override не мапятся |
 | Instant `SetHandPose(true)` без coroutine | Snap в `Start` раньше, чем PoseSampler доигрывает init-blend; либо `_isUnarmed` уже true → early-out. Mixer не фиксирует unarmed | Одна строка `instant: true` без `ClearSlot`/ожидания кадра | Snap **внутри** того же `TransitionToPose`, с yield на кадр и повторным `ForceOverlay` |
 
 **Итог (август 2026):** не делать unarmed «настоящей базой KINEMATION» и не выключать анимацию. Внутри старт = переход armed → unarmed как **T**, визуально = мгновенный overlay snap. Прыжок этот путь не трогает.

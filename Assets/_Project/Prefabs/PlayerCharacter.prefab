@@ -1106,8 +1106,8 @@ MonoBehaviour:
   armedOverlayPose: {fileID: 11400000, guid: d6e7f8a9b0c14235d6e7f8a9b0c21346, type: 2}
   equipClip: {fileID: 11400000, guid: b4c5d6e7f8a94123b4c5d6e7f8a90123, type: 2}
   unequipClip: {fileID: 11400000, guid: c5d6e7f8a9b04234c5d6e7f8a9b01234, type: 2}
-  armedLocomotionController: {fileID: 0}
-  unarmedLocomotionOverride: {fileID: 0}
+  armedLocomotionController: {fileID: 9100000, guid: c4e5f6a7b8d94321a0f1e2d3c4b5a697, type: 2}
+  unarmedLocomotionOverride: {fileID: 22100000, guid: cd76687c72395ad439b3a4ec556f975f, type: 2}
   startUnarmed: 1
 --- !u!114 &8812334455667788993
 MonoBehaviour:

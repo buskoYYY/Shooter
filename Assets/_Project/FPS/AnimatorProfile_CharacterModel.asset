@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.IkLayer.IkLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: FullBodyWeight
+    mode: 1
+    clampMin: 0
+    source: 0
   linkDynamically: 0
   isStandalone: 1
   rightHand:
@@ -84,7 +88,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.AdditiveLayer.AdditiveLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: FullBodyWeight
+    mode: 1
+    clampMin: 0
+    source: 0
   linkDynamically: 0
   isStandalone: 1
   weaponIkBone:
@@ -336,7 +344,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.SwayLayer.SwayLayerSettings
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
   alpha: 1
-  curveBlending: []
+  curveBlending:
+  - name: FullBodyWeight
+    mode: 1
+    clampMin: 0
+    source: 0
   linkDynamically: 0
   isStandalone: 1
   weaponIkBone:
