@@ -13,8 +13,8 @@ namespace Shooter.Project.Character
         public const float DefaultBaseSpeed = 5f;
         public const float DefaultBoostSpeed = 7.5f;
         // Was 8/10 — felt sluggish when turning while walking. Demo CCP uses ~50/40.
-        public const float DefaultAcceleration = 22f;
-        public const float DefaultDeceleration = 24f;
+        public const float DefaultAcceleration = 40f;
+        public const float DefaultDeceleration = 40f;
 
         // KINEMATION demo MovementSettings: jumpHeight=4 (vy), gravity=9 → apex ≈ 0.89m, duration ≈ 0.44s
         public const float DefaultJumpApexHeight = 16f / 18f;

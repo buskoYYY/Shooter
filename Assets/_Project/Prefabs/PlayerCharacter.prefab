@@ -806,11 +806,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedAcceleration
-      value: 22
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedDeceleration
-      value: 24
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: verticalMovementParameters.availableNotGroundedJumps
@@ -1083,6 +1083,7 @@ MonoBehaviour:
   cameraLocalOffset: {x: 0, y: 0.06, z: 0.04}
   defaultFieldOfView: 80
   detachFromHeadAnimation: 1
+  runBobSmoothTime: 0.14
   ladderLookSmoothTime: 0.4
   ladderLookPitch: -18
   ladderBobSmoothTime: 0.05
@@ -1146,8 +1147,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterCcpMovementTuning
   baseSpeedLimit: 5
   boostSpeedLimit: 7.5
-  stableGroundedAcceleration: 22
-  stableGroundedDeceleration: 24
+  stableGroundedAcceleration: 40
+  stableGroundedDeceleration: 40
   jumpApexHeight: 0.8888889
   jumpApexDuration: 0.4444444
 --- !u!114 &6644556677889900112

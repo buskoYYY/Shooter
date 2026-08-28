@@ -1,5 +1,6 @@
 using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Camera;
+using Lightbug.CharacterControllerPro.Core;
 using UnityEngine;
 
 namespace Shooter.Project.Character
@@ -20,6 +21,13 @@ namespace Shooter.Project.Character
         [SerializeField] float defaultFieldOfView = 80f;
         [Tooltip("If true, camera is detached from head and follows it in LateUpdate (fixes culling).")]
         [SerializeField] bool detachFromHeadAnimation = true;
+
+        public const float DefaultRunBobSmoothTime = 0.14f;
+
+        [Header("Run bob")]
+        [Tooltip("Damp on pelvis step bounce. Higher = slower/smoother. Bob stays on character up so looking up does not kill it.")]
+        [SerializeField] float runBobSmoothTime = DefaultRunBobSmoothTime;
+        [SerializeField] [Range(0f, 2f)] float runBobAmount = 1f;
 
         public const float DefaultLadderLookSmoothTime = 0.4f;
         public const float DefaultLadderLookPitch = -18f;
@@ -46,7 +54,15 @@ namespace Shooter.Project.Character
         ShooterLadderFpsBridge _ladderBridge;
         FPSCameraController _fpsCamera;
         Transform _head;
+        Transform _pelvis;
+        CharacterActor _actor;
         bool _detached;
+
+        float _pelvisBaseHeight;
+        float _pelvisBaseVelocity;
+        float _smoothedBob;
+        float _bobVelocity;
+        bool _bobInitialized;
 
         bool _ladderCameraActive;
         bool _exitBlendActive;
@@ -140,6 +156,9 @@ namespace Shooter.Project.Character
         {
             if (_character == null)
                 _character = GetComponent<ShooterCharacterController>();
+
+            if (_actor == null && _character != null)
+                _actor = _character.GetComponent<CharacterActor>();
 
             if (_ladderBridge == null)
                 _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
@@ -269,8 +288,11 @@ namespace Shooter.Project.Character
                 if (cam.parent != null && cam.parent != playerRoot && IsHeadLike(cam.parent))
                     _head = cam.parent;
                 else
-                    _head = FindHeadBone();
+                    _head = FindBone("head");
             }
+
+            if (_pelvis == null)
+                _pelvis = FindBone("pelvis", "hips");
 
             ClearCameraBoneBinding();
 
@@ -296,17 +318,28 @@ namespace Shooter.Project.Character
             return n.IndexOf("head", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        Transform FindHeadBone()
+        Transform FindBone(params string[] names)
         {
             if (_character == null)
                 return null;
 
-            Transform root = _character.transform;
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
+            Transform[] all = _character.GetComponentsInChildren<Transform>(true);
+            for (int n = 0; n < names.Length; n++)
             {
-                if (string.Equals(all[i].name, "head", System.StringComparison.OrdinalIgnoreCase))
-                    return all[i];
+                for (int i = 0; i < all.Length; i++)
+                {
+                    if (string.Equals(all[i].name, names[n], System.StringComparison.OrdinalIgnoreCase))
+                        return all[i];
+                }
+            }
+
+            for (int n = 0; n < names.Length; n++)
+            {
+                for (int i = 0; i < all.Length; i++)
+                {
+                    if (all[i].name.IndexOf(names[n], System.StringComparison.OrdinalIgnoreCase) >= 0)
+                        return all[i];
+                }
             }
 
             return null;
@@ -379,10 +412,37 @@ namespace Shooter.Project.Character
         {
             rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
             Vector3 eyeOffset = rotation * cameraLocalOffset;
-            if (_head != null)
-                position = _head.position + eyeOffset;
+            Vector3 up = _character.transform.up;
+            Vector3 rootPos = _character.transform.position;
+
+            Vector3 headPos = _head != null
+                ? _head.position
+                : rootPos + up * 1.6f;
+
+            Transform bobBone = _pelvis != null ? _pelvis : _head;
+            float rawHeight = bobBone != null
+                ? Vector3.Dot(bobBone.position - rootPos, up)
+                : Vector3.Dot(headPos - rootPos, up);
+
+            bool grounded = _actor == null || _actor.IsGrounded;
+            if (!grounded || !_bobInitialized)
+            {
+                _pelvisBaseHeight = rawHeight;
+                _smoothedBob = 0f;
+                _pelvisBaseVelocity = 0f;
+                _bobVelocity = 0f;
+                _bobInitialized = true;
+            }
             else
-                position = _character.transform.position + _character.transform.up * 1.6f + eyeOffset;
+            {
+                _pelvisBaseHeight = Mathf.SmoothDamp(_pelvisBaseHeight, rawHeight, ref _pelvisBaseVelocity, 0.22f);
+                float rawBob = (rawHeight - _pelvisBaseHeight) * runBobAmount;
+                float damp = Mathf.Max(0.04f, runBobSmoothTime);
+                _smoothedBob = Mathf.SmoothDamp(_smoothedBob, rawBob, ref _bobVelocity, damp);
+            }
+
+            Vector3 pelvisBob = up * (rawHeight - _pelvisBaseHeight);
+            position = headPos - pelvisBob + up * _smoothedBob + eyeOffset;
         }
 
         void ApplyDefaultFieldOfView()
