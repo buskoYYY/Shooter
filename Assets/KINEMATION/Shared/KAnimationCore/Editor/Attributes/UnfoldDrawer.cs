@@ -1,7 +1,4 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
-
-using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
+﻿using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 using UnityEditor;
 using UnityEngine;
 

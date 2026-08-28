@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
 
 using UnityEngine;
 
@@ -76,16 +75,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
         public static float ExpDecayAlpha(float speed, float deltaTime)
         {
             return 1 - Mathf.Exp(-speed * deltaTime);
-        }
-
-        public static float FloatInterp(float a, float b, float speed, float deltaTime)
-        {
-            return speed > 0f ? Mathf.Lerp(a, b, ExpDecayAlpha(speed, deltaTime)) : b;
-        }
-
-        public static Quaternion SmoothSlerp(Quaternion a, Quaternion b, float speed, float deltaTime)
-        {
-            return speed > 0f ? Quaternion.Slerp(a, b, ExpDecayAlpha(speed, deltaTime)) : b;
         }
 
         public static Vector2 ComputeLookAtInput(Transform root, Transform from, Transform to)

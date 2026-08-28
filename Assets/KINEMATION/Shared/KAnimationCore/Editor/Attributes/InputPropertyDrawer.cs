@@ -1,9 +1,9 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
 
-using System.Collections.Generic;
 using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
+
+using System.Collections.Generic;
 using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
 using UnityEditor;
 using UnityEngine;

@@ -1,6 +1,6 @@
 // Designed by KINEMATION, 2024.
 
-using KINEMATION.Shared.KAnimationCore.Editor.Tools;
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 
 using UnityEditor;

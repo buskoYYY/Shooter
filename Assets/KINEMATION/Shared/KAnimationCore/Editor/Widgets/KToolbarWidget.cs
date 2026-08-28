@@ -1,9 +1,9 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
 
+using UnityEditor;
 using UnityEngine;
 
-namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
+namespace KINEMATION.Shared.KAnimationCore.Editor.Misc
 {
     public struct KToolbarTab
     {
@@ -13,7 +13,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
         public KOnTabRendered onTabRendered;
     }
     
-    public class KToolbarWidget
+    public class KToolbarWidget : IEditorTool
     {
         private int _toolbarIndex = 0;
         private string[] _toolbarTabNames;
@@ -37,5 +37,15 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
             _toolbarIndex = GUILayout.Toolbar(_toolbarIndex, _toolbarTabNames);
             _toolbarTabs[_toolbarIndex].onTabRendered?.Invoke();
         }
+
+        public void Init() { }
+
+        public string GetToolName() => string.Empty;
+
+        public string GetToolCategory() => string.Empty;
+
+        public string GetToolDescription() => string.Empty;
+
+        public string GetDocsURL() => string.Empty;
     }
 }

@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 9a5444d378f079b40b426b671ff62dc7
+timeCreated: 1722195056
+AssetOrigin:
+  serializedVersion: 1
+  productId: 238641
+  packageName: FPS Animation Framework
+  packageVersion: 4.7.1
+  assetPath: Assets/KINEMATION/KAnimationCore/Editor/Attributes/RigDrawerUtility.cs
+  uploadId: 719590

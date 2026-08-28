@@ -1,8 +1,11 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+// Designed by KINEMATION, 2024.
 
-using System.Collections.Generic;
 using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
+
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -57,6 +60,26 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
         {
             var window = GetWindow<RigMappingWindow>(false, "Rig Mapping", true);
             return window;
+        }
+        
+        private static string GetProjectWindowFolder()
+        {
+            // Use reflection to access the internal ProjectWindowUtil.GetActiveFolderPath method
+            Type projectWindowUtilType = typeof(ProjectWindowUtil);
+            
+            MethodInfo getActiveFolderPathMethod = projectWindowUtilType.GetMethod("GetActiveFolderPath", 
+                BindingFlags.Static | BindingFlags.NonPublic);
+            
+            if (getActiveFolderPathMethod != null)
+            {
+                object result = getActiveFolderPathMethod.Invoke(null, null);
+                if (result != null)
+                {
+                    return result.ToString();
+                }
+            }
+
+            return "No folder is currently opened.";
         }
         
         private void TraverseHierarchy(Transform root, ref KRigElementChain chain, KRig rig)
@@ -154,7 +177,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
             }
             
             Undo.RegisterCreatedObjectUndo(_rigAsset, "Create Rig Asset");
-            string path = $"{KEditorUtility.GetProjectActiveFolder()}/Rig_{root.transform.root.name}.asset";
+            string path = $"{GetProjectWindowFolder()}/Rig_{root.transform.root.name}.asset";
             AssetDatabase.CreateAsset(_rigAsset, AssetDatabase.GenerateUniqueAssetPath(path));
         }
 

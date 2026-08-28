@@ -10,7 +10,7 @@ using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using KINEMATION.ProceduralRecoilAnimationSystem.Runtime;
 
 using System.IO;
-using KINEMATION.Shared.KAnimationCore.Editor;
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 using UnityEditor;
 using UnityEngine;
 

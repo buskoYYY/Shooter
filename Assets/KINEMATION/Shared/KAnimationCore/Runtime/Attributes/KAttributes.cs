@@ -1,13 +1,10 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+// Designed by KINEMATION, 2024.
 
 using System;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Attributes
 {
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class CurveSelectorAttribute : PropertyAttribute
     {
@@ -23,11 +20,9 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Attributes
         }
     }
 
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class InputProperty : PropertyAttribute { }
     
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class RigAssetSelectorAttribute : PropertyAttribute
     {
@@ -39,7 +34,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Attributes
         }
     }
 
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class ElementChainSelectorAttribute : RigAssetSelectorAttribute
     {
@@ -49,15 +43,12 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Attributes
         }
     }
     
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class ReadOnlyAttribute : PropertyAttribute { }
 
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class UnfoldAttribute : PropertyAttribute { }
 
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
     public class TabAttribute : PropertyAttribute
     {
@@ -66,20 +57,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Attributes
         public TabAttribute(string tabName)
         {
             this.tabName = tabName;
-        }
-    }
-    
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Attributes")]
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    public class CustomElementChainDrawerAttribute : PropertyAttribute
-    {
-        public bool drawLabel;
-        public bool drawTextField;
-
-        public CustomElementChainDrawerAttribute(bool drawLabel, bool drawTextField)
-        {
-            this.drawLabel = drawLabel;
-            this.drawTextField = drawTextField;
         }
     }
 

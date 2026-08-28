@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
+using KINEMATION.Shared.KAnimationCore.Editor.Rig;
 using KINEMATION.Shared.KAnimationCore.Editor.Widgets;
 using UnityEditor;
 using UnityEngine;
@@ -49,6 +51,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
             foreach (var toolType in toolTypes)
             {
                 if (toolType.IsAbstract) continue;
+                if (IsInternalWidget(toolType)) continue;
 
                 var toolInstance = Activator.CreateInstance(toolType) as IEditorTool;
                 if (toolInstance == null) continue;
@@ -74,6 +77,13 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
                 onDrawSecondGUI = RenderTool,
                 orientation = SplitOrientation.Horizontal
             };
+        }
+
+        private static bool IsInternalWidget(Type toolType)
+        {
+            return toolType == typeof(RigTreeWidget)
+                || toolType == typeof(KToolbarWidget)
+                || toolType == typeof(TabInspectorWidget);
         }
 
         private void OnGUI()

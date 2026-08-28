@@ -1,13 +1,10 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+// Designed by KINEMATION, 2024.
 
 using System;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
 {
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Core")]
     [Serializable]
     public struct VectorCurve
     {
@@ -60,12 +57,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
             return new Vector3(x.Evaluate(time), y.Evaluate(time), z.Evaluate(time));
         }
 
-        public Vector3 GetLastValue()
-        {
-            float length = GetCurveLength();
-            return GetValue(length);
-        }
-
         public bool IsValid()
         {
             return x != null && y != null && z != null;
@@ -79,7 +70,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
         }
     }
     
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Core")]
     [Serializable]
     public enum EEaseFunc
     {
@@ -89,7 +79,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
         Custom
     }
     
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Core")]
     [Serializable]
     public struct EaseMode
     {

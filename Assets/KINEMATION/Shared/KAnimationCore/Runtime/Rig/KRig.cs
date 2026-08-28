@@ -1,42 +1,43 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
+
+using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 
 using System.Collections.Generic;
-using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
-using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
-using Object = UnityEngine.Object;
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 {
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Rig")]
-    public abstract class KRigBase : ScriptableObject, IRigProvider
+    // Character skeleton asset.
+    [CreateAssetMenu(fileName = "NewRig", menuName = "KINEMATION/Rig")]
+    public class KRig : ScriptableObject
     {
         public RuntimeAnimatorController targetAnimator;
-        public List<KRigElement> rigHierarchy = new List<KRigElement>();
-        
-        [CustomElementChainDrawer(false, true)]
-        public List<KRigElementChain> rigElementChains = new List<KRigElementChain>();
-        
-        public KRigElement[] GetHierarchy()
-        {
-            return rigHierarchy.ToArray();
-        }
-    }
-    
-    // Character skeleton asset.
-    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Rig")]
-    public class KRig : KRigBase
-    {
         public UserInputConfig inputConfig;
+        public List<KRigElement> rigHierarchy = new List<KRigElement>();
+        public List<KRigElementChain> rigElementChains = new List<KRigElementChain>();
         public List<string> rigCurves = new List<string>();
 
         public KRigElementChain GetElementChainByName(string chainName)
         {
             var chain = rigElementChains.Find(item => item.chainName.Equals(chainName));
             return chain;
+        }
+
+        public KRigElement[] GetHierarchy()
+        {
+            if (rigHierarchy == null || rigHierarchy.Count == 0)
+            {
+                return System.Array.Empty<KRigElement>();
+            }
+
+            var result = new KRigElement[rigHierarchy.Count];
+            for (int i = 0; i < rigHierarchy.Count; i++)
+            {
+                result[i] = rigHierarchy[i];
+            }
+
+            return result;
         }
 
         public KTransformChain GetPopulatedChain(string chainName, KRigComponent rigComponent)
@@ -61,18 +62,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 #if UNITY_EDITOR
         public List<int> rigDepths = new List<int>();
         private List<Object> _rigObservers = new List<Object>();
-
-        private void OnEnable()
-        {
-            // Force update rig depths for compatibility reasons.
-            int count = rigHierarchy.Count;
-            for (int i = 0; i < count; i++)
-            {
-                var element = rigHierarchy[i];
-                element.depth = rigDepths[i];
-                rigHierarchy[i] = element;
-            }
-        }
 
         public void ImportRig(KRigComponent rigComponent)
         {

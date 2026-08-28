@@ -3,6 +3,7 @@
 
 using UnityEditor;
 using UnityEngine;
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 
 namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
 {

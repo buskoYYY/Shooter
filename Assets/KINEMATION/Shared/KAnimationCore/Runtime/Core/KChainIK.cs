@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+// Designed by KINEMATION, 2024.
 
 using UnityEngine;
 

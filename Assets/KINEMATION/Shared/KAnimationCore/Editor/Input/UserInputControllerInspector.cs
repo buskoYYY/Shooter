@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
 
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using UnityEditor;
 using UnityEngine;
@@ -11,10 +11,14 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Input
     public class UserInputControllerInspector : UnityEditor.Editor
     {
         private UserInputController _controller;
-        
+
+        private AssetObjectWidget<UserInputConfig> _configWidget;
+       
         private void OnEnable()
         {
             _controller = (UserInputController) target;
+            _configWidget = new AssetObjectWidget<UserInputConfig>(serializedObject, "inputConfig",
+                "Config");
         }
         
         private static bool IsInspectorFocused() 

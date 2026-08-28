@@ -16,7 +16,7 @@ using KINEMATION.FPSAnimationFramework.Runtime.Camera;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
 using KINEMATION.ProceduralRecoilAnimationSystem.Runtime;
-using KINEMATION.Shared.KAnimationCore.Editor;
+using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using KINEMATION.Shared.KAnimationCore.Runtime.Rig;

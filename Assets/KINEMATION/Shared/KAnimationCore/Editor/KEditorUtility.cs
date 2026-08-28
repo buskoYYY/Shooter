@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
 
 using System;
 using System.IO;
@@ -8,20 +7,17 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace KINEMATION.Shared.KAnimationCore.Editor
+namespace KINEMATION.Shared.KAnimationCore.Editor.Misc
 {
     public class KEditorUtility
     {
-        public const string EditorToolsPath = "Tools/KINEMATION";
-        
-        public static GUIStyle boldLabel = new GUIStyle(EditorStyles.label)
-        {
-            fontStyle = FontStyle.Bold,
-            richText = true,
-            wordWrap = false
-        };
-        
-        public static string GetProjectActiveFolder()
+        public const string EditorToolsPath = "Window/KINEMATION/Tools";
+
+        public static GUIStyle boldLabel => EditorStyles.boldLabel;
+
+        public static string GetProjectActiveFolder() => GetProjectWindowFolder();
+
+        public static string GetProjectWindowFolder()
         {
             Type projectWindowUtilType = typeof(ProjectWindowUtil);
             
@@ -46,40 +42,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor
             
             AssetDatabase.CreateAsset(asset, filePath);
             EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssetIfDirty(asset);
-        }
-        
-        public static bool IsSubAsset(Object asset)
-        {
-            if (asset == null) return false;
-
-            string path = AssetDatabase.GetAssetPath(asset);
-            if (string.IsNullOrEmpty(path)) return false;
-
-            Object mainAsset = AssetDatabase.LoadMainAssetAtPath(path);
-            return asset != mainAsset;
-        }
-        
-        public static AnimationClip GetAnimationClipFromSelection()
-        {
-            Object selected = Selection.activeObject;
-            if (selected == null) return null;
-
-            AnimationClip clip = selected as AnimationClip;
-            string path = AssetDatabase.GetAssetPath(selected);
-
-            // Try to find a clip in an FBX file.
-            if (clip == null && Path.GetExtension(path).ToLower() == ".fbx")
-            {
-                Object[] assets = AssetDatabase.LoadAllAssetsAtPath(path);
-                foreach (Object asset in assets)
-                {
-                    clip = asset as AnimationClip;
-                    if (clip != null && (clip.hideFlags & HideFlags.HideInHierarchy) == 0) break;
-                }
-            }
-
-            return clip;
+            AssetDatabase.SaveAssets();
         }
     }
 }

@@ -1,14 +1,14 @@
-﻿// Copyright (c) 2026 KINEMATION.
-// All rights reserved.
+﻿// Designed by KINEMATION, 2024.
+
+using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 using UnityEditor;
 using UnityEngine;
 
-namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
+namespace KINEMATION.Shared.KAnimationCore.Editor.Misc
 {
     public struct EditorTab
     {
@@ -16,7 +16,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
         public List<SerializedProperty> properties;
     }
     
-    public class TabInspectorWidget
+    public class TabInspectorWidget : IEditorTool
     {
         private SerializedObject _serializedObject;
 
@@ -87,7 +87,7 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
             _tabNames = _editorTabs.Select(item => item.name).ToArray();
         }
         
-        public void OnGUI()
+        public void Render()
         {
             _serializedObject.Update();
             
@@ -107,5 +107,13 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
             
             _serializedObject.ApplyModifiedProperties();
         }
+
+        public string GetToolName() => string.Empty;
+
+        public string GetToolCategory() => string.Empty;
+
+        public string GetToolDescription() => string.Empty;
+
+        public string GetDocsURL() => string.Empty;
     }
 }
