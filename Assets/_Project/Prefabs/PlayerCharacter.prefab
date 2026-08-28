@@ -1296,6 +1296,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5943732212394091074}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5511223344556677889}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 535695929301425874}
@@ -2326,6 +2329,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b24a8f06539258c41887e7e69f8b1754, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.lightbug.character-controller-pro::Lightbug.CharacterControllerPro.Core.AnimatorLink
+--- !u!114 &5511223344556677889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8593432475786107828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e8a91b2d3f4756a8b90c1d2e3f4051, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.EventReceiver
+  onStep:
+    m_PersistentCalls:
+      m_Calls: []
+  onJump:
+    m_PersistentCalls:
+      m_Calls: []
+  onFalldown:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &8674152986721511069 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 280244281219317880, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
