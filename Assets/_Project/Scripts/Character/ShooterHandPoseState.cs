@@ -236,7 +236,13 @@ namespace Shooter.Project.Character
 
             _isUnarmed = unarmed;
 
-            ApplyLocomotionController(unarmed);
+            // Unarmed: remap locomotion first (sprint / FBW — Docs/TASKS.md).
+            // Armed: defer remap until overlay settles — rifle clips vs unarmed overlay flash twisted arms.
+            if (unarmed || instant)
+                ApplyLocomotionController(unarmed);
+            else
+                ApplyFullBodyWeightForCurrentState();
+
             _characterController?.SyncFpsLayerWeights();
 
             if (instant)
@@ -302,6 +308,9 @@ namespace Shooter.Project.Character
             ClearSlotAnimations();
             ForceOverlayPoseFullWeight();
 
+            if (!toUnarmed)
+                ApplyLocomotionController(false);
+
             _characterController?.SyncFpsLayerWeights();
 
             _isTransitioning = false;
@@ -332,9 +341,9 @@ namespace Shooter.Project.Character
 
             _runtimeLocomotionOverride.ApplyOverrides(unarmed ? _unarmedClipOverrides : _armedClipOverrides);
 
-            // Clearing InAir/Standing after clip remap — stuck JumpStart legs were from controller swaps.
+            // Do not Play(Standing) on T→armed — that flashes rifle idle. Only clear a stuck jump.
             if (!unarmed)
-                ResetLocomotionAnimatorPose();
+                ClearStuckInAirLocomotion();
 
             ApplyFullBodyWeightForCurrentState();
         }
@@ -392,9 +401,9 @@ namespace Shooter.Project.Character
             return true;
         }
 
-        void ResetLocomotionAnimatorPose()
+        void ClearStuckInAirLocomotion()
         {
-            if (_animator == null)
+            if (_animator == null || !_animator.GetBool(InAirBoolHash))
                 return;
 
             _animator.SetBool(InAirBoolHash, false);
@@ -402,6 +411,14 @@ namespace Shooter.Project.Character
             int inAirLayer = _animator.GetLayerIndex("InAir");
             if (inAirLayer >= 0)
                 _animator.Play(EmptyStateHash, inAirLayer, 0f);
+        }
+
+        void ResetLocomotionAnimatorPose()
+        {
+            if (_animator == null)
+                return;
+
+            ClearStuckInAirLocomotion();
 
             _animator.Play(StandingStateHash, 0, 0f);
             _animator.Update(0f);

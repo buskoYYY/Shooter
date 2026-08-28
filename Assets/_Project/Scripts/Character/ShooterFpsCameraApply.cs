@@ -377,15 +377,12 @@ namespace Shooter.Project.Character
 
         void GetHeadCameraPose(out Vector3 position, out Quaternion rotation)
         {
-            // Position follows the head (bob), but offset is character-aligned — not head bone rotation.
-            // Rotation is look only (yaw from body + pitch from mouse) — independent of Animator.
-            if (_head != null)
-                position = _head.position + _character.transform.rotation * cameraLocalOffset;
-            else
-                position = _character.transform.position + _character.transform.up * 1.6f
-                    + _character.transform.rotation * cameraLocalOffset;
-
             rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
+            Vector3 eyeOffset = rotation * cameraLocalOffset;
+            if (_head != null)
+                position = _head.position + eyeOffset;
+            else
+                position = _character.transform.position + _character.transform.up * 1.6f + eyeOffset;
         }
 
         void ApplyDefaultFieldOfView()

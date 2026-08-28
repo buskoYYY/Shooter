@@ -434,10 +434,36 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ---
 
+## T → armed ломает руки / «рукава» (чеклист, авг 2026)
+
+KINEMATION по умолчанию **armed**. Обычно ломается не сам armed, а когда поверх него чинят **unarmed** или **камеру** и задевают общую цепочку (Animator + overlay mixer + PoseSampler). Чинить «только старт» или «только камеру» по отдельности нельзя.
+
+### Что ломает руки
+
+| Причина | Что происходит |
+|---------|----------------|
+| `runtimeAnimatorController =` asset-override | Сбрасывает базовый контроллер — ломает и unarmed, и armed |
+| Locomotion remap **сразу** при T→armed | Rifle-клипы включаются, пока overlay ещё unarmed → вспышка / скрученные руки |
+| `Play("Standing")` при equip | Мигание rifle idle, потом «нормально» |
+| Нет `ClearSlotAnimations()` между T | Старые slot-motion накапливаются → twisted hands |
+| «Рукава» / кривая ширина рук | Часто **камера**, не overlay: offset не в look space, камера на `head`, в сцене `cameraLocalOffset.y = -0.15` |
+
+### Как должно быть
+
+1. Locomotion только через **runtime** `AnimatorOverrideController.ApplyOverrides`, не полная смена controller (fallback swap — last resort).
+2. При **T→armed** locomotion меняется **после** settle overlay (`SetHandPose` откладывает remap; `TransitionToPose` вызывает его в конце).
+3. На armed-пути **не** `Play(Standing)` — только сброс застрявшего InAir.
+4. Между toggle — `ClearSlotAnimations()`.
+5. Камера: Play Mode **не** child `head`; позиция = `head` + offset в **look space**; `Camera Local Offset` от кости головы, типично `(0, 0.06, 0.04…0.08)`, не Y≈1.7 (это высота капсулы). В `3D Scene` не оставлять override `y = -0.15`. Demo **Character Camera** выключать целиком (Camera + AudioListener), не только `Camera3D`.
+
+Код: `ShooterHandPoseState.cs`, `ShooterFpsCameraApply.cs`, `ShooterDemoLegacyInputFix.cs`.
+
+---
+
 ### Камера и culling (авг 2026)
 
 FPS Camera больше **не дочерняя к кости head** в Play Mode (`ShooterFpsCameraApply`): отвязывается к корню игрока, в **LateUpdate (order 500)** ставит world position у головы и rotation = yaw тела + pitch мыши. `cameraBone` у `FPSCameraController` обнуляется, чтобы Animator не крутил Camera.transform (ломало world culling). Ответ KINEMATION support может предложить другое — наш обходной путь совместим с ожиданием «rotation в LateUpdate».
 
 ---
 
-*Последнее обновление: 24 августа 2026 — FPS-камера отвязана от анимации головы (culling). Следующий этап — Задача 2 (оружие).*
+*Последнее обновление: 28 августа 2026 — чеклист T→armed / камера (не ломать overlay). Следующий этап — Задача 2 (оружие).*

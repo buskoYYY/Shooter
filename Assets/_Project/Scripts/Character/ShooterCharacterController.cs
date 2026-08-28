@@ -251,6 +251,9 @@ namespace Shooter.Project.Character
                 _fpsCamera = fpsCharacterRoot.GetComponentInChildren<FPSCameraController>(true);
             }
 
+            if (_fpsCamera == null)
+                _fpsCamera = GetComponentInChildren<FPSCameraController>(true);
+
             if (inputActions != null)
             {
                 _playerMap = inputActions.FindActionMap("Player", true);
