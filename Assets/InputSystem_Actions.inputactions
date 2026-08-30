@@ -94,6 +94,51 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Reload",
+                    "type": "Button",
+                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c10",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "DropWeapon",
+                    "type": "Button",
+                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c11",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Weapon1",
+                    "type": "Button",
+                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c12",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Weapon2",
+                    "type": "Button",
+                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c13",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Weapon3",
+                    "type": "Button",
+                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c14",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -331,7 +376,7 @@
                 {
                     "name": "",
                     "id": "cbac6039-9c09-46a1-b5f2-4e5124ccb5ed",
-                    "path": "<Keyboard>/2",
+                    "path": "<Mouse>/scroll/up",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -419,7 +464,7 @@
                 {
                     "name": "",
                     "id": "1534dc16-a6aa-499d-9c3a-22b47347b52a",
-                    "path": "<Keyboard>/1",
+                    "path": "<Mouse>/scroll/down",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -490,6 +535,61 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "ToggleHandPose",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e01",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e02",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "DropWeapon",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e03",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Weapon1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e04",
+                    "path": "<Keyboard>/2",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Weapon2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e05",
+                    "path": "<Keyboard>/3",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Weapon3",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

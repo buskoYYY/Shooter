@@ -4,11 +4,12 @@
 
 | Файл | Описание |
 |------|----------|
-| [TASKS.md](TASKS.md) | Архитектура, фазы, задачи 1.1–1.4 (движение) |
+| [TASKS.md](TASKS.md) | Архитектура, фазы, задачи 1.1–1.4 (движение), задача 2 (оружие) |
 | [CLIENT_STATUS.md](CLIENT_STATUS.md) | Статус для заказчика |
 | [BALANCE_TUNING_PANEL.md](BALANCE_TUNING_PANEL.md) | Dev-панель F8 / F9 |
 | [PHASE1_SETUP.md](PHASE1_SETUP.md) | Auto-setup Phase 0–1 (CCP) |
 | [PHASE2_SETUP.md](PHASE2_SETUP.md) | Auto-setup Phase 2 (FPS AF) |
 | [PHASE4_SETUP.md](PHASE4_SETUP.md) | Auto-setup Phase 4 (лестницы) |
+| [PHASE5_SETUP.md](PHASE5_SETUP.md) | Auto-setup Phase 5 (каркас оружия) |
 
 Документация сторонних ассетов (CCP, KINEMATION) остаётся в их папках внутри `Assets/`.

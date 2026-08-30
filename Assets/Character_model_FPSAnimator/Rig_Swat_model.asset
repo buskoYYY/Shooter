@@ -13,564 +13,570 @@ MonoBehaviour:
   m_Name: Rig_Swat_model
   m_EditorClassIdentifier: KAnimationCore.Runtime::KINEMATION.Shared.KAnimationCore.Runtime.Rig.KRig
   targetAnimator: {fileID: 9100000, guid: 4c77323136b9524478f3a5c86ed70c71, type: 2}
+  inputConfig: {fileID: 11400000, guid: 022095d8cf55fba4080ab3e4c1364954, type: 2}
   rigHierarchy:
   - name: root
     index: 0
-    depth: 0
+    isVirtual: 0
   - name: center_of_mass
     index: 1
-    depth: 1
+    isVirtual: 0
   - name: ik_foot_root
     index: 2
-    depth: 1
+    isVirtual: 0
   - name: ik_foot_l
     index: 3
-    depth: 2
+    isVirtual: 0
   - name: ik_foot_r
     index: 4
-    depth: 2
+    isVirtual: 0
   - name: ik_hand_root
     index: 5
-    depth: 1
+    isVirtual: 0
   - name: ik_hand_gun
     index: 6
-    depth: 2
+    isVirtual: 0
   - name: ik_hand_l
     index: 7
-    depth: 3
+    isVirtual: 0
   - name: ik_hand_r
     index: 8
-    depth: 3
+    isVirtual: 0
   - name: interaction
     index: 9
-    depth: 1
+    isVirtual: 0
   - name: pelvis
     index: 10
-    depth: 1
+    isVirtual: 0
   - name: spine_01
     index: 11
-    depth: 2
+    isVirtual: 0
   - name: spine_02
     index: 12
-    depth: 3
+    isVirtual: 0
   - name: spine_03
     index: 13
-    depth: 4
+    isVirtual: 0
   - name: spine_04
     index: 14
-    depth: 5
+    isVirtual: 0
   - name: spine_05
     index: 15
-    depth: 6
+    isVirtual: 0
   - name: clavicle_l
     index: 16
-    depth: 7
+    isVirtual: 0
   - name: clavicle_out_l
     index: 17
-    depth: 8
+    isVirtual: 0
   - name: clavicle_scap_l
     index: 18
-    depth: 8
+    isVirtual: 0
   - name: upperarm_l
     index: 19
-    depth: 8
+    isVirtual: 0
   - name: lowerarm_l
     index: 20
-    depth: 9
+    isVirtual: 0
   - name: hand_l
     index: 21
-    depth: 10
+    isVirtual: 0
   - name: index_metacarpal_l
     index: 22
-    depth: 11
+    isVirtual: 0
   - name: index_01_l
     index: 23
-    depth: 12
+    isVirtual: 0
   - name: index_02_l
     index: 24
-    depth: 13
+    isVirtual: 0
   - name: index_03_l
     index: 25
-    depth: 14
+    isVirtual: 0
   - name: middle_metacarpal_l
     index: 26
-    depth: 11
+    isVirtual: 0
   - name: middle_01_l
     index: 27
-    depth: 12
+    isVirtual: 0
   - name: middle_02_l
     index: 28
-    depth: 13
+    isVirtual: 0
   - name: middle_03_l
     index: 29
-    depth: 14
+    isVirtual: 0
   - name: pinky_metacarpal_l
     index: 30
-    depth: 11
+    isVirtual: 0
   - name: pinky_01_l
     index: 31
-    depth: 12
+    isVirtual: 0
   - name: pinky_02_l
     index: 32
-    depth: 13
+    isVirtual: 0
   - name: pinky_03_l
     index: 33
-    depth: 14
+    isVirtual: 0
   - name: ring_metacarpal_l
     index: 34
-    depth: 11
+    isVirtual: 0
   - name: ring_01_l
     index: 35
-    depth: 12
+    isVirtual: 0
   - name: ring_02_l
     index: 36
-    depth: 13
+    isVirtual: 0
   - name: ring_03_l
     index: 37
-    depth: 14
+    isVirtual: 0
   - name: thumb_01_l
     index: 38
-    depth: 11
+    isVirtual: 0
   - name: thumb_02_l
     index: 39
-    depth: 12
+    isVirtual: 0
   - name: thumb_03_l
     index: 40
-    depth: 13
+    isVirtual: 0
   - name: weapon_l
     index: 41
-    depth: 11
+    isVirtual: 0
   - name: wrist_inner_l
     index: 42
-    depth: 11
+    isVirtual: 0
   - name: wrist_outer_l
     index: 43
-    depth: 11
+    isVirtual: 0
   - name: IK WeaponBoneLeft
     index: 44
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_correctiveRoot_l
     index: 45
-    depth: 10
+    isVirtual: 0
   - name: lowerarm_bck_l
     index: 46
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_fwd_l
     index: 47
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_in_l
     index: 48
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_out_l
     index: 49
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_twist_01_l
     index: 50
-    depth: 10
+    isVirtual: 0
   - name: lowerarm_twist_02_l
     index: 51
-    depth: 10
+    isVirtual: 0
   - name: upperarm_correctiveRoot_l
     index: 52
-    depth: 9
+    isVirtual: 0
   - name: upperarm_bck_l
     index: 53
-    depth: 10
+    isVirtual: 0
   - name: upperarm_fwd_l
     index: 54
-    depth: 10
+    isVirtual: 0
   - name: upperarm_in_l
     index: 55
-    depth: 10
+    isVirtual: 0
   - name: upperarm_out_l
     index: 56
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twist_01_l
     index: 57
-    depth: 9
+    isVirtual: 0
   - name: upperarm_twistCor_01_l
     index: 58
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twist_02_l
     index: 59
-    depth: 9
+    isVirtual: 0
   - name: upperarm_bicep_l
     index: 60
-    depth: 10
+    isVirtual: 0
   - name: upperarm_tricep_l
     index: 61
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twistCor_02_l
     index: 62
-    depth: 10
+    isVirtual: 0
   - name: clavicle_pec_l
     index: 63
-    depth: 7
+    isVirtual: 0
   - name: clavicle_pec_r
     index: 64
-    depth: 7
+    isVirtual: 0
   - name: clavicle_r
     index: 65
-    depth: 7
+    isVirtual: 0
   - name: clavicle_out_r
     index: 66
-    depth: 8
+    isVirtual: 0
   - name: clavicle_scap_r
     index: 67
-    depth: 8
+    isVirtual: 0
   - name: upperarm_r
     index: 68
-    depth: 8
+    isVirtual: 0
   - name: lowerarm_r
     index: 69
-    depth: 9
+    isVirtual: 0
   - name: hand_r
     index: 70
-    depth: 10
+    isVirtual: 0
   - name: index_metacarpal_r
     index: 71
-    depth: 11
+    isVirtual: 0
   - name: index_01_r
     index: 72
-    depth: 12
+    isVirtual: 0
   - name: index_02_r
     index: 73
-    depth: 13
+    isVirtual: 0
   - name: index_03_r
     index: 74
-    depth: 14
+    isVirtual: 0
   - name: middle_metacarpal_r
     index: 75
-    depth: 11
+    isVirtual: 0
   - name: middle_01_r
     index: 76
-    depth: 12
+    isVirtual: 0
   - name: middle_02_r
     index: 77
-    depth: 13
+    isVirtual: 0
   - name: middle_03_r
     index: 78
-    depth: 14
+    isVirtual: 0
   - name: pinky_metacarpal_r
     index: 79
-    depth: 11
+    isVirtual: 0
   - name: pinky_01_r
     index: 80
-    depth: 12
+    isVirtual: 0
   - name: pinky_02_r
     index: 81
-    depth: 13
+    isVirtual: 0
   - name: pinky_03_r
     index: 82
-    depth: 14
+    isVirtual: 0
   - name: ring_metacarpal_r
     index: 83
-    depth: 11
+    isVirtual: 0
   - name: ring_01_r
     index: 84
-    depth: 12
+    isVirtual: 0
   - name: ring_02_r
     index: 85
-    depth: 13
+    isVirtual: 0
   - name: ring_03_r
     index: 86
-    depth: 14
+    isVirtual: 0
   - name: thumb_01_r
     index: 87
-    depth: 11
+    isVirtual: 0
   - name: thumb_02_r
     index: 88
-    depth: 12
+    isVirtual: 0
   - name: thumb_03_r
     index: 89
-    depth: 13
+    isVirtual: 0
   - name: weapon_r
     index: 90
-    depth: 11
+    isVirtual: 0
   - name: wrist_inner_r
     index: 91
-    depth: 11
+    isVirtual: 0
   - name: wrist_outer_r
     index: 92
-    depth: 11
+    isVirtual: 0
   - name: IK WeaponBoneRight
     index: 93
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_correctiveRoot_r
     index: 94
-    depth: 10
+    isVirtual: 0
   - name: lowerarm_bck_r
     index: 95
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_fwd_r
     index: 96
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_in_r
     index: 97
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_out_r
     index: 98
-    depth: 11
+    isVirtual: 0
   - name: lowerarm_twist_01_r
     index: 99
-    depth: 10
+    isVirtual: 0
   - name: lowerarm_twist_02_r
     index: 100
-    depth: 10
+    isVirtual: 0
   - name: upperarm_correctiveRoot_r
     index: 101
-    depth: 9
+    isVirtual: 0
   - name: upperarm_bck_r
     index: 102
-    depth: 10
+    isVirtual: 0
   - name: upperarm_fwd_r
     index: 103
-    depth: 10
+    isVirtual: 0
   - name: upperarm_in_r
     index: 104
-    depth: 10
+    isVirtual: 0
   - name: upperarm_out_r
     index: 105
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twist_01_r
     index: 106
-    depth: 9
+    isVirtual: 0
   - name: upperarm_twistCor_01_r
     index: 107
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twist_02_r
     index: 108
-    depth: 9
+    isVirtual: 0
   - name: upperarm_bicep_r
     index: 109
-    depth: 10
+    isVirtual: 0
   - name: upperarm_tricep_r
     index: 110
-    depth: 10
+    isVirtual: 0
   - name: upperarm_twistCor_02_r
     index: 111
-    depth: 10
+    isVirtual: 0
   - name: neck_01
     index: 112
-    depth: 7
+    isVirtual: 0
   - name: neck_02
     index: 113
-    depth: 8
+    isVirtual: 0
   - name: head
     index: 114
-    depth: 9
+    isVirtual: 0
   - name: IK WeaponBone
     index: 115
-    depth: 10
+    isVirtual: 0
   - name: IK RightHand
     index: 116
-    depth: 11
+    isVirtual: 0
   - name: IK LeftHand
     index: 117
-    depth: 11
+    isVirtual: 0
   - name: IK RightElbow
     index: 118
-    depth: 11
+    isVirtual: 0
   - name: IK LeftElbow
     index: 119
-    depth: 11
+    isVirtual: 0
   - name: Camera
     index: 120
-    depth: 10
+    isVirtual: 0
   - name: spine_04_latissimus_l
     index: 121
-    depth: 7
+    isVirtual: 0
   - name: spine_04_latissimus_r
     index: 122
-    depth: 7
+    isVirtual: 0
   - name: thigh_l
     index: 123
-    depth: 2
+    isVirtual: 0
   - name: calf_l
     index: 124
-    depth: 3
+    isVirtual: 0
   - name: calf_correctiveRoot_l
     index: 125
-    depth: 4
+    isVirtual: 0
   - name: calf_knee_l
     index: 126
-    depth: 5
+    isVirtual: 0
   - name: calf_kneeBack_l
     index: 127
-    depth: 5
+    isVirtual: 0
   - name: calf_twist_01_l
     index: 128
-    depth: 4
+    isVirtual: 0
   - name: calf_twist_02_l
     index: 129
-    depth: 4
+    isVirtual: 0
   - name: calf_twistCor_02_l
     index: 130
-    depth: 5
+    isVirtual: 0
   - name: foot_l
     index: 131
-    depth: 4
+    isVirtual: 0
   - name: ankle_bck_l
     index: 132
-    depth: 5
+    isVirtual: 0
   - name: ankle_fwd_l
     index: 133
-    depth: 5
+    isVirtual: 0
   - name: ball_l
     index: 134
-    depth: 5
+    isVirtual: 0
   - name: thigh_correctiveRoot_l
     index: 135
-    depth: 3
+    isVirtual: 0
   - name: thigh_bck_l
     index: 136
-    depth: 4
+    isVirtual: 0
   - name: thigh_bck_lwr_l
     index: 137
-    depth: 4
+    isVirtual: 0
   - name: thigh_fwd_l
     index: 138
-    depth: 4
+    isVirtual: 0
   - name: thigh_fwd_lwr_l
     index: 139
-    depth: 4
+    isVirtual: 0
   - name: thigh_in_l
     index: 140
-    depth: 4
+    isVirtual: 0
   - name: thigh_out_l
     index: 141
-    depth: 4
+    isVirtual: 0
   - name: thigh_twist_01_l
     index: 142
-    depth: 3
+    isVirtual: 0
   - name: thigh_twistCor_01_l
     index: 143
-    depth: 4
+    isVirtual: 0
   - name: thigh_twist_02_l
     index: 144
-    depth: 3
+    isVirtual: 0
   - name: thigh_twistCor_02_l
     index: 145
-    depth: 4
+    isVirtual: 0
   - name: thigh_r
     index: 146
-    depth: 2
+    isVirtual: 0
   - name: calf_r
     index: 147
-    depth: 3
+    isVirtual: 0
   - name: calf_correctiveRoot_r
     index: 148
-    depth: 4
+    isVirtual: 0
   - name: calf_knee_r
     index: 149
-    depth: 5
+    isVirtual: 0
   - name: calf_kneeBack_r
     index: 150
-    depth: 5
+    isVirtual: 0
   - name: calf_twist_01_r
     index: 151
-    depth: 4
+    isVirtual: 0
   - name: calf_twist_02_r
     index: 152
-    depth: 4
+    isVirtual: 0
   - name: calf_twistCor_02_r
     index: 153
-    depth: 5
+    isVirtual: 0
   - name: foot_r
     index: 154
-    depth: 4
+    isVirtual: 0
   - name: ankle_bck_r
     index: 155
-    depth: 5
+    isVirtual: 0
   - name: ankle_fwd_r
     index: 156
-    depth: 5
+    isVirtual: 0
   - name: ball_r
     index: 157
-    depth: 5
+    isVirtual: 0
   - name: thigh_correctiveRoot_r
     index: 158
-    depth: 3
+    isVirtual: 0
   - name: thigh_bck_lwr_r
     index: 159
-    depth: 4
+    isVirtual: 0
   - name: thigh_bck_r
     index: 160
-    depth: 4
+    isVirtual: 0
   - name: thigh_fwd_lwr_r
     index: 161
-    depth: 4
+    isVirtual: 0
   - name: thigh_fwd_r
     index: 162
-    depth: 4
+    isVirtual: 0
   - name: thigh_in_r
     index: 163
-    depth: 4
+    isVirtual: 0
   - name: thigh_out_r
     index: 164
-    depth: 4
+    isVirtual: 0
   - name: thigh_twist_01_r
     index: 165
-    depth: 3
+    isVirtual: 0
   - name: thigh_twistCor_01_r
     index: 166
-    depth: 4
+    isVirtual: 0
   - name: thigh_twist_02_r
     index: 167
-    depth: 3
+    isVirtual: 0
   - name: thigh_twistCor_02_r
     index: 168
-    depth: 4
+    isVirtual: 0
   - name: WeaponBone
     index: 169
-    depth: 1
+    isVirtual: 0
   - name: WeaponBoneAdditive
     index: 170
-    depth: 1
+    isVirtual: 0
   - name: IK RightFoot
     index: 171
-    depth: 1
+    isVirtual: 0
   - name: IK LeftFoot
     index: 172
-    depth: 1
+    isVirtual: 0
   - name: IK RightKnee
     index: 173
-    depth: 1
+    isVirtual: 0
   - name: IK LeftKnee
     index: 174
-    depth: 1
+    isVirtual: 0
   rigElementChains:
   - chainName: PelvisChain
     elementChain:
     - name: pelvis
       index: 10
-      depth: -1
+      isVirtual: 0
+    isStandalone: 0
   - chainName: SpineRootChain
     elementChain:
     - name: spine_01
       index: 11
-      depth: -1
+      isVirtual: 0
+    isStandalone: 0
   - chainName: RightHandChain
     elementChain:
     - name: hand_r
       index: 70
-      depth: -1
+      isVirtual: 0
+    isStandalone: 0
   - chainName: LeftHandChain
     elementChain:
     - name: hand_l
       index: 21
-      depth: -1
+      isVirtual: 0
+    isStandalone: 0
   - chainName: RightFootChain
     elementChain:
     - name: foot_r
       index: 154
-      depth: -1
+      isVirtual: 0
+    isStandalone: 0
   - chainName: LeftFootChain
     elementChain:
     - name: foot_l
       index: 131
-      depth: -1
-  inputConfig: {fileID: 11400000, guid: 022095d8cf55fba4080ab3e4c1364954, type: 2}
+      isVirtual: 0
+    isStandalone: 0
   rigCurves:
   - Overlay
   - WeaponBoneWeight

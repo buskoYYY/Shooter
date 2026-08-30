@@ -5,7 +5,7 @@ FPS-проект на Unity (URP): персонаж с **Character Controller Pr
 ## Быстрый старт
 
 1. Открыть сцену `Assets/_Project/Scenes/PlayerTest.unity` или CCP demo `Assets/Character Controller Pro/Demo/Scenes/3D Scene.unity`.
-2. Play — WASD, мышь, Shift (бег), C (присед), Space (прыжок), E (interact / лестница), T (unarmed/armed).
+2. Play — WASD, мышь, Shift (бег), C (присед), Space (прыжок), E (лестница), T (достать/убрать руки). После Phase 5: ЛКМ огонь, R перезарядка, 1–3 слоты, G выбросить.
 3. **F8** — dev-панель баланса (временная). **F9** — сравнение осанки.
 
 ## Документация
@@ -14,17 +14,18 @@ FPS-проект на Unity (URP): персонаж с **Character Controller Pr
 
 | Файл | Описание |
 |------|----------|
-| [docs/TASKS.md](docs/TASKS.md) | Архитектура, фазы, задачи 1.1–1.4 (движение) |
+| [docs/TASKS.md](docs/TASKS.md) | Архитектура, фазы, задачи 1–2 |
 | [docs/CLIENT_STATUS.md](docs/CLIENT_STATUS.md) | Статус для заказчика |
 | [docs/BALANCE_TUNING_PANEL.md](docs/BALANCE_TUNING_PANEL.md) | F8-панель |
 | [docs/PHASE1_SETUP.md](docs/PHASE1_SETUP.md) | Auto-setup Phase 0–1 |
 | [docs/PHASE2_SETUP.md](docs/PHASE2_SETUP.md) | Auto-setup Phase 2 |
 | [docs/PHASE4_SETUP.md](docs/PHASE4_SETUP.md) | Auto-setup Phase 4 (лестницы) |
+| [docs/PHASE5_SETUP.md](docs/PHASE5_SETUP.md) | Auto-setup Phase 5 (оружие) |
 
 ## Текущий статус
 
 - **Движение:** ✅ locomotion, прыжок, лестница, turn-in-place, unarmed/armed
-- **Оружие:** 🔜 Задача 2 (Weapon Layer, ADS, recoil, стрельба)
+- **Оружие:** 🟡 Задача 2, фаза 5.0 — каркас (стрельба, патроны, гейт). IK/ADS — позже
 - **Motion Warping:** вне scope до отдельного согласования
 
 ## Стек

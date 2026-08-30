@@ -314,9 +314,9 @@ Player (Root)
 7. **`[DefaultExecutionOrder]` на скрипте Unity игнорирует**, если в `.meta` другой `executionOrder`. У `ShooterHandPoseState` в meta долго стояло **0**, поэтому FPS init (`ShooterCharacterController` = **-200**) всегда успевал поднять armed overlay до нашего `Start`.
 8. **Не выключать `Animator.enabled`**, чтобы «спрятать» руки. `FPSAnimator.Update` при обратном включении вызывает `RebuildPlayables()` → PoseSampler снова `PlayPose` → вспышка рук. `animator.speed = 0` PlayableGraph не останавливает. Прятать меши — мигание камеры (кадр как до Play).
 
-### Следующая задача (запланировано)
+### Следующая задача
 
-**Задача 2 — Оружие:** Weapon Layer, Attach Hand, ADS, Recoil, перезарядка, стрельба.
+**Задача 2 — Оружие** (черновик ТЗ заказчика, август 2026). См. раздел ниже.
 
 ---
 
@@ -466,4 +466,92 @@ FPS Camera больше **не дочерняя к кости head** в Play Mod
 
 ---
 
-*Последнее обновление: 28 августа 2026 — чеклист T→armed / камера (не ломать overlay). Следующий этап — Задача 2 (оружие).*
+---
+
+## Задача 2 — Оружие (черновик, ТЗ ещё пишется)
+
+**Цель:** своя система оружия поверх CCP + FPS AF. Не копировать `Demo.FPSController` — он завязан на Unity `CharacterController` и сломает наше движение.
+
+Заказчик пришлёт точный список. Ниже — план по предварительному ТЗ. Полную привязку анимаций/IK (Weapon Layer, ADS, recoil клипы) **не делаем вслепую**: T / unarmed / overlay легко сломать.
+
+### Что просил заказчик
+
+| Тема | Суть |
+|------|------|
+| Состав | Максимум 3 стреляющих: пистолет, автомат, ещё автомат. Плюс ближний бой |
+| Бой | Стрельба, попадание по поверхностям, урон, перезарядка, подбор патронов |
+| Инвентарь | Переключение в руках, подбор, выбрасывание |
+| VFX/SFX | Любые бесплатные плейсхолдеры, потом заменит |
+| Запреты | Не стрелять и **не доставать** оружие в прыжке, беге (sprint), на лестнице |
+| Ассеты | Временно пак / FPS Animation Pro (`Assets/Demo`). Модели заказчика — позже через Blender |
+| Full body | Клипы Pro — часто только руки; Retarget Pro → Humanoid. Демо уже имеет Humanoid-префабы |
+| Ближний бой | Отдельные состояния + покачивание камеры. Клипов у нас мало — `Demo/Prefabs/Knife` как временный |
+
+### Почему не `Demo.Weapon` напрямую
+
+`Assets/Demo/Scripts/.../Weapon.cs` вызывает `FPSController` на родителе. Наш персонаж — CCP + `ShooterHandPoseState`. Берём из Pro **меши, Animator Profile, recoil assets, клипы**, а логику пишем свою. `FPSAnimator.LinkAnimatorProfile(weapon)` — отдельный шаг, когда будет гайд по добавлению оружия.
+
+### Архитектура
+
+```
+Input (Attack, Reload, 1/2/3, Drop, scroll)
+        ↓
+ShooterWeaponController
+        ↓
+ShooterWeaponActionGate  ← sprint / jump / ladder / busy / unarmed
+        ↓
+ShooterWeaponInventory   ← слоты, pickup, drop
+        ↓
+hitscan / melee  →  IDamageable + surface impact (VFX/SFX)
+        ↓
+вид: префаб на WeaponBone (mesh). Overlay рук — по-прежнему T / HandPose
+```
+
+### План фаз
+
+#### Фаза 5.0 — Каркас (можно делать до финального ТЗ)
+- [x] `ShooterWeaponActionGate` — единая проверка «можно ли стрелять / доставать»
+- [x] Инвентарь, hitscan, урон, reload, ammo, switch, pickup, drop
+- [x] Melee-замах + импульс камеры
+- [x] Input: Attack (ЛКМ), Reload (R), Drop (G), слоты 1–3, колёсико
+- [x] Editor: **Shooter → Phase 5**
+- [ ] Play: подобрать демо-оружие, выстрел, запреты на sprint / jump / ladder
+
+#### Фаза 5.1 — Вид и FPS AF (когда будет гайд / модели)
+- [ ] Parent на `WeaponBone`, не ломая T / overlay
+- [ ] `LinkAnimatorProfile` с weapon profile (ADS, Attach Hand, recoil)
+- [ ] Equip / unequip motion; holster на лестнице если понадобится
+- [ ] Демо: Humanoid **Mk23**, **AK12**, **Mk18** + **Knife**
+- [ ] Retarget Pro, если клипы только руки
+
+#### Фаза 5.2 — Геймплей по финальному ТЗ
+- [ ] Точные цифры урона/магазина/темпа, ADS, режимы огня
+- [ ] Поверхности (металл/бетон/мясо) — свои декали
+- [ ] Звуки/эффекты заказчика
+- [ ] Замена демо-мешей через Blender (дока KINEMATION)
+- [ ] HUD патронов (сейчас черновой OnGUI)
+
+### Запреты (гейт)
+
+Нельзя **стрелять, перезаряжаться, доставать, переключать**:
+
+1. Sprint (Shift + движение)
+2. В воздухе или jump wind-up
+3. Лестница (`ShooterLadderFpsBridge` / `LadderClimbing`)
+4. Идёт reload / смена оружия
+5. Руки опущены (unarmed, T) — стрельба; достать можно, если гейт не блокирует
+
+Уже взятое оружие в спринте **остаётся в руках**, но не стреляет (как в демо KINEMATION).
+
+### Риски
+
+1. **`LinkAnimatorProfile` слишком рано** — чужой rig vs `Character_model` → сломанные руки. Сначала mesh на кости.
+2. **Смена locomotion при equip** — тот же баг, что T→armed (вспышка винтовки). Equip только после settle overlay.
+3. **Interact (E/F)** — лестница. Подбор — trigger, не Interact.
+4. **Ближний бой** — мало клипов; состояния заложить сразу, анимации подставить позже.
+
+Код: `Assets/_Project/Scripts/Weapons/`. Setup: [PHASE5_SETUP.md](PHASE5_SETUP.md).
+
+---
+
+*Последнее обновление: 29 августа 2026 — Задача 2, фаза 5.0 (каркас до финального ТЗ).*

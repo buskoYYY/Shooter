@@ -68,6 +68,8 @@ namespace Shooter.Project.Character
         bool _exitBlendActive;
         Vector3 _smoothedPosition;
         Vector3 _positionVelocity;
+        Vector2 _weaponCameraPunch;
+        const float WeaponPunchDecay = 12f;
 
         public float LadderLookSmoothTime
         {
@@ -107,6 +109,11 @@ namespace Shooter.Project.Character
             ladderLookPitch = DefaultLadderLookPitch;
             ladderBobSmoothTime = DefaultLadderBobSmoothTime;
             ladderExitSmoothTime = DefaultLadderExitSmoothTime;
+        }
+
+        public void AddWeaponCameraPunch(Vector2 pitchYaw)
+        {
+            _weaponCameraPunch += pitchYaw;
         }
 
         void Awake()
@@ -255,6 +262,8 @@ namespace Shooter.Project.Character
             ResolveRefs();
             if (_fpsCamera == null || _character == null)
                 return;
+
+            _weaponCameraPunch = Vector2.Lerp(_weaponCameraPunch, Vector2.zero, Time.deltaTime * WeaponPunchDecay);
 
             if (_ladderCameraActive)
             {
@@ -410,7 +419,10 @@ namespace Shooter.Project.Character
 
         void GetHeadCameraPose(out Vector3 position, out Quaternion rotation)
         {
-            rotation = _character.transform.rotation * Quaternion.Euler(_character.Pitch, 0f, 0f);
+            rotation = _character.transform.rotation * Quaternion.Euler(
+                _character.Pitch + _weaponCameraPunch.x,
+                _weaponCameraPunch.y,
+                0f);
             Vector3 eyeOffset = rotation * cameraLocalOffset;
             Vector3 up = _character.transform.up;
             Vector3 rootPos = _character.transform.position;

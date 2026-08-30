@@ -132,6 +132,14 @@ namespace Shooter.Project.Character
         public bool HasMoveInput =>
             _move != null && _move.ReadValue<Vector2>().sqrMagnitude > 0.01f;
 
+        public bool IsSprinting =>
+            _sprint != null && _sprint.IsPressed() && HasMoveInput &&
+            (_characterActor == null || _characterActor.IsGrounded);
+
+        public bool IsGrounded => _characterActor == null || _characterActor.IsGrounded;
+
+        public Transform FpsCharacterRoot => fpsCharacterRoot;
+
         public float MovingStopThreshold
         {
             get => movingStopThreshold;

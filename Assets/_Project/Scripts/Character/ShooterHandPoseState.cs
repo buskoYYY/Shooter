@@ -4,6 +4,7 @@ using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
+using Shooter.Project.Weapons;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.InputSystem;
@@ -44,6 +45,7 @@ namespace Shooter.Project.Character
         PoseSamplerLayerSettings _poseSampler;
         Animator _animator;
         ShooterCharacterController _characterController;
+        ShooterWeaponActionGate _weaponGate;
         InputActionMap _playerMap;
         InputAction _toggleHandPose;
         bool _isUnarmed;
@@ -126,6 +128,7 @@ namespace Shooter.Project.Character
             BindToggleAction();
             EnsureBalanceTuningPanel();
             _characterController = GetComponent<ShooterCharacterController>();
+            _weaponGate = GetComponent<ShooterWeaponActionGate>();
         }
 
         void OnEnable()
@@ -172,6 +175,14 @@ namespace Shooter.Project.Character
                 return;
 
             _toggleRequested = false;
+            if (_isUnarmed)
+            {
+                if (_weaponGate == null)
+                    _weaponGate = GetComponent<ShooterWeaponActionGate>();
+                if (_weaponGate != null && !_weaponGate.CanDraw(out _))
+                    return;
+            }
+
             SetHandPose(!_isUnarmed);
         }
 
