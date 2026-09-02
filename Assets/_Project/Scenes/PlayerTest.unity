@@ -710,7 +710,6 @@ GameObject:
   - component: {fileID: 1753621517}
   - component: {fileID: 1753621516}
   - component: {fileID: 1753621515}
-  - component: {fileID: 1753621514}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -733,51 +732,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1753621514
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1753621512}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 452e5ccfe20ff074fa56372b1069e59c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: com.lightbug.character-controller-pro::Lightbug.CharacterControllerPro.Demo.Camera3D
-  inputHandlerSettings:
-    humanInputType: 2
-    inputHandler: {fileID: 1753621515}
-  axes: Camera
-  zoomAxis: Camera Zoom
-  targetTransform: {fileID: 979532237}
-  offsetFromHead: {x: 0, y: 0, z: 0}
-  heightLerpSpeed: 10
-  cameraMode: 1
-  hideBody: 0
-  bodyObject: {fileID: 0}
-  updateYaw: 1
-  yawSpeed: 180
-  updatePitch: 1
-  initialPitch: 15
-  pitchSpeed: 180
-  maxPitchAngle: 80
-  minPitchAngle: 80
-  updateRoll: 0
-  updateZoom: 1
-  distanceToTarget: 4
-  zoomInOutSpeed: 40
-  zoomInOutLerpSpeed: 5
-  minZoom: 2
-  maxZoom: 12
-  collisionDetection: 1
-  collisionAffectsZoom: 0
-  detectionRadius: 0.5
-  layerMask:
-    serializedVersion: 2
-    m_Bits: 0
-  considerKinematicRigidbodies: 1
-  considerDynamicRigidbodies: 1
 --- !u!114 &1753621515
 MonoBehaviour:
   m_ObjectHideFlags: 0

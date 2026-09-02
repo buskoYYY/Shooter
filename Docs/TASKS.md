@@ -88,7 +88,7 @@ AnimatorProfile
 ├── SwayLayer          — качание при движении
 ├── AdditiveLayer      — доп. наложения
 ├── IkMotionLayer      — IK при root motion анимациях
-└── … (ADS, Weapon — позже, в Задаче 2)
+└── … (ADS, Weapon, Collision — Задача 2, см. WEAPON_SYSTEM_TZ.md)
 ```
 
 #### Look Layer
@@ -314,9 +314,14 @@ Player (Root)
 7. **`[DefaultExecutionOrder]` на скрипте Unity игнорирует**, если в `.meta` другой `executionOrder`. У `ShooterHandPoseState` в meta долго стояло **0**, поэтому FPS init (`ShooterCharacterController` = **-200**) всегда успевал поднять armed overlay до нашего `Start`.
 8. **Не выключать `Animator.enabled`**, чтобы «спрятать» руки. `FPSAnimator.Update` при обратном включении вызывает `RebuildPlayables()` → PoseSampler снова `PlayPose` → вспышка рук. `animator.speed = 0` PlayableGraph не останавливает. Прятать меши — мигание камеры (кадр как до Play).
 
-### Следующая задача
+### Следующая задача (запланировано)
 
-**Задача 2 — Оружие** (черновик ТЗ заказчика, август 2026). См. раздел ниже.
+**Задача 2 — Система оружия** по ТЗ заказчика (30.08.2026):  
+→ подробный план: **[WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)**
+
+Кратко: `WeaponManager` + `IWeapon` / `MeleeWeapon` / `RangedWeapon`, инвентарь `hasGun1…5`, клавиши **1–6**, прочность и патроны, ограничения (лестница/прыжок/бег), **CollisionLayer** FPS AF для стен, demo-оружия из пакета.
+
+Подзадачи: **2.1** каркас → **2.2** ranged → **2.3** melee → **2.4** gates движения → **2.5** стены → **2.6** inspect/break → **2.7** pickups → **2.8** тест-сцена.
 
 ---
 
@@ -388,6 +393,9 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 Код: `Assets/_Project/Scripts/Character/ShooterFpsCameraApply.cs`.
 
+> **FPS-камера + unarmed-руки (авг 2026):** отдельная глава — [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md).  
+> Кратко: отвязка камеры от `head` + look-space offset; unarmed locomotion через runtime `AnimatorOverrideController`, не смену всего controller.
+
 ---
 
 ## Задача 1.1 — Unarmed как визуальный старт (без ломания спринта)
@@ -398,12 +406,11 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ### Что нужно сделать
 
-- [x] Переключение armed / unarmed по **T** (`ShooterHandPoseState`)
+- [x] Переключение unarmed/armed через **WeaponManager** (клавиши **1–6**; **T** убрана)
 - [x] Старт визуально unarmed, без unequip-анимации
 - [x] Первый спринт без винтовочных рук (тот же resync, что у T)
 - [x] Не ломать прыжок, атаку, look/осанку
-- [x] На префабе прописан `unarmedLocomotionOverride` (`FPSAnimator_Unarmed_Humanoid`) — jog с махом рук без оружия
-- [x] `IkLayer` / Additive / Sway маскируются `FullBodyWeight` (Mask): в unarmed hand IK не прибивает кисти к weapon targets
+- [x] На префабе прописан `unarmedLocomotionOverride` + runtime override в `ShooterHandPoseState` (см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md))
 
 ### Что уже сделано
 
@@ -425,7 +432,7 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 | Поза «как F9» на старте / в конце бега | F9 = `LookLayerWeight`/`StabilizationWeight` = 1 (static). `stopMotion` — IK на WeaponBone при остановке | Крутить offset камеры (`ShooterFpsCameraApply`) — на armed-кадр не влияет | Look 0.3 unarmed / 1 armed; Stab 0; в unarmed не запускать `stopMotion`; сбрасывать F9 при Play |
 | Руки на мгновение после включения Animator | `FPSAnimator.Update`: animator был выкл → вкл → **`RebuildPlayables()`** → PoseSampler `Initialize` → снова `PlayPose` с blend. Graph живёт отдельно от `Animator.enabled` | Считать, что Animator «запомнил клип» | Не выключать Animator. Freeze/hide не использовать для старта |
 | Мигание камеры | Скрытие mesh на старте: первый кадр как Scene view / pre-Play camera | — | Не трогать рендереры и `ShooterFpsCameraApply` ради рук |
-| Носки при атаке + рывок рук | Подключили `FPSAnimator_Unarmed_Humanoid.overrideController`; Standing/sprint мапы пересеклись с rifle-клипами | Чинить старт через замену locomotion controller | Откат. **Позже (авг 2026):** override снова на префабе для маха рук; attack-клипы в override не мапятся |
+| Носки при атаке + рывок рук | Подключили override без runtime-логики — ломалась поза idle | Чинить старт через замену locomotion controller | Runtime `AnimatorOverrideController` в `ShooterHandPoseState` — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md) |
 | Instant `SetHandPose(true)` без coroutine | Snap в `Start` раньше, чем PoseSampler доигрывает init-blend; либо `_isUnarmed` уже true → early-out. Mixer не фиксирует unarmed | Одна строка `instant: true` без `ClearSlot`/ожидания кадра | Snap **внутри** того же `TransitionToPose`, с yield на кадр и повторным `ForceOverlay` |
 
 **Итог (август 2026):** не делать unarmed «настоящей базой KINEMATION» и не выключать анимацию. Внутри старт = переход armed → unarmed как **T**, визуально = мгновенный overlay snap. Прыжок этот путь не трогает.
@@ -434,124 +441,10 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ---
 
-## T → armed ломает руки / «рукава» (чеклист, авг 2026)
-
-KINEMATION по умолчанию **armed**. Обычно ломается не сам armed, а когда поверх него чинят **unarmed** или **камеру** и задевают общую цепочку (Animator + overlay mixer + PoseSampler). Чинить «только старт» или «только камеру» по отдельности нельзя.
-
-### Что ломает руки
-
-| Причина | Что происходит |
-|---------|----------------|
-| `runtimeAnimatorController =` asset-override | Сбрасывает базовый контроллер — ломает и unarmed, и armed |
-| Locomotion remap **сразу** при T→armed | Rifle-клипы включаются, пока overlay ещё unarmed → вспышка / скрученные руки |
-| `Play("Standing")` при equip | Мигание rifle idle, потом «нормально» |
-| Нет `ClearSlotAnimations()` между T | Старые slot-motion накапливаются → twisted hands |
-| «Рукава» / кривая ширина рук | Часто **камера**, не overlay: offset не в look space, камера на `head`, в сцене `cameraLocalOffset.y = -0.15` |
-
-### Как должно быть
-
-1. Locomotion только через **runtime** `AnimatorOverrideController.ApplyOverrides`, не полная смена controller (fallback swap — last resort).
-2. При **T→armed** locomotion меняется **после** settle overlay (`SetHandPose` откладывает remap; `TransitionToPose` вызывает его в конце).
-3. На armed-пути **не** `Play(Standing)` — только сброс застрявшего InAir.
-4. Между toggle — `ClearSlotAnimations()`.
-5. Камера: Play Mode **не** child `head`; позиция = `head` + offset в **look space**; `Camera Local Offset` от кости головы, типично `(0, 0.06, 0.04…0.08)`, не Y≈1.7 (это высота капсулы). В `3D Scene` не оставлять override `y = -0.15`. Demo **Character Camera** выключать целиком (Camera + AudioListener), не только `Camera3D`.
-
-Код: `ShooterHandPoseState.cs`, `ShooterFpsCameraApply.cs`, `ShooterDemoLegacyInputFix.cs`.
-
----
-
 ### Камера и culling (авг 2026)
 
-FPS Camera больше **не дочерняя к кости head** в Play Mode (`ShooterFpsCameraApply`): отвязывается к корню игрока, в **LateUpdate (order 500)** ставит world position у головы и rotation = yaw тела + pitch мыши. `cameraBone` у `FPSCameraController` обнуляется, чтобы Animator не крутил Camera.transform (ломало world culling). Ответ KINEMATION support может предложить другое — наш обходной путь совместим с ожиданием «rotation в LateUpdate».
+Подробно: **[FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md)**.
 
 ---
 
----
-
-## Задача 2 — Оружие (черновик, ТЗ ещё пишется)
-
-**Цель:** своя система оружия поверх CCP + FPS AF. Не копировать `Demo.FPSController` — он завязан на Unity `CharacterController` и сломает наше движение.
-
-Заказчик пришлёт точный список. Ниже — план по предварительному ТЗ. Полную привязку анимаций/IK (Weapon Layer, ADS, recoil клипы) **не делаем вслепую**: T / unarmed / overlay легко сломать.
-
-### Что просил заказчик
-
-| Тема | Суть |
-|------|------|
-| Состав | Максимум 3 стреляющих: пистолет, автомат, ещё автомат. Плюс ближний бой |
-| Бой | Стрельба, попадание по поверхностям, урон, перезарядка, подбор патронов |
-| Инвентарь | Переключение в руках, подбор, выбрасывание |
-| VFX/SFX | Любые бесплатные плейсхолдеры, потом заменит |
-| Запреты | Не стрелять и **не доставать** оружие в прыжке, беге (sprint), на лестнице |
-| Ассеты | Временно пак / FPS Animation Pro (`Assets/Demo`). Модели заказчика — позже через Blender |
-| Full body | Клипы Pro — часто только руки; Retarget Pro → Humanoid. Демо уже имеет Humanoid-префабы |
-| Ближний бой | Отдельные состояния + покачивание камеры. Клипов у нас мало — `Demo/Prefabs/Knife` как временный |
-
-### Почему не `Demo.Weapon` напрямую
-
-`Assets/Demo/Scripts/.../Weapon.cs` вызывает `FPSController` на родителе. Наш персонаж — CCP + `ShooterHandPoseState`. Берём из Pro **меши, Animator Profile, recoil assets, клипы**, а логику пишем свою. `FPSAnimator.LinkAnimatorProfile(weapon)` — отдельный шаг, когда будет гайд по добавлению оружия.
-
-### Архитектура
-
-```
-Input (Attack, Reload, 1/2/3, Drop, scroll)
-        ↓
-ShooterWeaponController
-        ↓
-ShooterWeaponActionGate  ← sprint / jump / ladder / busy / unarmed
-        ↓
-ShooterWeaponInventory   ← слоты, pickup, drop
-        ↓
-hitscan / melee  →  IDamageable + surface impact (VFX/SFX)
-        ↓
-вид: префаб на WeaponBone (mesh). Overlay рук — по-прежнему T / HandPose
-```
-
-### План фаз
-
-#### Фаза 5.0 — Каркас (можно делать до финального ТЗ)
-- [x] `ShooterWeaponActionGate` — единая проверка «можно ли стрелять / доставать»
-- [x] Инвентарь, hitscan, урон, reload, ammo, switch, pickup, drop
-- [x] Melee-замах + импульс камеры
-- [x] Input: Attack (ЛКМ), Reload (R), Drop (G), слоты 1–3, колёсико
-- [x] Editor: **Shooter → Phase 5**
-- [ ] Play: подобрать демо-оружие, выстрел, запреты на sprint / jump / ladder
-
-#### Фаза 5.1 — Вид и FPS AF (когда будет гайд / модели)
-- [ ] Parent на `WeaponBone`, не ломая T / overlay
-- [ ] `LinkAnimatorProfile` с weapon profile (ADS, Attach Hand, recoil)
-- [ ] Equip / unequip motion; holster на лестнице если понадобится
-- [ ] Демо: Humanoid **Mk23**, **AK12**, **Mk18** + **Knife**
-- [ ] Retarget Pro, если клипы только руки
-
-#### Фаза 5.2 — Геймплей по финальному ТЗ
-- [ ] Точные цифры урона/магазина/темпа, ADS, режимы огня
-- [ ] Поверхности (металл/бетон/мясо) — свои декали
-- [ ] Звуки/эффекты заказчика
-- [ ] Замена демо-мешей через Blender (дока KINEMATION)
-- [ ] HUD патронов (сейчас черновой OnGUI)
-
-### Запреты (гейт)
-
-Нельзя **стрелять, перезаряжаться, доставать, переключать**:
-
-1. Sprint (Shift + движение)
-2. В воздухе или jump wind-up
-3. Лестница (`ShooterLadderFpsBridge` / `LadderClimbing`)
-4. Идёт reload / смена оружия
-5. Руки опущены (unarmed, T) — стрельба; достать можно, если гейт не блокирует
-
-Уже взятое оружие в спринте **остаётся в руках**, но не стреляет (как в демо KINEMATION).
-
-### Риски
-
-1. **`LinkAnimatorProfile` слишком рано** — чужой rig vs `Character_model` → сломанные руки. Сначала mesh на кости.
-2. **Смена locomotion при equip** — тот же баг, что T→armed (вспышка винтовки). Equip только после settle overlay.
-3. **Interact (E/F)** — лестница. Подбор — trigger, не Interact.
-4. **Ближний бой** — мало клипов; состояния заложить сразу, анимации подставить позже.
-
-Код: `Assets/_Project/Scripts/Weapons/`. Setup: [PHASE5_SETUP.md](PHASE5_SETUP.md).
-
----
-
-*Последнее обновление: 29 августа 2026 — Задача 2, фаза 5.0 (каркас до финального ТЗ).*
+*Последнее обновление: 31 августа 2026 — план Задачи 2 по ТЗ заказчика ([WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)). Блок движения (1.x) закрыт.*

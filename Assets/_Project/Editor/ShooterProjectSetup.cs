@@ -27,6 +27,38 @@ namespace Shooter.Project.Editor
             Debug.Log("CCP demo tags ensured in Tag Manager.");
         }
 
+        [MenuItem("Shooter/Project/Add Weapon System")]
+        public static void AddWeaponSystemMenu()
+        {
+            ShooterWeaponSystemSetup.TrySetupOnPlayer(GameObject.Find("PlayerCharacter"));
+
+            GameObject prefabRoot = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/Prefabs/PlayerCharacter.prefab");
+            if (prefabRoot != null)
+            {
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefabRoot) as GameObject;
+                if (instance != null)
+                {
+                    try
+                    {
+                        ShooterWeaponSystemSetup.TrySetupOnPlayer(instance);
+                        PrefabUtility.SaveAsPrefabAsset(instance,
+                            "Assets/_Project/Prefabs/PlayerCharacter.prefab");
+                    }
+                    finally
+                    {
+                        Object.DestroyImmediate(instance);
+                    }
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Weapon system",
+                "Done. Play Mode auto-adds WeaponManager if missing.\n1 = holster, 2–6 = slots.",
+                "OK");
+        }
+
         [MenuItem("Shooter/Project/Fix EventSystem for Input System (current scene)")]
         public static void FixEventSystemForInputSystem()
         {
@@ -110,7 +142,7 @@ namespace Shooter.Project.Editor
 
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            Debug.Log("Demo warnings fix applied (tags, EventSystem, demo managers/camera, MaterialController).");
+            Debug.Log("Demo warnings fix applied (tags, EventSystem, demo managers, Camera3D removed, MaterialController).");
         }
 
         public static int DisableLegacyDemoManagersInScene()
@@ -135,12 +167,9 @@ namespace Shooter.Project.Editor
                 count++;
             }
 
-            foreach (var camera in Object.FindObjectsByType<Camera3D>(FindObjectsSortMode.None))
+            foreach (var camera in Object.FindObjectsByType<Camera3D>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (!camera.enabled)
-                    continue;
-
-                camera.enabled = false;
+                Object.DestroyImmediate(camera);
                 count++;
             }
 

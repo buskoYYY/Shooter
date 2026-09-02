@@ -16,7 +16,7 @@ using KINEMATION.FPSAnimationFramework.Runtime.Camera;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
 using KINEMATION.ProceduralRecoilAnimationSystem.Runtime;
-using KINEMATION.Shared.KAnimationCore.Editor.Misc;
+using KINEMATION.Shared.KAnimationCore.Editor;
 using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
@@ -1009,8 +1009,11 @@ namespace Shooter.Project.Editor
             if (playerRoot.GetComponent<ShooterFpsHeadHide>() == null)
                 playerRoot.AddComponent<ShooterFpsHeadHide>();
 
+            if (model != null && model.GetComponent<EventReceiver>() == null)
+                model.gameObject.AddComponent<EventReceiver>();
+
             SetupHandPoseState(playerRoot, model, profile);
-            SetupBalanceTuningPanel(playerRoot);
+            ShooterWeaponSystemSetup.TrySetupOnPlayer(playerRoot);
 
             var headHide = playerRoot.GetComponent<ShooterFpsHeadHide>();
             if (headHide != null)
@@ -1078,6 +1081,11 @@ namespace Shooter.Project.Editor
                 EnsureUnarmedLocomotionOverride();
             so.FindProperty("startUnarmed").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetupWeaponSystem(GameObject playerRoot)
+        {
+            ShooterWeaponSystemSetup.TrySetupOnPlayer(playerRoot);
         }
 
         static AnimatorOverrideController EnsureUnarmedLocomotionOverride()
@@ -1163,15 +1171,13 @@ namespace Shooter.Project.Editor
             string targetName = rifleClipName switch
             {
                 "C_Rifle_Idle_Humanoid" => "Unarmed_Idle",
-                // All move directions use run — Jog clips have almost no arm swing.
-                "C_Rifle_Run_Fwd_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Run_Fwd_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Run_Fwd_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Strafe_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Strafe_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Run_Bwd_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Run_Bwd_Left_Humanoid" => "C_Unarmed_Run_Humanoid",
-                "C_Rifle_Run_Bwd_Right_Humanoid" => "C_Unarmed_Run_Humanoid",
+                "C_Rifle_Run_Fwd_Humanoid" => "Unarmed_Jog_Forward",
+                "C_Rifle_Run_Fwd_Left_Humanoid" => "Unarmed_Jog_Forward_45",
+                "C_Rifle_Run_Fwd_Right_Humanoid" => "Unarmed_Jog_Forward_-45",
+                "C_Rifle_Strafe_Right_Humanoid" => "Unarmed_Jog_Right",
+                "C_Rifle_Run_Bwd_Humanoid" => "Unarmed_Jog_Bwd",
+                "C_Rifle_Run_Bwd_Left_Humanoid" => "Unarmed_Jog_Bwd_-45",
+                "C_Rifle_Run_Bwd_Right_Humanoid" => "Unarmed_Jog_Bwd_45",
                 "C_Rifle_Sprint_Fwd_Humanoid" => "C_Unarmed_Run_Humanoid",
                 _ => null
             };
@@ -1195,26 +1201,15 @@ namespace Shooter.Project.Editor
 
         static void SetupBalanceTuningPanel(GameObject playerRoot)
         {
+            // Dev balance UI removed — keep movement/ladder tuning components only.
             if (playerRoot == null)
                 return;
 
-            System.Type tuningType = typeof(ShooterCharacterController).Assembly.GetType(
-                "Shooter.Project.Character.ShooterBalanceTuningPanel");
-            if (tuningType == null)
-                return;
+            if (playerRoot.GetComponent<ShooterCcpMovementTuning>() == null)
+                playerRoot.AddComponent<ShooterCcpMovementTuning>();
 
-            Component tuning = playerRoot.GetComponent(tuningType);
-            if (tuning == null)
-                tuning = playerRoot.AddComponent(tuningType);
-
-            var ladderTuning = playerRoot.GetComponent<ShooterLadderApproachTuning>();
-            if (ladderTuning == null)
-                ladderTuning = playerRoot.AddComponent<ShooterLadderApproachTuning>();
-
-            var so = new SerializedObject(tuning);
-            so.FindProperty("ccpMovement").objectReferenceValue = playerRoot.GetComponent<ShooterCcpMovementTuning>();
-            so.FindProperty("ladderApproach").objectReferenceValue = ladderTuning;
-            so.ApplyModifiedPropertiesWithoutUndo();
+            if (playerRoot.GetComponent<ShooterLadderApproachTuning>() == null)
+                playerRoot.AddComponent<ShooterLadderApproachTuning>();
         }
 
         static void ConfigureCcpMovement(GameObject playerRoot)

@@ -4,7 +4,6 @@ using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseSamplerLayer;
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
-using Shooter.Project.Weapons;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.InputSystem;
@@ -14,6 +13,7 @@ namespace Shooter.Project.Character
 {
     /// <summary>
     /// Switches upper-body overlay pose between unarmed (hands down) and armed rifle pose.
+    /// Controlled by <see cref="Weapons.WeaponManager"/> (keys 1–6), not a toggle key.
     /// </summary>
     [DefaultExecutionOrder(-150)]
     [DisallowMultipleComponent]
@@ -45,12 +45,8 @@ namespace Shooter.Project.Character
         PoseSamplerLayerSettings _poseSampler;
         Animator _animator;
         ShooterCharacterController _characterController;
-        ShooterWeaponActionGate _weaponGate;
-        InputActionMap _playerMap;
-        InputAction _toggleHandPose;
         bool _isUnarmed;
-        bool _toggleRequested;
-        bool _simulateToggleOnStart;
+        bool _applyStartupUnarmed;
         bool _snapStartOverlay;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
@@ -80,6 +76,7 @@ namespace Shooter.Project.Character
         public FPSAnimationAsset ArmedOverlayPose => armedOverlayPose;
         public FPSAnimationAsset UnarmedOverlayPose => unarmedOverlayPose;
         public FPSAnimatorProfile FpsAnimatorProfile => fpsAnimatorProfile;
+        public Transform FpsCharacterRoot => fpsCharacterRoot;
 
         public bool IsTurnInPlacePlaying()
         {
@@ -121,34 +118,25 @@ namespace Shooter.Project.Character
         void Awake()
         {
             if (startUnarmed)
-                _simulateToggleOnStart = true;
+                _applyStartupUnarmed = true;
 
             ResolveReferences();
             CachePoseSampler();
-            BindToggleAction();
-            EnsureBalanceTuningPanel();
             _characterController = GetComponent<ShooterCharacterController>();
-            _weaponGate = GetComponent<ShooterWeaponActionGate>();
-        }
-
-        void OnEnable()
-        {
-            _playerMap?.Enable();
         }
 
         void OnDisable()
         {
-            _playerMap?.Disable();
             StopActiveTransition();
         }
 
         void Start()
         {
-            if (_simulateToggleOnStart)
+            if (_applyStartupUnarmed)
             {
-                _simulateToggleOnStart = false;
+                _applyStartupUnarmed = false;
                 _snapStartOverlay = true;
-                SimulateToggleHandPosePress();
+                SetHandPose(true);
                 return;
             }
 
@@ -157,41 +145,10 @@ namespace Shooter.Project.Character
             ApplyPoseInstant(startUnarmed ? unarmedOverlayPose : armedOverlayPose);
         }
 
-        void Update()
-        {
-            if (_isTransitioning)
-                return;
-
-            if (_toggleHandPose != null && _toggleHandPose.WasPressedThisFrame())
-                _toggleRequested = true;
-        }
-
         void LateUpdate()
         {
             if (_animator != null && _isUnarmed && !_isTransitioning)
                 ApplyFullBodyWeightForCurrentState();
-
-            if (!_toggleRequested)
-                return;
-
-            _toggleRequested = false;
-            if (_isUnarmed)
-            {
-                if (_weaponGate == null)
-                    _weaponGate = GetComponent<ShooterWeaponActionGate>();
-                if (_weaponGate != null && !_weaponGate.CanDraw(out _))
-                    return;
-            }
-
-            SetHandPose(!_isUnarmed);
-        }
-
-        /// <summary>
-        /// Same code path as pressing ToggleHandPose (T).
-        /// </summary>
-        void SimulateToggleHandPosePress()
-        {
-            SetHandPose(!_isUnarmed);
         }
 
         public void SetUnarmed() => SetHandPose(true);
@@ -248,7 +205,7 @@ namespace Shooter.Project.Character
             _isUnarmed = unarmed;
 
             // Unarmed: remap locomotion first (sprint / FBW — Docs/TASKS.md).
-            // Armed: defer remap until overlay settles — rifle clips vs unarmed overlay flash twisted arms.
+            // Armed: defer remap until overlay settles — rifle locomotion arms flash otherwise.
             if (unarmed || instant)
                 ApplyLocomotionController(unarmed);
             else
@@ -319,6 +276,7 @@ namespace Shooter.Project.Character
             ClearSlotAnimations();
             ForceOverlayPoseFullWeight();
 
+            // Armed locomotion remap after overlay is stable (see SetHandPose).
             if (!toUnarmed)
                 ApplyLocomotionController(false);
 
@@ -352,7 +310,8 @@ namespace Shooter.Project.Character
 
             _runtimeLocomotionOverride.ApplyOverrides(unarmed ? _unarmedClipOverrides : _armedClipOverrides);
 
-            // Do not Play(Standing) on T→armed — that flashes rifle idle. Only clear a stuck jump.
+            // Only clear a stuck jump — do not Play(Standing, 0). Restarting Standing on T→armed
+            // flashes a fast armed idle, then settles (see Docs/TASKS.md equip path).
             if (!unarmed)
                 ClearStuckInAirLocomotion();
 
@@ -597,21 +556,6 @@ namespace Shooter.Project.Character
             OverlayBlendTimeField ??= typeof(FPSAnimatorMixer).GetField(
                 "_blendTime",
                 BindingFlags.Instance | BindingFlags.NonPublic);
-        }
-
-        void BindToggleAction()
-        {
-            if (inputActions == null)
-                return;
-
-            _playerMap = inputActions.FindActionMap("Player", true);
-            _toggleHandPose = _playerMap.FindAction("ToggleHandPose", false);
-        }
-
-        void EnsureBalanceTuningPanel()
-        {
-            if (GetComponent<ShooterBalanceTuningPanel>() == null)
-                gameObject.AddComponent<ShooterBalanceTuningPanel>();
         }
 
         void ResolveReferences()

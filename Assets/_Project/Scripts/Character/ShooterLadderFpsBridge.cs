@@ -1,3 +1,4 @@
+using Shooter.Project.Weapons;
 using System.Collections;
 using System.Reflection;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
@@ -35,6 +36,7 @@ namespace Shooter.Project.Character
         CharacterStateController _stateController;
         ShooterCharacterController _shooterController;
         ShooterHandPoseState _handPoseState;
+        WeaponManager _weaponManager;
         ShooterFpsHeadHide _headHide;
         UserInputController _userInput;
         Animator _animator;
@@ -70,6 +72,7 @@ namespace Shooter.Project.Character
             _stateController = GetComponentInChildren<CharacterStateController>();
             _shooterController = GetComponent<ShooterCharacterController>();
             _handPoseState = GetComponent<ShooterHandPoseState>();
+            _weaponManager = GetComponent<WeaponManager>();
             _headHide = GetComponent<ShooterFpsHeadHide>();
             _cameraApply = GetComponent<ShooterFpsCameraApply>();
 
@@ -186,7 +189,10 @@ namespace Shooter.Project.Character
         void HandleStateChange(CharacterState from, CharacterState to)
         {
             if (to is LadderClimbing)
+            {
                 _headHide?.SetLadderBodyHidden(true);
+                _weaponManager?.NotifyLadderEnter();
+            }
 
             if (from is LadderClimbing)
                 ExitLadderMode();
@@ -594,6 +600,7 @@ namespace Shooter.Project.Character
             _headHide?.RefreshHeadHide();
             RestoreFpsInputWeights();
             _cameraApply?.ForceRefresh();
+            _weaponManager?.NotifyLadderExit();
             return _fpsAnimator != null && _fpsAnimator.HasLinkedProfile;
         }
 

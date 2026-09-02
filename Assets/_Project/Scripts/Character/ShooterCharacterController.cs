@@ -1,6 +1,7 @@
 using KINEMATION.FPSAnimationFramework.Runtime.Camera;
 using KINEMATION.FPSAnimationFramework.Runtime.Core;
 using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer;
+using KINEMATION.FPSAnimationFramework.Runtime.Recoil;
 using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
 using Lightbug.CharacterControllerPro.Core;
@@ -89,6 +90,7 @@ namespace Shooter.Project.Character
         UserInputController _userInput;
         Animator _animator;
         FPSCameraController _fpsCamera;
+        RecoilPattern _recoilPattern;
 
         Vector2 _mouseInput;
         Vector2 _animatorVelocity;
@@ -135,10 +137,6 @@ namespace Shooter.Project.Character
         public bool IsSprinting =>
             _sprint != null && _sprint.IsPressed() && HasMoveInput &&
             (_characterActor == null || _characterActor.IsGrounded);
-
-        public bool IsGrounded => _characterActor == null || _characterActor.IsGrounded;
-
-        public Transform FpsCharacterRoot => fpsCharacterRoot;
 
         public float MovingStopThreshold
         {
@@ -257,8 +255,11 @@ namespace Shooter.Project.Character
                 _userInput = fpsCharacterRoot.GetComponent<UserInputController>();
                 _animator = fpsCharacterRoot.GetComponent<Animator>();
                 _fpsCamera = fpsCharacterRoot.GetComponentInChildren<FPSCameraController>(true);
+                _recoilPattern = fpsCharacterRoot.GetComponent<RecoilPattern>();
+                EnsureEventReceiver(fpsCharacterRoot.gameObject);
             }
 
+            // Detached FPS Camera lives under the player root, not under Graphics.
             if (_fpsCamera == null)
                 _fpsCamera = GetComponentInChildren<FPSCameraController>(true);
 
@@ -287,6 +288,14 @@ namespace Shooter.Project.Character
                 return;
 
             gameObject.AddComponent<ShooterFpsCameraApply>();
+        }
+
+        static void EnsureEventReceiver(GameObject animatorRoot)
+        {
+            if (animatorRoot == null)
+                return;
+            if (animatorRoot.GetComponent<EventReceiver>() == null)
+                animatorRoot.AddComponent<EventReceiver>();
         }
 
         void EnsureJumpWindupOnSelf()
@@ -507,6 +516,15 @@ namespace Shooter.Project.Character
 
             _mouseInput.x += lookDelta.x;
             _characterActor.Rotation *= Quaternion.Euler(0f, lookDelta.x, 0f);
+
+            if (_recoilPattern != null)
+            {
+                Vector2 recoil = _recoilPattern.GetRecoilDelta();
+                _mouseInput.y += recoil.y;
+                _mouseInput.y = Mathf.Clamp(_mouseInput.y, -pitchClamp, pitchClamp);
+                _characterActor.Rotation *= Quaternion.Euler(0f, recoil.x, 0f);
+            }
+
             _characterActor.ResetInterpolationRotation();
         }
 

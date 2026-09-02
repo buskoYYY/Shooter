@@ -465,7 +465,7 @@ GameObject:
   - component: {fileID: 5389295900614542713}
   - component: {fileID: 6754435315871305001}
   - component: {fileID: 218755035235881758}
-  - component: {fileID: 8012366724746681905}
+  - component: {fileID: 1198624045935660437}
   m_Layer: 0
   m_Name: FPS Camera
   m_TagString: MainCamera
@@ -481,13 +481,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5745374993527454885}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.49994802, y: 0.50005215, z: -0.49994186, w: 0.50005794}
-  m_LocalPosition: {x: 0.039993286, y: 1.6257709, z: -0.05329132}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.15, z: -0.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3804788901806876030}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 203.552}
 --- !u!20 &5389295900614542713
 Camera:
   m_ObjectHideFlags: 0
@@ -570,7 +570,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   fovSpeed: 5
---- !u!114 &8012366724746681905
+--- !u!114 &1198624045935660437
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -694,7 +694,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280656, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: bodySize.x
-      value: 0.72
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280656, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: bodySize.y
@@ -702,15 +702,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -82.51424
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2
+      value: -3.11521
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 99.55245
       objectReference: {fileID: 0}
     - target: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: m_LocalRotation.w
@@ -739,6 +739,10 @@ PrefabInstance:
     - target: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3276619212830280662, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: stepUpDistance
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 6289874670575315053, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: inputHandlerSettings.inputHandler
@@ -806,15 +810,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedAcceleration
-      value: 40
+      value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: planarMovementParameters.stableGroundedDeceleration
-      value: 40
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063288, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: verticalMovementParameters.availableNotGroundedJumps
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6289874671616063289, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      propertyPath: approachDuration
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6289874671616063291, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       propertyPath: movementReferenceParameters.externalReference
@@ -876,6 +884,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6644556677889900112}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1563702094404641001}
+    - targetCorrespondingSourceObject: {fileID: 3276619212830280649, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4983882516917541788}
     - targetCorrespondingSourceObject: {fileID: 6289874670575315051, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7556114334140695970}
@@ -1080,13 +1094,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b94d1296e62f4c34baca7b37b25f7d4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterFpsCameraApply
-  cameraLocalOffset: {x: 0, y: 0.06, z: 0.04}
+  cameraLocalOffset: {x: 0, y: 0.06, z: 0.08}
   defaultFieldOfView: 80
   detachFromHeadAnimation: 1
-  runBobSmoothTime: 0.14
   ladderLookSmoothTime: 0.4
   ladderLookPitch: -18
-  ladderBobSmoothTime: 0.05
+  ladderBobSmoothTime: 0.02
   ladderExitSmoothTime: 0.12
 --- !u!114 &7722334455667788992
 MonoBehaviour:
@@ -1147,8 +1160,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterCcpMovementTuning
   baseSpeedLimit: 5
   boostSpeedLimit: 7.5
-  stableGroundedAcceleration: 40
-  stableGroundedDeceleration: 40
+  stableGroundedAcceleration: 22
+  stableGroundedDeceleration: 24
   jumpApexHeight: 0.8888889
   jumpApexDuration: 0.4444444
 --- !u!114 &6644556677889900112
@@ -1165,6 +1178,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.ShooterLadderApproachTuning
   approachDuration: 0.4
   approachSnapDistance: 0.05
+--- !u!114 &1563702094404641001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f7e8d9c0b1a232346789abcdef01234, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Weapons.ShooterPlayerInventory
+  hasGun1: 1
+  hasGun2: 1
+  hasGun3: 1
+  hasGun4: 0
+  hasGun5: 0
+--- !u!114 &4983882516917541788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3804788901806876004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f8e9d0c1b2a34345789abcdef012345, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Weapons.WeaponManager
+  inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  weaponAttachPoint: {fileID: 2024218303318851783}
+  weaponSlots:
+  - {fileID: 6421470442159435738, guid: cbcd737b05694974e8be1df3d1dddbaf, type: 3}
+  - {fileID: 8123679283046615362, guid: 2a01431b59e73d04ea39f70ee3e5d477, type: 3}
+  - {fileID: 3801359025069816147, guid: 05c6105b90021184a9b02c89b5198591, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  autoCollectFromAttachPoint: 1
+  showAmmoHud: 1
 --- !u!4 &3804788901806876030 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276619212830280659, guid: c822f91997f3a8649ae1b0ddaac74b61, type: 3}
@@ -1236,9 +1288,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8531248215242998404, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7823293702887809713, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5007277136405668583, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -3193396964409386333, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       propertyPath: m_Name
       value: Character_model
+      objectReference: {fileID: 0}
+    - target: {fileID: 5241284212654878085, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       propertyPath: m_Controller
@@ -1299,7 +1371,7 @@ PrefabInstance:
       addedObject: {fileID: 5943732212394091074}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5511223344556677889}
+      addedObject: {fileID: 4687611659772989335}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 535695929301425874}
@@ -2302,7 +2374,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2076ea9fc56d456dab4549a97f178a67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RecoilAnimation.Runtime::KINEMATION.ProceduralRecoilAnimationSystem.Runtime.RecoilAnimation
-  recoilData: {fileID: 0}
   isAiming: 0
   fireMode: 0
 --- !u!114 &6268923272053785788
@@ -2330,7 +2401,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b24a8f06539258c41887e7e69f8b1754, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.lightbug.character-controller-pro::Lightbug.CharacterControllerPro.Core.AnimatorLink
---- !u!114 &5511223344556677889
+--- !u!114 &4687611659772989335
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2339,18 +2410,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 8593432475786107828}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4e8a91b2d3f4756a8b90c1d2e3f4051, type: 3}
+  m_Script: {fileID: 11500000, guid: 2ce547e116b44076a8d073dc602131b8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Character.EventReceiver
-  onStep:
-    m_PersistentCalls:
-      m_Calls: []
-  onJump:
-    m_PersistentCalls:
-      m_Calls: []
-  onFalldown:
-    m_PersistentCalls:
-      m_Calls: []
+  m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Recoil.RecoilPattern
+  recoilSettings: {fileID: 0}
+  deltaLookInputProperty: MouseDeltaInput
 --- !u!4 &8674152986721511069 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 280244281219317880, guid: cd5ea5a8faa84c44bb6af5967c36c40b, type: 3}

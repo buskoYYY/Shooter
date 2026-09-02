@@ -17,15 +17,9 @@ namespace Shooter.Project.Input
             foreach (var menu in Object.FindObjectsByType<MainMenuManager>(FindObjectsSortMode.None))
                 menu.enabled = false;
 
-            foreach (var camera3D in Object.FindObjectsByType<Camera3D>(FindObjectsSortMode.None))
+            foreach (var camera in Object.FindObjectsByType<Camera3D>(FindObjectsSortMode.None))
             {
-                camera3D.enabled = false;
-                var cam = camera3D.GetComponent<Camera>();
-                if (cam != null)
-                    cam.enabled = false;
-                var listener = camera3D.GetComponent<AudioListener>();
-                if (listener != null)
-                    listener.enabled = false;
+                Object.Destroy(camera);
             }
         }
     }

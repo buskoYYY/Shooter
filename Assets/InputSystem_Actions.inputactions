@@ -60,18 +60,54 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Previous",
+                    "name": "WeaponSlot1",
                     "type": "Button",
-                    "id": "2776c80d-3c14-4091-8c56-d04ced07a2b0",
+                    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Next",
+                    "name": "WeaponSlot2",
                     "type": "Button",
-                    "id": "b7230bb6-fc9b-4f52-8b25-f5e19cb2c2ba",
+                    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678902",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "WeaponSlot3",
+                    "type": "Button",
+                    "id": "c3d4e5f6-a7b8-9012-cdef-123456789013",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "WeaponSlot4",
+                    "type": "Button",
+                    "id": "d4e5f6a7-b8c9-0123-def0-234567890124",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "WeaponSlot5",
+                    "type": "Button",
+                    "id": "e5f6a7b8-c9d0-1234-ef01-345678901235",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "WeaponSlot6",
+                    "type": "Button",
+                    "id": "f6a7b8c9-d0e1-2345-f012-456789012346",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -87,54 +123,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ToggleHandPose",
-                    "type": "Button",
-                    "id": "e8a4c2f1-9b3d-4e5a-8c7f-1d2e3f4a5b6c",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Reload",
                     "type": "Button",
-                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c10",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "DropWeapon",
-                    "type": "Button",
-                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c11",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Weapon1",
-                    "type": "Button",
-                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c12",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Weapon2",
-                    "type": "Button",
-                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c13",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Weapon3",
-                    "type": "Button",
-                    "id": "7c9e2f11-4a8b-4d3e-9c1f-2b6e8a4d5c14",
+                    "id": "a7b8c9d0-e1f2-3456-a123-567890123457",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -376,11 +367,11 @@
                 {
                     "name": "",
                     "id": "cbac6039-9c09-46a1-b5f2-4e5124ccb5ed",
-                    "path": "<Mouse>/scroll/up",
+                    "path": "<Keyboard>/2",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Next",
+                    "action": "WeaponSlot2",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -391,7 +382,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Next",
+                    "action": "WeaponSlot2",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -464,11 +455,11 @@
                 {
                     "name": "",
                     "id": "1534dc16-a6aa-499d-9c3a-22b47347b52a",
-                    "path": "<Mouse>/scroll/down",
+                    "path": "<Keyboard>/1",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "Previous",
+                    "action": "WeaponSlot1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -479,7 +470,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Previous",
+                    "action": "WeaponSlot1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -530,66 +521,55 @@
                 {
                     "name": "",
                     "id": "f4a8b2c1-7d3e-4f5a-9b6c-8e1d2f3a4b5c",
-                    "path": "<Keyboard>/t",
+                    "path": "<Keyboard>/3",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "ToggleHandPose",
+                    "action": "WeaponSlot3",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e01",
+                    "id": "a5b9c3d2-8e4f-5a6b-0c7d-9f2e3a4b5c6d",
+                    "path": "<Keyboard>/4",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "WeaponSlot4",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b6c0d4e3-9f5a-6b7c-1d8e-0a3f4b5c6d7e",
+                    "path": "<Keyboard>/5",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "WeaponSlot5",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c7d1e5f4-a06b-7c8d-2e9f-1b4a5c6d7e8f",
+                    "path": "<Keyboard>/6",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "WeaponSlot6",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b8c9d0e1-f2a3-4567-b234-678901234568",
                     "path": "<Keyboard>/r",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Reload",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e02",
-                    "path": "<Keyboard>/g",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "DropWeapon",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e03",
-                    "path": "<Keyboard>/1",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Weapon1",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e04",
-                    "path": "<Keyboard>/2",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Weapon2",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a4c1d8e2-3b7f-4c90-9e1a-5d6b7c8d9e05",
-                    "path": "<Keyboard>/3",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Weapon3",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

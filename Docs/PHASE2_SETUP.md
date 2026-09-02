@@ -12,7 +12,7 @@
   - `FPSAnimator`, `FPSBoneController`, `UserInputController`, `FPSPlayablesController`, `RecoilAnimation`
   - Animator Controller: `Assets/Demo/Animations/Locomotion/FPSAnimator_Humanoid.controller`
 - Создаёт IK-цели и Rig/Profile в `Assets/_Project/FPS/`
-- Ставит **FPS Camera** на кость `head` с `FPSCameraController`
+- Ставит **FPS Camera** на кость `head` с `FPSCameraController` (в Play отвязывается на корень — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md))
 - Добавляет **ShooterCharacterController** на корень игрока (мост CCP ↔ FPS AF)
 - Отключает third-person камеру сцены, включает FPS-камеру
 - CCP: `External Reference` → корень игрока, авто-поворот тела CCP выключен

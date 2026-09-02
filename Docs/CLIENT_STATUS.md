@@ -1,10 +1,11 @@
 # Статус для заказчика (Shooter — персонаж и FPS-тело)
 
-**Дата:** август 2026  
+**Дата:** 31 августа 2026  
 **Стек на текущем этапе:** **Character Controller Pro (CCP)** + **FPS Animation Framework (FPS AF)**.  
 Motion Warping (mantle/vault) — **не в scope** до отдельного согласования.
 
-**Этап движения:** ✅ **завершён**. **Оружие (Задача 2):** начат каркас (фаза 5.0) по черновику ТЗ; точный список функций ещё пишется.
+**Этап движения:** ✅ **завершён**.  
+**Следующий этап:** **Задача 2 — система оружия** по ТЗ Robert (30.08.2026) → [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md).
 
 ---
 
@@ -13,7 +14,7 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 ### Инфраструктура проекта
 - Unity-проект (URP, Input System)
 - Документация и план фаз: `docs/TASKS.md`
-- Авто-setup через меню **Shooter → Phase 0–5** в редакторе
+- Авто-setup через меню **Shooter → Phase 0–4** в редакторе
 - Dev-панель баланса **F8** (временная, см. `docs/BALANCE_TUNING_PANEL.md`)
 
 ### Фаза 0–1 — Движение (CCP)
@@ -29,7 +30,7 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 - **FPSAnimator_Humanoid** — locomotion (ходьба/бег/стрейф)
 - FPS-камера на голове, процедурные слои: **Turn, Look, Sway, IK**
 - **ShooterCharacterController** — мост CCP ↔ FPS AF (input, поворот, параметры аниматора)
-- **ShooterHandPoseState** — unarmed/armed по **T**, старт с опущенными руками без рывка
+- **ShooterHandPoseState** — unarmed/armed overlay; управление через **WeaponManager** (1–6), не T
 - Модель на **Humanoid** Avatar (обязательно для demo-анимаций)
 
 ### Полировка движения (август 2026)
@@ -44,12 +45,6 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 - **ShooterLadderFpsBridge** — отключение FPS sway/turn на лестнице, restore после слезания
 - **ShooterFpsCameraApply** / **ShooterFpsHeadHide** — камера и вид тела на лестнице
 
-### Фаза 5.0 — Оружие (каркас)
-- **ShooterWeaponActionGate** — нельзя стрелять / доставать / переключать в прыжке, спринте, на лестнице
-- Инвентарь: слоты, подбор, выброс, перезарядка, hitscan-урон, melee + punch камеры
-- Временно меши из FPS Animation Pro (Mk23, AK12, Mk18, Knife)
-- Setup: **Shooter → Phase 5 → Run Full Weapon Setup**
-
 ---
 
 ## Что работает в Play Mode (сейчас)
@@ -60,28 +55,39 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 | Бег (Shift), присед (C) | ✅ |
 | Прыжок (Space) — пружина + без стрейфа в воздухе | ✅ |
 | Locomotion (ходьба/бег/стрейф, Humanoid) | ✅ |
-| Unarmed / armed (T), старт unarmed | ✅ |
+| Unarmed / armed (клавиши **1–6**, holster + слоты) | ✅ каркас 2.1 |
 | Процедурное тело (sway / turn / look / IK) | ✅ |
 | Разворот на месте → ходьба | ✅ |
 | Лестница (Interact + climb + exit) | ✅ |
 | F8 — временная панель баланса | ✅ |
-| Оружие: каркас (hitscan, урон, reload, pickup/drop, гейт) | 🟡 фаза 5.0 |
-| Оружие: IK / ADS / recoil / финальные модели | ❌ ждём ТЗ и гайд |
+| Оружие: каркас 1–6 + Mk18/AK12/Pistol ranged MVP | 🟡 2.1–2.2 |
+| Оружие: melee, CollisionLayer, inspect, pickups | ❌ дальше по ТЗ |
 | Mantle / Vault (Motion Warping) | ❌ **вне scope** |
 
 ---
 
-## Следующие шаги (план)
+## Следующие шаги (план по ТЗ 30.08.2026)
 
-1. **Задача 2 — оружие:** каркас уже в коде (стрельба, патроны, подбор, запреты на прыжок/бег/лестницу). Дальше — точное ТЗ, вид/анимации, ADS/recoil
-2. Тестовая сцена / полировка окружения — по необходимости
-3. **Motion Warping (mantle/vault)** — только после отдельного согласования
+Полный план: **[WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)**
+
+| Этап | Содержание |
+|------|------------|
+| **2.1** | `IWeapon`, `WeaponManager`, инвентарь `hasGun1…5`, клавиши **1–6** |
+| **2.2** | Дальний бой: стрельба, reload, recoil, VFX (demo Mk18/AK12) |
+| **2.3** | Ближний бой: combo, knife, прочность |
+| **2.4** | Ограничения: лестница (auto holster), прыжок, бег |
+| **2.5** | Стены: **CollisionLayer** FPS AF |
+| **2.6–2.8** | Inspect, check ammo, break, pickups, тест-сцена |
+
+**Заказчик доработает сам:** финальный UI, подбор звуков (пока placeholder / demo).
+
+**Вне scope:** Motion Warping (mantle/vault).
 
 ---
 
 ## Краткий текст для сообщения заказчику
 
-> Реализован FPS-персонаж уровня полноценного locomotion-блока (CCP + FPS AF). Блок движения закрыт. По оружию начат каркас: стрельба, урон, перезарядка, подбор/выброс, переключение; оружие не стреляет и не достаётся в прыжке, спринте и на лестнице. Временно демо-меши из FPS Animation Pro. Полные анимации, ADS и модели заказчика — после финального ТЗ.
+> Блок движения закрыт. По ТЗ от 30.08 начинаем **систему оружия**: слоты 1–6, инвентарь, дальний/ближний бой, прочность, патроны, ограничения при беге/прыжке/лестнице, поднятие оружия у стены (FPS AF CollisionLayer). За основу — demo-оружия и анимации из FPS Animation Framework; звуки и UI — простые заглушки.
 
 ---
 
@@ -89,7 +95,8 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 
 | Документ | Содержание |
 |----------|------------|
-| `docs/TASKS.md` | Техническая документация, задачи 1–2 |
+| `docs/WEAPON_SYSTEM_TZ.md` | **ТЗ заказчика + план Задачи 2** (оружие, инвентарь, ограничения) |
+| `docs/TASKS.md` | Техническая документация, задачи 1.1–1.4, архитектура |
 | `docs/BALANCE_TUNING_PANEL.md` | Описание F8-панели для заказчика |
-| `docs/PHASE1_SETUP.md` … `PHASE5_SETUP.md` | Auto-setup в Unity |
+| `docs/PHASE1_SETUP.md` … `PHASE4_SETUP.md` | Auto-setup в Unity |
 | `docs/README.md` | Оглавление документации |
