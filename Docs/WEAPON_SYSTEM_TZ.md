@@ -8,6 +8,20 @@
 
 ---
 
+## 0. Предварительные пожелания заказчика (~29.08.2026)
+
+До финального ТЗ (раздел 1 ниже) в переписке были зафиксированы ожидания:
+
+- **Главное ограничение:** оружие не стреляет и не достаётся во время **прыжка**, **бега**, **лестницы**.
+- **Модели:** временно demo из FPS Animation Pro; **Retarget Pro** для full-body; замена mesh через Blender — позже.
+- **Количество:** до **3 стрелковых** (пистолет + 2 автомата) + **ближний бой** (анимации искать отдельно).
+- **Функции:** стрельба, попадания, урон, перезарядка, патроны, SFX/VFX (placeholder), переключение, подбор, выбрасывание.
+- Заказчик сам доработает UI и финальные звуки.
+
+Практический гайд по текущей реализации: **[WEAPON_SETUP.md](WEAPON_SETUP.md)**.
+
+---
+
 ## 1. Общие требования
 
 | Требование | Реализация |
@@ -144,12 +158,13 @@ void OnBreak();
 - [x] Связь **1** ↔ unarmed через `ShooterHandPoseState`; **T** убрана
 - [x] Input Actions: `WeaponSlot1`…`WeaponSlot6` (клавиши 1–6)
 - [x] Editor: **Shooter → Project → Add Weapon System** (или **Phase 2 → Add Weapon System**)
-- [ ] Назначить weapon prefabs на `WeaponManager` + включить `hasGun1` для теста
+- [x] Prefabs на `WeaponManager` + `hasGun1…3` для Mk18/AK12/Mk23 (Setup Ranged Weapons)
 
 ### 2.2 — Ranged MVP (~6–8 ч)
 
 - [x] `RangedWeapon`: fire semi/auto, reload, ammo + `AmmoType`, recoil, hitscan, camera shake
 - [x] Prefabs: **Mk18** (slot 2), **AK12** (slot 3), **Mk23** pistol (slot 4) via **Shooter → Project → Setup Ranged Weapons**
+- [x] Attach на `IK WeaponBone` + local offsets (см. [WEAPON_SETUP.md](WEAPON_SETUP.md))
 - [ ] Equip/Unequip polish (per-weapon overlay pose)
 - [ ] Muzzle flash + shell prefabs (slots ready, assign VFX assets)
 - [ ] Tactical reload variant
@@ -162,9 +177,9 @@ void OnBreak();
 
 ### 2.4 — Ограничения движения (~3–4 ч)
 
-- [ ] `WeaponManager` gates: sprint / jump / ladder
-- [ ] Лестница: auto unequip при входе, restore при выходе (`ShooterLadderFpsBridge`)
-- [ ] Блок reload / weapon swap в воздухе
+- [x] `WeaponManager` gates: sprint / jump (в воздухе) — блок fire/reload/swap
+- [x] Лестница: auto unequip при входе, restore при выходе (`ShooterLadderFpsBridge` → `NotifyLadderEnter/Exit`)
+- [x] Блок reload / weapon swap в воздухе
 
 ### 2.5 — Стены и FPS AF (~2–3 ч)
 
@@ -228,7 +243,7 @@ void OnBreak();
 
 | Риск | Митигация |
 |------|-----------|
-| Armed/unarmed overlay ([FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md)) | Equip оружия = armed overlay + weapon prefab; клавиша **1** = unarmed. Не менять locomotion через полный swap controller |
+| Armed/unarmed overlay ([FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md)) | Equip оружия = `SetArmed()` + weapon mesh на **IK WeaponBone**; клавиша **1** = unarmed. **Не** `LinkAnimatorProfile` demo-оружия |
 | Demo `FPSController` ≠ CCP | Брать только weapon/playables/recoil; движение — `ShooterCharacterController` |
 | Лестница + оружие | Расширить bridge, не отключать FPS AF целиком |
 | Клавиша T vs 1 | **Решено 31.08:** только **1–6**; T и `ToggleHandPose` удалены | — |
@@ -238,7 +253,9 @@ void OnBreak();
 
 ## См. также
 
-- [TASKS.md](TASKS.md) — Задача 1 (движение, закрыта), сводка Задачи 2
+- [TASKS.md](TASKS.md) — Задача 1 (движение, закрыта), **Задача 2** (статус и нюансы)
+- [WEAPON_SETUP.md](WEAPON_SETUP.md) — практический гайд (меню, крепление, клавиши)
 - [CLIENT_STATUS.md](CLIENT_STATUS.md) — статус для заказчика
 - [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md) — не ломать при equip/unarmed
 - [PHASE2_SETUP.md](PHASE2_SETUP.md) — FPS AF setup
+- [PHASE5_SETUP.md](PHASE5_SETUP.md) — legacy Phase 5 (не использовать)

@@ -314,14 +314,80 @@ Player (Root)
 7. **`[DefaultExecutionOrder]` на скрипте Unity игнорирует**, если в `.meta` другой `executionOrder`. У `ShooterHandPoseState` в meta долго стояло **0**, поэтому FPS init (`ShooterCharacterController` = **-200**) всегда успевал поднять armed overlay до нашего `Start`.
 8. **Не выключать `Animator.enabled`**, чтобы «спрятать» руки. `FPSAnimator.Update` при обратном включении вызывает `RebuildPlayables()` → PoseSampler снова `PlayPose` → вспышка рук. `animator.speed = 0` PlayableGraph не останавливает. Прятать меши — мигание камеры (кадр как до Play).
 
-### Следующая задача (запланировано)
+---
 
-**Задача 2 — Система оружия** по ТЗ заказчика (30.08.2026):  
-→ подробный план: **[WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)**
+## Задача 2 — Оружие (ТЗ + реализация)
 
-Кратко: `WeaponManager` + `IWeapon` / `MeleeWeapon` / `RangedWeapon`, инвентарь `hasGun1…5`, клавиши **1–6**, прочность и патроны, ограничения (лестница/прыжок/бег), **CollisionLayer** FPS AF для стен, demo-оружия из пакета.
+**Цель:** своя система оружия поверх CCP + FPS AF. Не копировать demo `FPSController` целиком — только weapon/playables/recoil-логику.
 
-Подзадачи: **2.1** каркас → **2.2** ranged → **2.3** melee → **2.4** gates движения → **2.5** стены → **2.6** inspect/break → **2.7** pickups → **2.8** тест-сцена.
+| Документ | Содержание |
+|----------|------------|
+| [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md) | Полное ТЗ Robert (30.08.2026) + подзадачи 2.1–2.8 |
+| [WEAPON_SETUP.md](WEAPON_SETUP.md) | Практический гайд: меню, клавиши, `IK WeaponBone`, attach offsets |
+| [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md) | Не ломать armed/unarmed overlay при equip |
+
+### Черновик заказчика (до финального ТЗ, ~29.08.2026)
+
+Из переписки до согласованного ТЗ:
+
+- Оружие **не стреляет и не достаётся** во время прыжка, бега, лестницы.
+- Временно — demo-оружия из FPS Animation Pro; **Retarget Pro** для full-body; замена моделей через Blender — позже.
+- Максимум **3 стрелковых**: пистолет, автомат, ещё один автомат + **ближний бой** (анимации пока нет).
+- Нужна система: стрельба, попадания, урон, перезарядка, патроны, звуки/VFX (placeholder), переключение, подбор, выбрасывание.
+- Заказчик доработает финальный UI и звуки сам.
+
+### Архитектура (по ТЗ)
+
+```
+PlayerCharacter
+├── ShooterPlayerInventory      — hasGun1…hasGun5
+├── WeaponManager               — слоты 1–6, gates, ammo HUD
+├── ShooterHandPoseState        — unarmed overlay (клавиша 1)
+├── ShooterLadderFpsBridge      — auto holster / restore на лестнице
+└── IK WeaponBone               — parent для меша оружия
+```
+
+Код: `Assets/_Project/Scripts/Character/Weapons/`  
+Префабы: `Assets/_Project/Weapons/Prefabs/`
+
+### Управление
+
+| Клавиша | Действие |
+|---------|----------|
+| **1** | Holster (unarmed) |
+| **2–6** | Слоты оружия (2=Mk18, 3=AK12, 4=Mk23) |
+| **ЛКМ** | Огонь / удар |
+| **R** | Перезарядка |
+
+**T убрана.** Legacy Phase 5 (`ShooterWeaponController`) — не использовать → [PHASE5_SETUP.md](PHASE5_SETUP.md).
+
+### Статус подзадач
+
+| Этап | Статус | Комментарий |
+|------|--------|-------------|
+| **2.1** Каркас | ✅ | `IWeapon`, `WeaponManager`, inventory, input 1–6 |
+| **2.2** Ranged MVP | 🟡 | Mk18/AK12/Mk23: fire, reload, ammo, recoil, hitscan. Осталось: VFX, polish pose |
+| **2.3** Melee | ❌ | `MeleeWeapon` — заглушка |
+| **2.4** Gates движения | 🟡 | Sprint/jump/air block; ladder holster/restore в bridge |
+| **2.5** Стены (CollisionLayer) | ❌ | |
+| **2.6** Inspect / break | ❌ | |
+| **2.7** Pickups | ❌ | |
+| **2.8** Тест-сцена | ❌ | |
+
+### Критичные нюансы (из отладки)
+
+1. **Parent оружия — `IK WeaponBone`**, не `WeaponBone` — иначе меш не следует за анимацией торса.
+2. **Не вызывать `LinkAnimatorProfile`** demo-оружия на Humanoid `Character_model` — «взрыв» меша.
+3. Equip = `ShooterHandPoseState.SetArmed()` + меш на IK-кости; overlay — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.md).
+4. С demo holosight снимать **MeshCollider** (`WeaponPrefabUtility.StripPhysics`).
+5. Оружие можно разместить **в иерархии префаба** под `IK WeaponBone` для ручной подгонки; иначе runtime spawn из `weaponSlots[]`.
+
+Attach offsets (local): Mk18 `(-0.039, 0.05, -0.009)` / `(0.22, 347.70, 359.70)`; AK12 `(-0.033, 0.07, -0.007)` / `(0.25, 347.60, 0.13)`; Mk23 `(-0.016, 0.026, -0.156)` / `(0.77, 345.55, 359.83)`.
+
+### Editor setup
+
+- **Shooter → Project → Add Weapon System**
+- **Shooter → Project → Setup Ranged Weapons (Mk18 / AK12 / Pistol)**
 
 ---
 
@@ -447,4 +513,4 @@ CCP берёт размер из **CharacterBody → Width** (диаметр), �
 
 ---
 
-*Последнее обновление: 31 августа 2026 — план Задачи 2 по ТЗ заказчика ([WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)). Блок движения (1.x) закрыт.*
+*Последнее обновление: 2 сентября 2026 — Задача 2: ТЗ + [WEAPON_SETUP.md](WEAPON_SETUP.md), ranged MVP Mk18/AK12/Mk23. Блок движения (1.x) закрыт.*

@@ -1,44 +1,47 @@
-# Phase 5 Setup — Оружие (каркас)
+# Phase 5 Setup — ⚠️ УСТАРЕЛО (legacy)
 
-ТЗ заказчика ещё пишется. Этот setup включает **логику** (стрельба, урон, патроны, подбор) и **запреты** (прыжок / бег / лестница). Полный IK/ADS/recoil — после гайда по добавлению оружия.
+Этот документ описывает **ранний прототип** оружия на `ShooterWeaponController` (`Assets/_Project/Scripts/Weapons/`).  
+Он **не используется** в текущей реализации.
 
-## Быстрый старт
+---
+
+## Актуальная система оружия
+
+| Документ | Содержание |
+|----------|------------|
+| **[WEAPON_SETUP.md](WEAPON_SETUP.md)** | Практический гайд: меню, клавиши, крепление на `IK WeaponBone` |
+| **[WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md)** | ТЗ заказчика + план подзадач 2.1–2.8 |
+| **[TASKS.md](TASKS.md)** | Раздел «Задача 2» — статус и нюансы |
+
+**Editor-меню (использовать):**
+
+- **Shooter → Project → Add Weapon System**
+- **Shooter → Project → Setup Ranged Weapons (Mk18 / AK12 / Pistol)**
+
+**Не запускать:** `Shooter → Phase 5 → Run Full Weapon Setup` — вешает legacy-компоненты и конфликтует с `WeaponManager`.
+
+---
+
+## Чем legacy отличается от текущего
+
+| | Legacy (Phase 5) | Текущий (`WeaponManager`) |
+|--|------------------|---------------------------|
+| Код | `ShooterWeaponController`, `ShooterWeaponInventory` | `WeaponManager`, `RangedWeapon`, `ShooterPlayerInventory` |
+| Клавиши | T, G, колёсико | **1–6** (T убрана) |
+| Крепление | Runtime spawn на weapon bone | `IK WeaponBone` + attach transforms |
+| Armed overlay | Смешение с legacy | `ShooterHandPoseState.SetArmed()` |
+| HUD | Старый debug | Ammo HUD на `WeaponManager` |
+
+При открытии старых сцен проверьте, что на игроке **нет** `ShooterWeaponController` / `ShooterWeaponActionGate` — `WeaponManager.Awake()` отключает их, если найдёт.
+
+---
+
+## Архив: что делал старый setup (для справки)
 
 1. **Shooter → Phase 5 → Run Full Weapon Setup**
-2. Play в `PlayerTest`
-3. Старт **unarmed**. **T** — достать (если в инвентаре есть оружие) или armed-поза без меша
-4. **ЛКМ** — стрельба / удар. **R** — перезарядка. **1 / 2 / 3** — слоты. **G** — выбросить. Колёсико — цикл
-5. На сцене: куб-мишень и пикапы (пистолет / автомат / нож)
+2. Вешал `ShooterWeaponActionGate`, `ShooterWeaponInventory`, `ShooterWeaponController`
+3. Создавал SO в `Assets/_Project/Weapons/` (Mk23, AK12, Mk18, Knife)
+4. Добавлял мишень и пикапы в `PlayerTest`
+5. Управление: T holster, G drop, колёсико cycle
 
-## Управление
-
-| Клавиша | Действие |
-|---------|----------|
-| ЛКМ | Огонь / удар ближнего боя |
-| R | Перезарядка |
-| 1 / 2 / 3 | Слот оружия |
-| Колёсико | Следующее / предыдущее |
-| G | Выбросить текущее |
-| T | Holster / достать (как раньше armed/unarmed) |
-
-Не работает во время **спринта**, **прыжка** (включая пружину), **лестницы**.
-
-## Что делает setup
-
-- Вешает на игрока `ShooterWeaponActionGate`, `ShooterWeaponInventory`, `ShooterWeaponController`
-- Создаёт SO в `Assets/_Project/Weapons/` (Mk23, AK12, Mk18, Knife) — меши из FPS Animation Pro
-- Добавляет в `PlayerTest` мишень и пикапы
-- Выдаёт стартовый пистолет в инвентарь (спрятан, пока unarmed)
-
-## Если не стреляет
-
-1. **T** — руки должны быть armed, в инвентаре есть оружие
-2. Не зажат Shift, персонаж на земле, не на лестнице
-3. В магазине есть патроны (R)
-4. Setup прогнан на **префабе и сцене** (`Run Full Weapon Setup`)
-
-## Чего пока нет (намеренно)
-
-- ADS, процедурный recoil, `LinkAnimatorProfile` оружия
-- Замена демо-мешей на модели заказчика
-- Финальные звуки/декали
+Это было до согласованного ТЗ (30.08.2026) и заменено официальной архитектурой из [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md).
