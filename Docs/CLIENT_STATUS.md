@@ -73,7 +73,7 @@ Motion Warping (mantle/vault) — **не в scope** до отдельного с
 | Этап | Содержание | Статус |
 |------|------------|--------|
 | **2.1** | `IWeapon`, `WeaponManager`, инвентарь, клавиши **1–6** | ✅ |
-| **2.2** | Mk18/AK12/Mk23: fire, reload, recoil, ammo HUD | 🟡 VFX/polish |
+| **2.2** | Mk18/AK12/Mk23: fire, reload, recoil, ammo HUD, VFX/SFX | 🟡 pose polish |
 | **2.3** | Ближний бой: combo, knife, прочность | ❌ |
 | **2.4** | Gates: спринт, прыжок, лестница (holster/restore) | ✅ |
 | **2.5** | Стены: **CollisionLayer** FPS AF | ❌ |

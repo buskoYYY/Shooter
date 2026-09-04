@@ -25,14 +25,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3686106034911762673}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.001915, y: 0.10675, z: -0.000204, w: -0.994287}
-  m_LocalPosition: {x: -0.039, y: 0.05, z: -0.009}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7954264734643968242}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0.21964277, y: 347.70087, z: 359.6968}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6421470442159435738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
   maxDurability: 100
   durability: 100
   attachLocalPosition: {x: -0.039, y: 0.05, z: -0.009}
-  attachLocalEulerAngles: {x: 0.21964277, y: 347.70087, z: 359.6968}
+  attachLocalEulerAngles: {x: 0.22, y: 347.7, z: 359.7}
   ammoType: 1
   magazineSize: 30
   startReserve: 90
@@ -72,10 +72,10 @@ MonoBehaviour:
   cameraShake: {fileID: 11400000, guid: 5563e5a81879bf3488e215990ceb8724, type: 2}
   muzzlePoint: {fileID: 9057744068166274121}
   muzzleFlashPrefab: {fileID: 0}
-  shellEjectPrefab: {fileID: 0}
-  fireSfx: {fileID: 0}
+  shellEjectPrefab: {fileID: 888293095129972748, guid: 9e0a813ef1b015243b2111b67ffd7569, type: 3}
+  fireSfx: {fileID: 8300000, guid: b58e6e277789bb54191e03c4c3fd2ca9, type: 3}
   emptySfx: {fileID: 0}
-  reloadSfx: {fileID: 0}
+  reloadSfx: {fileID: 8300000, guid: 64b2a9f1592c12340a59512dc4e46911, type: 3}
 --- !u!1001 &1415992825958048428
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -84,6 +84,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6242253762360707766}
     m_Modifications:
+    - target: {fileID: 5882940409121476925, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
+      propertyPath: defaultAimPoint
+      value: 
+      objectReference: {fileID: 9057744068166274121}
     - target: {fileID: 8542894136583626980, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
       propertyPath: m_Name
       value: Mk18_View
@@ -140,6 +144,10 @@ PrefabInstance:
     - {fileID: 3503007806020209413, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
     - {fileID: 6021082444482178404, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
     - {fileID: 9207858700110832506, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
+    - {fileID: 5143413775239761991, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
+    - {fileID: 2922655164713559353, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
+    - {fileID: 1887610252894711267, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
+    - {fileID: 788851809564539674, guid: 4eb869b283956354d8ae03f13c2650ab, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -165,8 +165,11 @@ void OnBreak();
 - [x] `RangedWeapon`: fire semi/auto, reload, ammo + `AmmoType`, recoil, hitscan, camera shake
 - [x] Prefabs: **Mk18** (slot 2), **AK12** (slot 3), **Mk23** pistol (slot 4) via **Shooter → Project → Setup Ranged Weapons**
 - [x] Attach на `IK WeaponBone` + local offsets (см. [WEAPON_SETUP.md](WEAPON_SETUP.md))
-- [ ] Equip/Unequip polish (per-weapon overlay pose)
-- [ ] Muzzle flash + shell prefabs (slots ready, assign VFX assets)
+- [x] Equip/Unequip IK motion (`LinkAnimatorLayer` equip/unEquip из demo)
+- [x] Muzzle flash: поле `Muzzle Flash Prefab` на оружии — назначаешь сам; setup не затирает
+- [x] Shell prefab + placeholder SFX (FPS Animation Pack)
+- [x] Тестовые мишени: **Shooter → Project → Add Weapon Test Targets**
+- [ ] Per-weapon overlay pose polish
 - [ ] Tactical reload variant
 
 ### 2.3 — Melee MVP (~3–4 ч)

@@ -9,6 +9,7 @@ using KINEMATION.FPSAnimationFramework.Runtime.Recoil;
 using KINEMATION.ProceduralRecoilAnimationSystem.Runtime;
 using Shooter.Project.Weapons;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,6 +24,22 @@ namespace Shooter.Project.Editor
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
         const string WeaponsFolder = "Assets/_Project/Weapons";
         const string PrefabsFolder = "Assets/_Project/Weapons/Prefabs";
+        const string VfxFolder = "Assets/_Project/Weapons/VFX";
+        const string TestScenePath = "Assets/_Project/Scenes/PlayerTest.unity";
+
+        const string SfxRifleFire = "Assets/KINEMATION/FPSAnimationPack/SFX/AK/S_AKX200_Shot_0.WAV";
+        const string SfxRifleReload = "Assets/KINEMATION/FPSAnimationPack/SFX/AK/S_AKX200_Reload_Empty_Full.WAV";
+        const string SfxMk18Reload = "Assets/KINEMATION/FPSAnimationPack/SFX/Mk14EBR/S_MK14_Reload_Empty_Full.WAV";
+        const string SfxPistolFire = "Assets/KINEMATION/FPSAnimationPack/SFX/MX16A4/S_MX16A4_Fire_A.WAV";
+        const string SfxPistolReload = "Assets/KINEMATION/FPSAnimationPack/SFX/M1911/S_M1911_Reload_Empty.wav";
+
+        // Tuned local offsets relative to IK WeaponBone (do not zero on rebuild).
+        static readonly Vector3 Mk18AttachPos = new Vector3(-0.039f, 0.05f, -0.009f);
+        static readonly Vector3 Mk18AttachEuler = new Vector3(0.22f, 347.7f, 359.7f);
+        static readonly Vector3 Ak12AttachPos = new Vector3(-0.033f, 0.07f, -0.007f);
+        static readonly Vector3 Ak12AttachEuler = new Vector3(0.25f, 347.6f, 0.13f);
+        static readonly Vector3 Mk23AttachPos = new Vector3(-0.016f, 0.026f, -0.156f);
+        static readonly Vector3 Mk23AttachEuler = new Vector3(0.77f, 345.55f, 359.83f);
 
         const string Mk18Demo = "Assets/Demo/Prefabs/Mk18/Mk18_Scriptable.prefab";
         const string Ak12Demo = "Assets/Demo/Prefabs/AK12/AK12_Scriptable.prefab";
@@ -40,6 +57,9 @@ namespace Shooter.Project.Editor
 
         [MenuItem("Shooter/Project/Setup Ranged Weapons (Mk18 / AK12 / Pistol)")]
         public static void SetupRangedWeaponsMenu() => AddWeaponSystemImpl();
+
+        [MenuItem("Shooter/Project/Add Weapon Test Targets")]
+        public static void AddWeaponTestTargetsMenu() => AddWeaponTestTargets();
 
         public static void TrySetupOnPlayer(GameObject playerRoot)
         {
@@ -64,26 +84,34 @@ namespace Shooter.Project.Editor
         static void AddWeaponSystemImpl()
         {
             EnsureFolders();
+            GameObject shell = EnsureShellCasingPrefab();
+
             WeaponBase mk18 = CreateOrUpdateRangedPrefab(
                 "Ranged_Mk18", Mk18Demo, "Mk18", AmmoType.Rifle,
                 30, 90, 750f, true, 25f, 150f, 2.1f,
                 "Assets/Demo/Animations/Weapons/Mk18/AA_Mk18_ReloadEmpty.asset",
                 "Assets/Demo/Prefabs/Mk18/Recoil_Mk18.asset",
-                "Assets/Demo/Prefabs/Mk18/RecoilPattern_AR.asset");
+                "Assets/Demo/Prefabs/Mk18/RecoilPattern_AR.asset",
+                SfxRifleFire, SfxMk18Reload, shell,
+                0, Mk18AttachPos, Mk18AttachEuler);
 
             WeaponBase ak12 = CreateOrUpdateRangedPrefab(
                 "Ranged_AK12", Ak12Demo, "AK12", AmmoType.Rifle,
                 30, 90, 600f, true, 25f, 150f, 2.2f,
                 "Assets/Demo/Animations/Weapons/AK12/AA_AK12_Reload_Empty.asset",
                 "Assets/Demo/Prefabs/AK12/Recoil_AK12.asset",
-                "Assets/Demo/Prefabs/AK12/RecoilPattern_AK.asset");
+                "Assets/Demo/Prefabs/AK12/RecoilPattern_AK.asset",
+                SfxRifleFire, SfxRifleReload, shell,
+                1, Ak12AttachPos, Ak12AttachEuler);
 
             WeaponBase pistol = CreateOrUpdateRangedPrefab(
                 "Ranged_Mk23", PistolDemo, "Mk23", AmmoType.Pistol,
                 12, 36, 400f, false, 22f, 80f, 1.6f,
                 "Assets/Demo/Animations/Weapons/Pistol/AA_PistolReloadEmpty.asset",
                 "Assets/Demo/Prefabs/Pistol/Recoil_Pistol.asset",
-                "Assets/Demo/Prefabs/Pistol/RecoilPattern_Pistol.asset");
+                "Assets/Demo/Prefabs/Pistol/RecoilPattern_Pistol.asset",
+                SfxPistolFire, SfxPistolReload, shell,
+                2, Mk23AttachPos, Mk23AttachEuler);
 
             AssetDatabase.SaveAssets();
 
@@ -133,9 +161,10 @@ namespace Shooter.Project.Editor
                 "2 = Mk18\n" +
                 "3 = AK12\n" +
                 "4 = Mk23 pistol\n\n" +
-                "Weapons are embedded under IK WeaponBone.\n" +
-                "Edit position/rotation in the hierarchy.\n\n" +
+                "Weapons keep attach / muzzle flash on rebuild.\n" +
+                "After moving a weapon: RMB component → Capture Attach From Transform.\n\n" +
                 "LMB fire, R reload.\n" +
+                "Optional: Shooter → Project → Add Weapon Test Targets.\n" +
                 "Stop Play → Play again.",
                 "OK");
         }
@@ -208,8 +237,14 @@ namespace Shooter.Project.Editor
             WeaponBase[] existing = weaponBone.GetComponentsInChildren<WeaponBase>(true);
             for (int i = 0; i < existing.Length; i++)
             {
-                if (existing[i].SlotIndex == slotIndex)
-                    return existing[i];
+                if (existing[i].SlotIndex != slotIndex)
+                    continue;
+
+                // Do not overwrite attach/transform on weapons already placed/tuned in the hierarchy.
+                var so = new SerializedObject(existing[i]);
+                so.FindProperty("slotIndex").intValue = slotIndex;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                return existing[i];
             }
 
             GameObject instance = PrefabUtility.InstantiatePrefab(prefabAsset.gameObject, weaponBone) as GameObject;
@@ -224,6 +259,8 @@ namespace Shooter.Project.Editor
                 var so = new SerializedObject(weapon);
                 so.FindProperty("slotIndex").intValue = slotIndex;
                 so.ApplyModifiedPropertiesWithoutUndo();
+                weapon.ApplyAttachTransform();
+                EditorUtility.SetDirty(weapon);
             }
 
             return weapon;
@@ -255,6 +292,151 @@ namespace Shooter.Project.Editor
                 AssetDatabase.CreateFolder("Assets/_Project", "Weapons");
             if (!AssetDatabase.IsValidFolder(PrefabsFolder))
                 AssetDatabase.CreateFolder(WeaponsFolder, "Prefabs");
+            if (!AssetDatabase.IsValidFolder(VfxFolder))
+                AssetDatabase.CreateFolder(WeaponsFolder, "VFX");
+        }
+
+        static GameObject EnsureMuzzleFlashPrefab()
+        {
+            string path = VfxFolder + "/MuzzleFlash.prefab";
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (existing != null)
+                return existing;
+
+            var root = new GameObject("MuzzleFlash");
+            try
+            {
+                var ps = root.AddComponent<ParticleSystem>();
+                var main = ps.main;
+                main.duration = 0.06f;
+                main.loop = false;
+                main.playOnAwake = true;
+                main.startLifetime = 0.05f;
+                main.startSpeed = 0.2f;
+                main.startSize = 0.12f;
+                main.startColor = new Color(1f, 0.82f, 0.35f, 1f);
+                main.maxParticles = 12;
+                main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+                var emission = ps.emission;
+                emission.rateOverTime = 0f;
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)8) });
+
+                var shape = ps.shape;
+                shape.shapeType = ParticleSystemShapeType.Sphere;
+                shape.radius = 0.02f;
+
+                var lightGo = new GameObject("FlashLight");
+                lightGo.transform.SetParent(root.transform, false);
+                var light = lightGo.AddComponent<Light>();
+                light.type = LightType.Point;
+                light.range = 2f;
+                light.intensity = 2.5f;
+                light.color = new Color(1f, 0.75f, 0.3f);
+
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        static GameObject EnsureShellCasingPrefab()
+        {
+            string path = VfxFolder + "/ShellCasing.prefab";
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (existing != null)
+                return existing;
+
+            var shell = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            shell.name = "ShellCasing";
+            try
+            {
+                shell.transform.localScale = new Vector3(0.01f, 0.018f, 0.01f);
+                shell.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+                var rb = shell.AddComponent<Rigidbody>();
+                rb.mass = 0.008f;
+                rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+
+                var renderer = shell.GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                    mat.color = new Color(0.82f, 0.62f, 0.18f);
+                    renderer.sharedMaterial = mat;
+                }
+
+                PrefabUtility.SaveAsPrefabAsset(shell, path);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(shell);
+            }
+
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        static void AddWeaponTestTargets()
+        {
+            if (!System.IO.File.Exists(TestScenePath))
+            {
+                EditorUtility.DisplayDialog(
+                    "Weapon test targets",
+                    "Scene not found:\n" + TestScenePath,
+                    "OK");
+                return;
+            }
+
+            var scene = EditorSceneManager.OpenScene(TestScenePath, OpenSceneMode.Single);
+            Transform root = GetOrCreateRoot("WeaponTest").transform;
+
+            CreateDummyTarget(root, "DummyTarget_Near", new Vector3(4f, 1f, 8f), new Vector3(0.8f, 2f, 0.4f));
+            CreateDummyTarget(root, "DummyTarget_Mid", new Vector3(-2f, 1.2f, 12f), new Vector3(0.8f, 2.2f, 0.4f));
+            CreateDummyTarget(root, "DummyTarget_Far", new Vector3(0f, 1.5f, 20f), new Vector3(1f, 2.5f, 0.5f));
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+
+            EditorUtility.DisplayDialog(
+                "Weapon test targets",
+                "Added 3 damageable targets under WeaponTest.\n\n" +
+                "Play → equip weapon (2–4) → shoot targets.\n" +
+                "They tint red as health drops.",
+                "OK");
+        }
+
+        static GameObject GetOrCreateRoot(string name)
+        {
+            var existing = GameObject.Find(name);
+            if (existing != null)
+                return existing;
+
+            return new GameObject(name);
+        }
+
+        static void CreateDummyTarget(Transform parent, string name, Vector3 position, Vector3 scale)
+        {
+            if (parent.Find(name) != null)
+                return;
+
+            var target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            target.name = name;
+            target.transform.SetParent(parent, false);
+            target.transform.position = position;
+            target.transform.localScale = scale;
+            target.AddComponent<ShooterDummyDamageable>();
+
+            var renderer = target.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                var mat = new Material(renderer.sharedMaterial);
+                mat.color = new Color(0.75f, 0.45f, 0.2f);
+                renderer.sharedMaterial = mat;
+            }
         }
 
         static WeaponBase CreateOrUpdateRangedPrefab(
@@ -271,7 +453,13 @@ namespace Shooter.Project.Editor
             float reloadSeconds,
             string reloadClipPath,
             string recoilDataPath,
-            string recoilPatternPath)
+            string recoilPatternPath,
+            string fireSfxPath,
+            string reloadSfxPath,
+            GameObject shellPrefab,
+            int defaultSlotIndex,
+            Vector3 attachLocalPosition,
+            Vector3 attachLocalEulerAngles)
         {
             string path = PrefabsFolder + "/" + name + ".prefab";
             GameObject demo = AssetDatabase.LoadAssetAtPath<GameObject>(demoPrefabPath);
@@ -279,6 +467,39 @@ namespace Shooter.Project.Editor
             {
                 Debug.LogError("[Shooter] Demo prefab missing: " + demoPrefabPath);
                 return AssetDatabase.LoadAssetAtPath<WeaponBase>(path);
+            }
+
+            var existingWeapon = AssetDatabase.LoadAssetAtPath<WeaponBase>(path);
+            if (existingWeapon != null)
+            {
+                // Update stats/SFX in place — never wipe attach / muzzle flash / hierarchy pose.
+                ApplyRangedSerializedFields(
+                    existingWeapon,
+                    displayId,
+                    ammoType,
+                    mag,
+                    reserve,
+                    rpm,
+                    auto,
+                    damage,
+                    range,
+                    reloadSeconds,
+                    reloadClipPath,
+                    recoilDataPath,
+                    recoilPatternPath,
+                    fireSfxPath,
+                    reloadSfxPath,
+                    shellPrefab,
+                    defaultSlotIndex,
+                    preserveAttach: true,
+                    attachLocalPosition,
+                    attachLocalEulerAngles,
+                    preserveMuzzleFlash: true);
+
+                existingWeapon.ApplyAttachTransform();
+                EditorUtility.SetDirty(existingWeapon);
+                EditorUtility.SetDirty(existingWeapon.gameObject);
+                return existingWeapon;
             }
 
             GameObject root = new GameObject(name);
@@ -296,36 +517,30 @@ namespace Shooter.Project.Editor
                     StripWeaponPhysics(view);
                 }
 
-                var so = new SerializedObject(ranged);
-                so.FindProperty("weaponId").stringValue = displayId;
-                so.FindProperty("ammoType").enumValueIndex = (int)ammoType;
-                so.FindProperty("magazineSize").intValue = mag;
-                so.FindProperty("startReserve").intValue = reserve;
-                so.FindProperty("fireRateRpm").floatValue = rpm;
-                so.FindProperty("supportsAuto").boolValue = auto;
-                so.FindProperty("damage").floatValue = damage;
-                so.FindProperty("range").floatValue = range;
-                so.FindProperty("reloadSeconds").floatValue = reloadSeconds;
-                so.FindProperty("reloadClip").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(reloadClipPath);
-                so.FindProperty("equipMotion").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
-                so.FindProperty("unEquipMotion").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(UnequipMotion);
-                so.FindProperty("recoilData").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<RecoilAnimData>(recoilDataPath);
-                so.FindProperty("recoilPatternSettings").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<RecoilPatternSettings>(recoilPatternPath);
-                so.FindProperty("cameraShake").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<FPSCameraShake>(CameraShake);
+                ApplyRangedSerializedFields(
+                    ranged,
+                    displayId,
+                    ammoType,
+                    mag,
+                    reserve,
+                    rpm,
+                    auto,
+                    damage,
+                    range,
+                    reloadSeconds,
+                    reloadClipPath,
+                    recoilDataPath,
+                    recoilPatternPath,
+                    fireSfxPath,
+                    reloadSfxPath,
+                    shellPrefab,
+                    defaultSlotIndex,
+                    preserveAttach: false,
+                    attachLocalPosition,
+                    attachLocalEulerAngles,
+                    preserveMuzzleFlash: false);
 
-                Transform aim = root.transform.Find(displayId + "_View/AimPoint")
-                    ?? FindDeepChild(root.transform, "AimPoint");
-                if (aim != null)
-                    so.FindProperty("muzzlePoint").objectReferenceValue = aim;
-
-                so.ApplyModifiedPropertiesWithoutUndo();
-
+                ranged.ApplyAttachTransform();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }
             finally
@@ -334,6 +549,89 @@ namespace Shooter.Project.Editor
             }
 
             return AssetDatabase.LoadAssetAtPath<WeaponBase>(path);
+        }
+
+        static void ApplyRangedSerializedFields(
+            WeaponBase weapon,
+            string displayId,
+            AmmoType ammoType,
+            int mag,
+            int reserve,
+            float rpm,
+            bool auto,
+            float damage,
+            float range,
+            float reloadSeconds,
+            string reloadClipPath,
+            string recoilDataPath,
+            string recoilPatternPath,
+            string fireSfxPath,
+            string reloadSfxPath,
+            GameObject shellPrefab,
+            int defaultSlotIndex,
+            bool preserveAttach,
+            Vector3 attachLocalPosition,
+            Vector3 attachLocalEulerAngles,
+            bool preserveMuzzleFlash)
+        {
+            var so = new SerializedObject(weapon);
+            so.FindProperty("weaponId").stringValue = displayId;
+            so.FindProperty("slotIndex").intValue = defaultSlotIndex;
+
+            if (!preserveAttach)
+            {
+                so.FindProperty("attachLocalPosition").vector3Value = attachLocalPosition;
+                so.FindProperty("attachLocalEulerAngles").vector3Value = attachLocalEulerAngles;
+            }
+
+            so.FindProperty("ammoType").enumValueIndex = (int)ammoType;
+            so.FindProperty("magazineSize").intValue = mag;
+            so.FindProperty("startReserve").intValue = reserve;
+            so.FindProperty("fireRateRpm").floatValue = rpm;
+            so.FindProperty("supportsAuto").boolValue = auto;
+            so.FindProperty("damage").floatValue = damage;
+            so.FindProperty("range").floatValue = range;
+            so.FindProperty("reloadSeconds").floatValue = reloadSeconds;
+            so.FindProperty("reloadClip").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(reloadClipPath);
+            so.FindProperty("equipMotion").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
+            so.FindProperty("unEquipMotion").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(UnequipMotion);
+            so.FindProperty("recoilData").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<RecoilAnimData>(recoilDataPath);
+            so.FindProperty("recoilPatternSettings").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<RecoilPatternSettings>(recoilPatternPath);
+            so.FindProperty("cameraShake").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<FPSCameraShake>(CameraShake);
+
+            if (so.FindProperty("muzzlePoint").objectReferenceValue == null)
+            {
+                Transform aim = FindDeepChild(weapon.transform, "AimPoint")
+                    ?? FindDeepChild(weapon.transform, "PointAim");
+                if (aim != null)
+                    so.FindProperty("muzzlePoint").objectReferenceValue = aim;
+            }
+
+            if (!preserveMuzzleFlash)
+                so.FindProperty("muzzleFlashPrefab").objectReferenceValue = null;
+
+            if (so.FindProperty("shellEjectPrefab").objectReferenceValue == null && shellPrefab != null)
+                so.FindProperty("shellEjectPrefab").objectReferenceValue = shellPrefab;
+
+            if (so.FindProperty("fireSfx").objectReferenceValue == null)
+            {
+                so.FindProperty("fireSfx").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<AudioClip>(fireSfxPath);
+            }
+
+            if (so.FindProperty("reloadSfx").objectReferenceValue == null)
+            {
+                so.FindProperty("reloadSfx").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<AudioClip>(reloadSfxPath);
+            }
+
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void WireFpsAnimatorEntity(GameObject viewRoot)

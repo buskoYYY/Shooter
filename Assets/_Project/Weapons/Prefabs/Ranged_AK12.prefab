@@ -25,14 +25,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6936257509179711294}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.002175, y: 0.10672, z: 0.000933, w: -0.994284}
-  m_LocalPosition: {x: -0.033, y: 0.07, z: -0.007}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6251510731904827429}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0.24944678, y: 347.60312, z: 0.13088548}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8123679283046615362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
   maxDurability: 100
   durability: 100
   attachLocalPosition: {x: -0.033, y: 0.07, z: -0.007}
-  attachLocalEulerAngles: {x: 0.24944678, y: 347.60312, z: 0.13088548}
+  attachLocalEulerAngles: {x: 0.25, y: 347.6, z: 0.13}
   ammoType: 1
   magazineSize: 30
   startReserve: 90
@@ -72,10 +72,10 @@ MonoBehaviour:
   cameraShake: {fileID: 11400000, guid: 5563e5a81879bf3488e215990ceb8724, type: 2}
   muzzlePoint: {fileID: 9106838914772928736}
   muzzleFlashPrefab: {fileID: 0}
-  shellEjectPrefab: {fileID: 0}
-  fireSfx: {fileID: 0}
+  shellEjectPrefab: {fileID: 888293095129972748, guid: 9e0a813ef1b015243b2111b67ffd7569, type: 3}
+  fireSfx: {fileID: 8300000, guid: b58e6e277789bb54191e03c4c3fd2ca9, type: 3}
   emptySfx: {fileID: 0}
-  reloadSfx: {fileID: 0}
+  reloadSfx: {fileID: 8300000, guid: 438d962fa65a5c845ab676c1ec67abff, type: 3}
 --- !u!1001 &8511353101950524455
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -138,6 +138,9 @@ PrefabInstance:
     - {fileID: 659365306898794487, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
     - {fileID: 1921354106621488191, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
     - {fileID: 8377436695880313903, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
+    - {fileID: 4400508547492520431, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
+    - {fileID: 3338303071616750284, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
+    - {fileID: 2083319524908931606, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

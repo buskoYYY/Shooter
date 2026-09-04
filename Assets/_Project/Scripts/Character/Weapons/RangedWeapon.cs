@@ -38,8 +38,9 @@ namespace Shooter.Project.Weapons
         [SerializeField] RecoilPatternSettings recoilPatternSettings;
         [SerializeField] FPSCameraShake cameraShake;
 
-        [Header("VFX / SFX placeholders")]
+        [Header("VFX / SFX")]
         [SerializeField] Transform muzzlePoint;
+        [Tooltip("Assign your muzzle flash prefab here. Spawned at Muzzle Point on each shot.")]
         [SerializeField] GameObject muzzleFlashPrefab;
         [SerializeField] GameObject shellEjectPrefab;
         [SerializeField] AudioClip fireSfx;
@@ -48,6 +49,7 @@ namespace Shooter.Project.Weapons
 
         GameObject _owner;
         IPlayablesController _playables;
+        FPSAnimator _fpsAnimator;
         FPSCameraController _camera;
         RecoilAnimation _recoilAnimation;
         RecoilPattern _recoilPattern;
@@ -79,6 +81,7 @@ namespace Shooter.Project.Weapons
                 return;
 
             _playables = owner.GetComponentInChildren<IPlayablesController>(true);
+            _fpsAnimator = owner.GetComponentInChildren<FPSAnimator>(true);
             _camera = owner.GetComponentInChildren<FPSCameraController>(true);
             _recoilAnimation = owner.GetComponentInChildren<RecoilAnimation>(true);
             _recoilPattern = owner.GetComponentInChildren<RecoilPattern>(true);
@@ -110,10 +113,13 @@ namespace Shooter.Project.Weapons
 
             if (_recoilPattern != null && recoilPatternSettings != null)
                 _recoilPattern.Init(recoilPatternSettings);
+
+            PlayEquipMotion();
         }
 
         public override void Unequip()
         {
+            PlayUnequipMotion();
             StopFire();
             CancelReload();
             base.Unequip();
@@ -315,8 +321,22 @@ namespace Shooter.Project.Weapons
             if (muzzleFlashPrefab == null || muzzlePoint == null)
                 return;
 
-            GameObject fx = Instantiate(muzzleFlashPrefab, muzzlePoint.position, muzzlePoint.rotation, muzzlePoint);
-            Destroy(fx, 0.08f);
+            GameObject fx = Instantiate(
+                muzzleFlashPrefab,
+                muzzlePoint.position,
+                muzzlePoint.rotation,
+                muzzlePoint);
+
+            float life = 0.5f;
+            var systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var main = systems[i].main;
+                float candidate = main.duration + main.startLifetime.constantMax;
+                life = Mathf.Max(life, candidate);
+            }
+
+            Destroy(fx, Mathf.Clamp(life, 0.05f, 3f));
         }
 
         void SpawnShell()
@@ -342,6 +362,18 @@ namespace Shooter.Project.Weapons
             marker.transform.position = hit.point + hit.normal * 0.02f;
             marker.transform.localScale = Vector3.one * 0.06f;
             Object.Destroy(marker, 0.3f);
+        }
+
+        void PlayEquipMotion()
+        {
+            if (_fpsAnimator != null && equipMotion != null)
+                _fpsAnimator.LinkAnimatorLayer(equipMotion);
+        }
+
+        void PlayUnequipMotion()
+        {
+            if (_fpsAnimator != null && unEquipMotion != null)
+                _fpsAnimator.LinkAnimatorLayer(unEquipMotion);
         }
 
         void PlaySfx(AudioClip clip)

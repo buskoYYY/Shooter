@@ -85,7 +85,7 @@ PlayerCharacter
 Поля на `WeaponBase`: `attachLocalPosition`, `attachLocalEulerAngles`.  
 Применяются в `InitializeForSlot()` / `ApplyAttachTransform()`.
 
-**Текущие значения (сентябрь 2026):**
+**Текущие значения (зашиты в Setup, не обнуляются при пересборке):**
 
 | Оружие | Position | Rotation (Euler) |
 |--------|----------|------------------|
@@ -93,7 +93,9 @@ PlayerCharacter
 | AK12 | (-0.033, 0.07, -0.007) | (0.25, 347.60, 0.13) |
 | Mk23 | (-0.016, 0.026, -0.156) | (0.77, 345.55, 359.83) |
 
-Подгонка: выбрать оружие под `IK WeaponBone` в префабе `PlayerCharacter`, двигать в Scene view, скопировать local pos/rot в prefab оружия.
+Подгонка: подвигай оружие под `IK WeaponBone` в Scene view → ПКМ по компоненту оружия → **Capture Attach From Transform**. Иначе на Play поза вернётся к полям Attach.
+
+Setup **не пересоздаёт** существующие weapon prefabs и **не затирает** attach / muzzle flash.
 
 ---
 
@@ -119,7 +121,16 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 |------|----------|
 | **Shooter → Project → Add Weapon System** | `WeaponManager`, inventory, bootstrap, input bindings |
 | **Shooter → Project → Setup Ranged Weapons** | Mk18 / AK12 / Mk23 prefabs + wire slots |
+| **Shooter → Project → Add Weapon Test Targets** | 3 мишени с `ShooterDummyDamageable` в PlayerTest |
 | **Shooter → Phase 2 → Add Weapon System** | То же (алиас) |
+
+---
+
+## VFX
+
+- **Muzzle Flash Prefab** — назначаешь сам на каждом `Ranged_*` (Inspector → VFX / SFX). Setup это поле **не затирает**.
+- Spawn идёт в `Muzzle Point` (обычно `AimPoint` на модели).
+- **Shell Eject Prefab** — пока placeholder из setup; тоже можно заменить вручную.
 
 ---
 
@@ -139,7 +150,7 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 
 См. чеклисты **2.2–2.8** в [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md):
 
-- Muzzle flash / shell VFX (слоты есть, назначить ассеты)
+- Shell VFX (можно заменить вручную, как muzzle)
 - Melee combo (2.3)
 - CollisionLayer у стены (2.5)
 - Inspect, check ammo, break, pickups (2.6–2.7)

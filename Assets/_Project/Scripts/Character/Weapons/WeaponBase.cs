@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Shooter.Project.Weapons
 {
@@ -10,6 +13,7 @@ namespace Shooter.Project.Weapons
         [SerializeField] float durability = 100f;
 
         [Header("Attach (local to IK WeaponBone)")]
+        [Tooltip("Source of truth for weapon pose. Moving the Transform alone is overwritten on Play — use Capture Attach.")]
         [SerializeField] Vector3 attachLocalPosition;
         [SerializeField] Vector3 attachLocalEulerAngles;
 
@@ -65,7 +69,29 @@ namespace Shooter.Project.Weapons
             transform.localRotation = Quaternion.Euler(attachLocalEulerAngles);
         }
 
+        public void CaptureAttachFromTransform()
+        {
+            attachLocalPosition = transform.localPosition;
+            attachLocalEulerAngles = transform.localEulerAngles;
+        }
+
 #if UNITY_EDITOR
+        [ContextMenu("Capture Attach From Transform")]
+        void CaptureAttachFromTransformMenu()
+        {
+            Undo.RecordObject(this, "Capture Weapon Attach");
+            CaptureAttachFromTransform();
+            EditorUtility.SetDirty(this);
+        }
+
+        [ContextMenu("Apply Attach To Transform")]
+        void ApplyAttachToTransformMenu()
+        {
+            Undo.RecordObject(transform, "Apply Weapon Attach");
+            ApplyAttachTransform();
+            EditorUtility.SetDirty(transform);
+        }
+
         void OnValidate()
         {
             slotIndex = Mathf.Max(0, slotIndex);
