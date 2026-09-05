@@ -79,6 +79,15 @@ namespace KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer
         public void OnLayerLinked(FPSAnimatorLayerSettings newSettings)
         {
             settings = (IkMotionLayerSettings) newSettings;
+
+            // alpha 0 = cancel active motion (holster / stopMotion cleanup).
+            if (settings == null || settings.alpha <= 0.001f)
+            {
+                isPlaying = false;
+                playback = 0f;
+                result = cachedResult = KTransform.Identity;
+                return;
+            }
             
             isPlaying = true;
             cachedResult = result;
@@ -103,7 +112,9 @@ namespace KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer
             result = job.result;
             playback = Mathf.Clamp(playback + Time.deltaTime * settings.playRate, 0f, _length);
             
-            if (Mathf.Approximately(playback, 1f) && settings.autoBlendOut) isPlaying = false;
+            // Was Approximately(playback, 1f) — stuck playing when curve length != 1.
+            if (settings.autoBlendOut && playback >= _length - 1e-4f)
+                isPlaying = false;
 
             job.settings = settings;
             job.isPlaying = isPlaying;

@@ -25,14 +25,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4038439727927530133}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.0067102024, y: 0.10655322, z: -0.0029300884, w: -0.99428004}
+  m_LocalPosition: {x: -0.016, y: 0.026, z: -0.156}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 525153168466567622}
+  - {fileID: 9302848593018472611}
+  - {fileID: 9302848593018472613}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.77, y: 345.55, z: 359.83}
 --- !u!114 &3801359025069816147
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71,6 +73,10 @@ MonoBehaviour:
   recoilPatternSettings: {fileID: 11400000, guid: b60711d0a5eabca449a3e2324c4d3483, type: 2}
   cameraShake: {fileID: 11400000, guid: 5563e5a81879bf3488e215990ceb8724, type: 2}
   muzzlePoint: {fileID: 5852562543533428616}
+  muzzleFlashPoint: {fileID: 9302848593018472611}
+  shellEjectPoint: {fileID: 9302848593018472613}
+  shellEjectLocalOffset: {x: 0.06, y: 0.03, z: -0.02}
+  shellEjectForce: 2.4
   muzzleFlashPrefab: {fileID: 3360542172024696037, guid: 330038511cce52e4990a0b332c9cfc4b, type: 3}
   shellEjectPrefab: {fileID: 888293095129972748, guid: 9e0a813ef1b015243b2111b67ffd7569, type: 3}
   fireSfx: {fileID: 8300000, guid: 7d8c810c6c43bfd4b9730e3661f86b98, type: 3}
@@ -129,12 +135,16 @@ PrefabInstance:
       value: Mk23_View
       objectReference: {fileID: 0}
     - target: {fileID: 6506212990733282748, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.038
+      objectReference: {fileID: 0}
+    - target: {fileID: 6506212990733282748, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.054
       objectReference: {fileID: 0}
     - target: {fileID: 6506212990733282748, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.411
+      value: 0.122
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1520529762629545365, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
@@ -160,6 +170,68 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6506212990733282748, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
   m_PrefabInstance: {fileID: 824946662494528052}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &9302848593018472610
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9302848593018472611}
+  m_Layer: 0
+  m_Name: MuzzleFlashPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9302848593018472611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9302848593018472610}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0.18}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3521023983261932976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9302848593018472612
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9302848593018472613}
+  m_Layer: 0
+  m_Name: ShellEjectPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9302848593018472613
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9302848593018472612}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.03, y: 0.04, z: 0.05}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3521023983261932976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &6318802553930965682
 PrefabInstance:
   m_ObjectHideFlags: 0

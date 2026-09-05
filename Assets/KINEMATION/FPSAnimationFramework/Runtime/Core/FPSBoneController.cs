@@ -1,6 +1,7 @@
 ﻿// Designed by KINEMATION, 2024.
 
 using KINEMATION.FPSAnimationFramework.Runtime.Playables;
+using KINEMATION.FPSAnimationFramework.Runtime.Layers.IkMotionLayer;
 
 using System.Collections.Generic;
 using System;
@@ -414,6 +415,36 @@ namespace KINEMATION.FPSAnimationFramework.Runtime.Core
             foreach (var layer in _animationLayers)
             {
                 if (layer.job.GetSettingAsset().GetType() == newSettingType) layer.job.OnLayerLinked(newSettings);
+            }
+        }
+
+        /// <summary>
+        /// Stops an in-flight IK WeaponBone motion (e.g. MoveStop left twisted arms after holster).
+        /// </summary>
+        public void CancelIkMotions()
+        {
+            if (_animationLayers == null)
+                return;
+
+            foreach (var layer in _animationLayers)
+            {
+                if (layer.job.GetSettingAsset() is not IkMotionLayerSettings active)
+                    continue;
+
+                float previousAlpha = active.alpha;
+                active.alpha = 0f;
+                layer.job.OnLayerLinked(active);
+                active.alpha = previousAlpha;
+
+                if (layer.playable.IsValid())
+                {
+                    var job = layer.playable.GetJobData<IkMotionLayerJob>();
+                    job.isPlaying = false;
+                    job.playback = 0f;
+                    job.result = KTransform.Identity;
+                    job.cachedResult = KTransform.Identity;
+                    layer.playable.SetJobData(job);
+                }
             }
         }
 

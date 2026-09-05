@@ -25,6 +25,7 @@ namespace Shooter.Project.Weapons
 
         public virtual void Equip()
         {
+            ApplyAttachTransform();
             gameObject.SetActive(true);
         }
 

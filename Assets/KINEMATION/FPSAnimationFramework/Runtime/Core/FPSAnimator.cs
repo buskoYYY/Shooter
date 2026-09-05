@@ -118,5 +118,10 @@ namespace KINEMATION.FPSAnimationFramework.Runtime.Core
             
             _boneController.LinkAnimatorLayer(newSettings);
         }
+
+        public void CancelIkMotions()
+        {
+            _boneController?.CancelIkMotions();
+        }
     }
 }

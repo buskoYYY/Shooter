@@ -25,14 +25,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6936257509179711294}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.002175, y: 0.10672, z: 0.000933, w: -0.994284}
+  m_LocalPosition: {x: -0.033, y: 0.07, z: -0.007}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6251510731904827429}
+  - {fileID: 8201938475620193841}
+  - {fileID: 8201938475620193843}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.25, y: 347.6, z: 0.13}
 --- !u!114 &8123679283046615362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71,6 +73,10 @@ MonoBehaviour:
   recoilPatternSettings: {fileID: 11400000, guid: be2be2c72d4648d4d9c1626c6fae08bc, type: 2}
   cameraShake: {fileID: 11400000, guid: 5563e5a81879bf3488e215990ceb8724, type: 2}
   muzzlePoint: {fileID: 9106838914772928736}
+  muzzleFlashPoint: {fileID: 8201938475620193841}
+  shellEjectPoint: {fileID: 8201938475620193843}
+  shellEjectLocalOffset: {x: 0.06, y: 0.03, z: -0.02}
+  shellEjectForce: 2.4
   muzzleFlashPrefab: {fileID: 0}
   shellEjectPrefab: {fileID: 888293095129972748, guid: 9e0a813ef1b015243b2111b67ffd7569, type: 3}
   fireSfx: {fileID: 8300000, guid: b58e6e277789bb54191e03c4c3fd2ca9, type: 3}
@@ -155,3 +161,65 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 612378718665479367, guid: 930933797e08b5041bacaa2dd6b2ff69, type: 3}
   m_PrefabInstance: {fileID: 8511353101950524455}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8201938475620193840
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8201938475620193841}
+  m_Layer: 0
+  m_Name: MuzzleFlashPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8201938475620193841
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201938475620193840}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.02, z: 0.38}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5666881533772839809}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8201938475620193842
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8201938475620193843}
+  m_Layer: 0
+  m_Name: ShellEjectPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8201938475620193843
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8201938475620193842}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.04, y: 0.05, z: 0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5666881533772839809}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

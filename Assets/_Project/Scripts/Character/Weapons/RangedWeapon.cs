@@ -39,8 +39,15 @@ namespace Shooter.Project.Weapons
         [SerializeField] FPSCameraShake cameraShake;
 
         [Header("VFX / SFX")]
+        [Tooltip("AimPoint — shell eject origin (and aim reference).")]
         [SerializeField] Transform muzzlePoint;
-        [Tooltip("Assign your muzzle flash prefab here. Spawned at Muzzle Point on each shot.")]
+        [Tooltip("Muzzle flash spawn point. Assign an empty at the barrel tip.")]
+        [SerializeField] Transform muzzleFlashPoint;
+        [Tooltip("Optional override for shell eject. If empty, uses Muzzle Point (AimPoint).")]
+        [SerializeField] Transform shellEjectPoint;
+        [SerializeField] Vector3 shellEjectLocalOffset = new Vector3(0.06f, 0.03f, -0.02f);
+        [SerializeField] float shellEjectForce = 2.4f;
+        [Tooltip("Assign your muzzle flash prefab here.")]
         [SerializeField] GameObject muzzleFlashPrefab;
         [SerializeField] GameObject shellEjectPrefab;
         [SerializeField] AudioClip fireSfx;
@@ -318,14 +325,14 @@ namespace Shooter.Project.Weapons
 
         void SpawnMuzzleFlash()
         {
-            if (muzzleFlashPrefab == null || muzzlePoint == null)
+            if (muzzleFlashPrefab == null || muzzleFlashPoint == null)
                 return;
 
             GameObject fx = Instantiate(
                 muzzleFlashPrefab,
-                muzzlePoint.position,
-                muzzlePoint.rotation,
-                muzzlePoint);
+                muzzleFlashPoint.position,
+                muzzleFlashPoint.rotation,
+                muzzleFlashPoint);
 
             float life = 0.5f;
             var systems = fx.GetComponentsInChildren<ParticleSystem>(true);
@@ -341,17 +348,68 @@ namespace Shooter.Project.Weapons
 
         void SpawnShell()
         {
-            if (shellEjectPrefab == null || muzzlePoint == null)
+            if (shellEjectPrefab == null)
                 return;
 
-            GameObject shell = Instantiate(
-                shellEjectPrefab,
-                muzzlePoint.position + muzzlePoint.right * 0.05f,
-                Random.rotation);
+            // Shells use AimPoint (muzzlePoint) / optional shellEjectPoint — not the flash tip.
+            Transform basis = transform;
+            Transform eject = shellEjectPoint != null ? shellEjectPoint : muzzlePoint;
+            Vector3 origin;
+            if (eject != null)
+            {
+                origin = eject.position
+                    + basis.right * shellEjectLocalOffset.x
+                    + basis.up * shellEjectLocalOffset.y
+                    + basis.forward * shellEjectLocalOffset.z;
+            }
+            else
+            {
+                origin = basis.TransformPoint(shellEjectLocalOffset);
+            }
+
+            Vector3 ejectRight = basis.right;
+            Camera cam = Camera.main;
+            if (cam != null)
+            {
+                Vector3 camRight = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up);
+                if (camRight.sqrMagnitude > 0.001f)
+                    ejectRight = camRight.normalized;
+            }
+
+            GameObject shell = Instantiate(shellEjectPrefab, origin + ejectRight * 0.02f, Random.rotation);
+            IgnoreOwnerCollisions(shell);
+
             var rb = shell.GetComponent<Rigidbody>();
             if (rb != null)
-                rb.AddForce(muzzlePoint.right * 1.5f + muzzlePoint.up * 0.8f, ForceMode.Impulse);
-            Destroy(shell, 2f);
+            {
+                Vector3 force = ejectRight * shellEjectForce
+                    + Vector3.up * (shellEjectForce * 0.55f)
+                    + basis.forward * Random.Range(-0.25f, 0.25f);
+                rb.AddForce(force, ForceMode.Impulse);
+                rb.AddTorque(Random.insideUnitSphere * 4f, ForceMode.Impulse);
+            }
+
+            Destroy(shell, 2.5f);
+        }
+
+        void IgnoreOwnerCollisions(GameObject shell)
+        {
+            if (_owner == null || shell == null)
+                return;
+
+            Collider[] shellCols = shell.GetComponentsInChildren<Collider>(true);
+            Collider[] ownerCols = _owner.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < shellCols.Length; i++)
+            {
+                if (shellCols[i] == null)
+                    continue;
+                for (int j = 0; j < ownerCols.Length; j++)
+                {
+                    if (ownerCols[j] == null)
+                        continue;
+                    Physics.IgnoreCollision(shellCols[i], ownerCols[j], true);
+                }
+            }
         }
 
         static void SpawnImpactMarker(RaycastHit hit)

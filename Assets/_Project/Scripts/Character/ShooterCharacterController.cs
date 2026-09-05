@@ -581,15 +581,40 @@ namespace Shooter.Project.Character
             if (_animator == null || _userInput == null)
                 return;
 
-            if (_handPoseState != null && _handPoseState.IsUnarmed)
-                _animator.SetFloat(FullBodyWeightHash, 1f);
-            else if (_characterActor != null && !_characterActor.IsGrounded)
-                _animator.SetFloat(FullBodyWeightHash, 1f);
-            else if (_handPoseState != null && !_handPoseState.IsUnarmed)
+            // Equip/holster blend: keep overlay alive until settle — early FBW=1 twists arms.
+            if (_handPoseState != null && _handPoseState.IsTransitioning)
+            {
                 _animator.SetFloat(FullBodyWeightHash, 0f);
+                _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
+                return;
+            }
 
-            float playablesWeight = 1f - _animator.GetFloat(FullBodyWeightHash);
-            _userInput.SetValue(FPSANames.PlayablesWeight, playablesWeight);
+            bool isUnarmed = _handPoseState != null && _handPoseState.IsUnarmed;
+            bool isArmed = _handPoseState != null && !_handPoseState.IsUnarmed;
+
+            if (isUnarmed)
+            {
+                _animator.SetFloat(FullBodyWeightHash, 1f);
+                _userInput.SetValue(FPSANames.PlayablesWeight, 0f);
+                return;
+            }
+
+            // Jump / fall: full-body.
+            if (_characterActor != null && !_characterActor.IsGrounded)
+            {
+                _animator.SetFloat(FullBodyWeightHash, 1f);
+                _userInput.SetValue(FPSANames.PlayablesWeight, 0f);
+                return;
+            }
+
+            if (isArmed)
+            {
+                // Rifle sprint clip writes FullBodyWeight=1. PoseSampler uses Mask (1-FBW),
+                // so FBW=1 kills the weapon hold. Do not derive PW from GetFloat(FBW) —
+                // the clip overwrites the parameter and PW would become 0.
+                _animator.SetFloat(FullBodyWeightHash, 0f);
+                _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
+            }
         }
 
         void SyncMouseInputOnly()
@@ -642,9 +667,8 @@ namespace Shooter.Project.Character
             _animator.SetBool(CrouchingHash, crouching);
             _animator.SetFloat(SprintingHash, _sprintWeight);
 
-            if (animatorMoving != _wasAnimatorMoving && !animatorMoving && stopMotion != null && _fpsAnimator != null)
-                PlayIkMotion(stopMotion);
-
+            // Never play stopMotion: animates IK WeaponBone.
+            // Armed → looks like holster; unarmed → twisted idle (Docs/TASKS.md).
             _wasAnimatorMoving = animatorMoving;
 
             if (crouching != _wasCrouching && crouchMotion != null && _fpsAnimator != null)
@@ -670,6 +694,12 @@ namespace Shooter.Project.Character
                 return;
 
             _fpsAnimator.LinkAnimatorLayer(motion);
+        }
+
+        /// <summary>Stops in-flight MoveStop/jump IK on WeaponBone (call on holster).</summary>
+        public void CancelIkMotions()
+        {
+            _fpsAnimator?.CancelIkMotions();
         }
 
         static void ApplyIkMotionTuning(IkMotionLayerSettings motion, float blendTime, float playRate)

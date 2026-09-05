@@ -26,6 +26,7 @@ namespace Shooter.Project.Character
         const float DefaultTurnInPlaceFadeOutDuration = 0.35f;
         const string TurnInPlaceLayerName = "TurnInPlace";
         const string TurnInPlaceEmptyStateName = "Empty";
+        const string IkAnimatorLayerName = "IK";
 
         static readonly int TurnLeftHash = Animator.StringToHash("TurnLeft");
         static readonly int TurnRightHash = Animator.StringToHash("TurnRight");
@@ -51,6 +52,7 @@ namespace Shooter.Project.Character
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
         int _turnInPlaceLayerIndex = -1;
+        int _ikAnimatorLayerIndex = -1;
         float _turnInPlaceLayerWeight = 1f;
         float _turnInPlaceFadeOutDuration = DefaultTurnInPlaceFadeOutDuration;
 
@@ -80,7 +82,7 @@ namespace Shooter.Project.Character
 
         public bool IsTurnInPlacePlaying()
         {
-            if (_animator == null || _turnInPlaceLayerIndex < 0 || !_isUnarmed)
+            if (_animator == null || _turnInPlaceLayerIndex < 0)
                 return false;
 
             if (_animator.IsInTransition(_turnInPlaceLayerIndex))
@@ -95,9 +97,11 @@ namespace Shooter.Project.Character
 
         public void TickTurnInPlaceBlend(bool animatorMoving, bool hasMoveInput)
         {
+            // Procedural TurnLayer + animator TIP (LowerBody mask — feet step, arms untouched).
             if (!_isUnarmed)
             {
                 _turnInPlaceLayerWeight = 1f;
+                ApplyTurnInPlaceLayerWeight();
                 return;
             }
 
@@ -105,6 +109,7 @@ namespace Shooter.Project.Character
             float target = wantsLocomotion ? 0f : 1f;
             float fadeStep = Time.deltaTime / Mathf.Max(0.01f, _turnInPlaceFadeOutDuration);
             _turnInPlaceLayerWeight = Mathf.MoveTowards(_turnInPlaceLayerWeight, target, fadeStep);
+            ApplyTurnInPlaceLayerWeight();
         }
 
         public void ResetTransitionBlendDefaults()
@@ -204,11 +209,20 @@ namespace Shooter.Project.Character
 
             _isUnarmed = unarmed;
 
-            // Unarmed: remap locomotion first (sprint / FBW — Docs/TASKS.md).
-            // Armed: defer remap until overlay settles — rifle locomotion arms flash otherwise.
-            if (unarmed || instant)
+            // Kill Animator IK (C_CurveIdle → weapon bones) as soon as holster starts —
+            // otherwise idle arms stay twisted until the player moves.
+            ApplyIkAnimatorLayerWeight();
+
+            if (unarmed)
+                _characterController?.CancelIkMotions();
+
+            // Startup snap: unarmed locomotion first (Docs/TASKS.md sprint/FBW).
+            // Holster: defer remap — early unarmed clips + dying armed IK twists hands.
+            // Equip: defer remap until overlay settles (Docs/FPS_CAMERA_AND_HANDS.md).
+            bool remapLocomotionNow = instant || (unarmed && _snapStartOverlay);
+            if (remapLocomotionNow)
                 ApplyLocomotionController(unarmed);
-            else
+            else if (!unarmed)
                 ApplyFullBodyWeightForCurrentState();
 
             _characterController?.SyncFpsLayerWeights();
@@ -221,18 +235,21 @@ namespace Shooter.Project.Character
             }
 
             StopActiveTransition();
-            _transitionCoroutine = StartCoroutine(TransitionToPose(pose, unarmed));
+            _transitionCoroutine = StartCoroutine(TransitionToPose(pose, unarmed, !remapLocomotionNow));
         }
 
-        IEnumerator TransitionToPose(FPSAnimationAsset targetPose, bool toUnarmed)
+        IEnumerator TransitionToPose(FPSAnimationAsset targetPose, bool toUnarmed, bool remapLocomotionAtEnd)
         {
             _isTransitioning = true;
 
             if (_playablesController == null || targetPose.clip == null)
             {
                 SyncPoseSamplerSettings(targetPose);
+                if (remapLocomotionAtEnd)
+                    ApplyLocomotionController(toUnarmed);
                 _isTransitioning = false;
                 _transitionCoroutine = null;
+                _characterController?.SyncFpsLayerWeights();
                 yield break;
             }
 
@@ -240,8 +257,11 @@ namespace Shooter.Project.Character
             if (!graph.IsValid())
             {
                 SyncPoseSamplerSettings(targetPose);
+                if (remapLocomotionAtEnd)
+                    ApplyLocomotionController(toUnarmed);
                 _isTransitioning = false;
                 _transitionCoroutine = null;
+                _characterController?.SyncFpsLayerWeights();
                 yield break;
             }
 
@@ -276,14 +296,13 @@ namespace Shooter.Project.Character
             ClearSlotAnimations();
             ForceOverlayPoseFullWeight();
 
-            // Armed locomotion remap after overlay is stable (see SetHandPose).
-            if (!toUnarmed)
-                ApplyLocomotionController(false);
-
-            _characterController?.SyncFpsLayerWeights();
+            // Locomotion after overlay is stable (holster + equip).
+            if (remapLocomotionAtEnd)
+                ApplyLocomotionController(toUnarmed);
 
             _isTransitioning = false;
             _transitionCoroutine = null;
+            _characterController?.SyncFpsLayerWeights();
         }
 
         void ApplyLocomotionController(bool unarmed)
@@ -310,12 +329,25 @@ namespace Shooter.Project.Character
 
             _runtimeLocomotionOverride.ApplyOverrides(unarmed ? _unarmedClipOverrides : _armedClipOverrides);
 
-            // Only clear a stuck jump — do not Play(Standing, 0). Restarting Standing on T→armed
-            // flashes a fast armed idle, then settles (see Docs/TASKS.md equip path).
-            if (!unarmed)
+            // Armed: only clear stuck jump — Play(Standing) flashes rifle idle (Docs).
+            // Unarmed: must rebind Standing — ApplyOverrides keeps the already-playing
+            // rifle idle until Moving exits/re-enters (twisted hands in idle, OK when walking).
+            if (unarmed)
+                RebindStandingIdleAfterOverride();
+            else
                 ClearStuckInAirLocomotion();
 
             ApplyFullBodyWeightForCurrentState();
+        }
+
+        void RebindStandingIdleAfterOverride()
+        {
+            if (_animator == null)
+                return;
+
+            ClearStuckInAirLocomotion();
+            _animator.Play(StandingStateHash, 0, 0f);
+            _animator.Update(0f);
         }
 
         bool EnsureRuntimeLocomotionOverride()
@@ -401,6 +433,23 @@ namespace Shooter.Project.Character
 
             _animator.SetFloat(Animator.StringToHash("FullBodyWeight"), _isUnarmed ? 1f : 0f);
             ApplyTurnInPlaceLayerWeight();
+            ApplyIkAnimatorLayerWeight();
+        }
+
+        void ApplyIkAnimatorLayerWeight()
+        {
+            if (_animator == null)
+                return;
+
+            if (_ikAnimatorLayerIndex < 0)
+                _ikAnimatorLayerIndex = _animator.GetLayerIndex(IkAnimatorLayerName);
+
+            if (_ikAnimatorLayerIndex < 0)
+                return;
+
+            // IK layer plays C_CurveIdle (ik_hand_gun / WeaponBoneAdditive). Fine while armed;
+            // after holster it twists idle arms until locomotion overrides on move.
+            _animator.SetLayerWeight(_ikAnimatorLayerIndex, _isUnarmed ? 0f : 1f);
         }
 
         void ApplyTurnInPlaceLayerWeight()
@@ -414,7 +463,8 @@ namespace Shooter.Project.Character
             if (_turnInPlaceLayerIndex < 0)
                 return;
 
-            float weight = _isUnarmed ? _turnInPlaceLayerWeight : 1f;
+            // LowerBody mask on controller: foot plant only, no rifle-arm overwrite.
+            float weight = _turnInPlaceLayerWeight;
             _animator.SetLayerWeight(_turnInPlaceLayerIndex, weight);
 
             if (weight <= 0.001f && !IsTurnInPlacePlaying())
