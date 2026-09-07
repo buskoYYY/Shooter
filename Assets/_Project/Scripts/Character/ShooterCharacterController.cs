@@ -236,6 +236,10 @@ namespace Shooter.Project.Character
 
         void Awake()
         {
+            // Docs/TASKS.md: F9 static flag survives Stop/Play without domain reload
+            // and starts the game in rifle "slouch" while already unarmed.
+            UseLegacySlouchedPosture = false;
+
             _characterActor = GetComponent<CharacterActor>();
             _stateController = GetComponentInChildren<CharacterStateController>();
             _normalMovement = GetComponentInChildren<NormalMovement>();
@@ -277,6 +281,10 @@ namespace Shooter.Project.Character
             GetComponent<ShooterFpsCameraApply>()?.PrepareCameraBeforeInit();
 
             ApplyMotionTuning();
+
+            // Docs/TASKS.md §1.1: package init must PlayPose(armed). Shared PoseSampler SO is
+            // mutated at runtime — pin armed before Initialize or leftover unarmed causes early-out.
+            _handPoseState?.PrepareArmedInitPoseForFpsAnimator();
 
             if (_fpsAnimator != null)
                 _fpsAnimator.Initialize();
@@ -373,6 +381,14 @@ namespace Shooter.Project.Character
                 EnsureInAirFlag();
 
             _jumpWindupVisualActive = false;
+
+            if (_handPoseState != null && _handPoseState.IsUnarmed)
+            {
+                // Drop any windup crouch IkMotion that started before takeoff.
+                CancelIkMotions();
+                return;
+            }
+
             PlayIkMotion(jumpMotion);
         }
 
@@ -424,6 +440,7 @@ namespace Shooter.Project.Character
             if (_inAirLayerIndex < 0)
                 _inAirLayerIndex = _animator.GetLayerIndex("InAir");
 
+            // InAir uses LowerBody mask — legs jump, arms stay from unarmed/armed upper body.
             if (_inAirLayerIndex >= 0)
                 _animator.Play(JumpStartStateHash, _inAirLayerIndex, 0f);
         }
@@ -691,6 +708,11 @@ namespace Shooter.Project.Character
         void PlayIkMotion(IkMotionLayerSettings motion)
         {
             if (motion == null || _fpsAnimator == null)
+                return;
+
+            // jump/stop/crouch IkMotion animate IK WeaponBone (rifle hold).
+            // Unarmed: same as Docs/TASKS.md stopMotion — looks like armed flash.
+            if (_handPoseState != null && _handPoseState.IsUnarmed)
                 return;
 
             _fpsAnimator.LinkAnimatorLayer(motion);

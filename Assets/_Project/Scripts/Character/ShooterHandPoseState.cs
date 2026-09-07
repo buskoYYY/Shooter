@@ -47,7 +47,8 @@ namespace Shooter.Project.Character
         Animator _animator;
         ShooterCharacterController _characterController;
         bool _isUnarmed;
-        bool _applyStartupUnarmed;
+        /// <summary>Docs/TASKS.md §1.1: fake ToggleHandPose (T) on Start when startUnarmed.</summary>
+        bool _simulateToggleOnStart;
         bool _snapStartOverlay;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
@@ -122,8 +123,9 @@ namespace Shooter.Project.Character
 
         void Awake()
         {
+            // Docs/TASKS.md §1.1: do NOT set _isUnarmed here — that early-outs SetHandPose and skips mixer resync.
             if (startUnarmed)
-                _applyStartupUnarmed = true;
+                _simulateToggleOnStart = true;
 
             ResolveReferences();
             CachePoseSampler();
@@ -137,17 +139,42 @@ namespace Shooter.Project.Character
 
         void Start()
         {
-            if (_applyStartupUnarmed)
+            // Docs/TASKS.md §1.1: internal path = pressing T (armed→unarmed), visual = snap (no 0.45s blend).
+            if (_simulateToggleOnStart)
             {
-                _applyStartupUnarmed = false;
+                _simulateToggleOnStart = false;
                 _snapStartOverlay = true;
-                SetHandPose(true);
+                SimulateToggleHandPosePress();
                 return;
             }
 
             _isUnarmed = startUnarmed;
             ApplyLocomotionController(_isUnarmed);
             ApplyPoseInstant(startUnarmed ? unarmedOverlayPose : armedOverlayPose);
+        }
+
+        /// <summary>
+        /// Same code path as pressing ToggleHandPose (T). Docs/TASKS.md §1.1.
+        /// </summary>
+        void SimulateToggleHandPosePress()
+        {
+            SetHandPose(!_isUnarmed);
+        }
+
+        /// <summary>
+        /// Call before <see cref="FPSAnimator.Initialize"/> so PoseSampler PlayPose is package-armed.
+        /// Shared layer SO keeps last poseToSample across Play without domain reload.
+        /// </summary>
+        public void PrepareArmedInitPoseForFpsAnimator()
+        {
+            ResolveReferences();
+            CachePoseSampler();
+            if (_poseSampler == null || armedOverlayPose == null)
+                return;
+
+            _poseSampler.poseToSample = armedOverlayPose;
+            _poseSampler.overwriteRoot = false;
+            _poseSampler.overwriteWeaponBone = true;
         }
 
         void LateUpdate()

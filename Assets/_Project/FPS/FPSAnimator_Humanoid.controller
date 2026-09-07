@@ -1469,7 +1469,7 @@ AnimatorController:
   - serializedVersion: 5
     m_Name: InAir
     m_StateMachine: {fileID: -8111222333444555666}
-    m_Mask: {fileID: 0}
+    m_Mask: {fileID: 31900000, guid: 49cfaad5d6bfc3f4cb63636785f8d40a, type: 2}
     m_Motions: []
     m_Behaviours: []
     m_BlendingMode: 0
