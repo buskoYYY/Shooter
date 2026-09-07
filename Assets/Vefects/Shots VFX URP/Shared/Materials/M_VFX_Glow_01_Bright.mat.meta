@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cc0ca3a3610329a42a075ce2bd67f501
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shared/Materials/M_VFX_Glow_01_Bright.mat
+  uploadId: 751349

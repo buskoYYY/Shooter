@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 56bc93a5c08e40b48985d46617059e68
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Light/VFX_Point_Light_01.prefab
+  uploadId: 751349

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 8f6ee0be3fb57d047aee3d6252b9c37a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _MainTexture: {fileID: 2800000, guid: 39d639af07e3c114e9c11dd5bab8b9e1, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shared/Shaders/SH_Vefects_URP_VFX_Cutout_Lit_Particle_01.shader
+  uploadId: 751349

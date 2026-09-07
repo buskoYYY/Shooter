@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 9b2cda7d78eab834f88bfe342c0f7ede
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _DecalTexture: {fileID: 2800000, guid: 445a5e5e2347c37499f4a4d556145ae3, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Decals/Shaders/Fake/SH_Vefects_URP_VFX_Decal_Glass_01_Fake.shader
+  uploadId: 751349

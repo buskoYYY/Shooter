@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 24fd72a8d0101fa4893296da4af0cd11
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Others/Demo/Assets/Surfaces/Shaders/SH_Demo_Surface_01.shader
+  uploadId: 751349

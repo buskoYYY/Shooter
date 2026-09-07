@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7d1496249d2ebe64ba34095f67fce5ed
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Materials/M_VFX_Smoke_Puff_Burst_Direction_01.mat
+  uploadId: 751349

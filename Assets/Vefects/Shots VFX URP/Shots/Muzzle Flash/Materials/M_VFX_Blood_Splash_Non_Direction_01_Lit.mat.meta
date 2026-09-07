@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 04334a1147796af4898b5bc161508856
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Materials/M_VFX_Blood_Splash_Non_Direction_01_Lit.mat
+  uploadId: 751349

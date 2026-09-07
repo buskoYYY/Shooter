@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c16f022e74948b74ab92f61cb82af3de
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shared/Shaders/SH_Vefects_URP_VFX_Unlit_Particle_Adv_01.shader
+  uploadId: 751349

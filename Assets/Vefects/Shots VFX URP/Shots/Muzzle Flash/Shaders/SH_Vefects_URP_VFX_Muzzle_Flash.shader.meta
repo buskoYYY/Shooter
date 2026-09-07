@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 7c76e6b8b20680b41bbfee3fe0a16b7a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _Flipbook: {fileID: 2800000, guid: 35b4dfce26f7e47458ffbd34022ce045, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Shaders/SH_Vefects_URP_VFX_Muzzle_Flash.shader
+  uploadId: 751349

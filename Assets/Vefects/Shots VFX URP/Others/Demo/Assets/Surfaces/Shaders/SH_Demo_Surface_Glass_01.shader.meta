@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 71dd49736a0610343be29b7931850e8b
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Others/Demo/Assets/Surfaces/Shaders/SH_Demo_Surface_Glass_01.shader
+  uploadId: 751349

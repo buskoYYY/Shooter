@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 896bb223fbd8af34590c65cd091515e8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Materials/M_VFX_Smoke_Puff_Animated_Directional_01.mat
+  uploadId: 751349

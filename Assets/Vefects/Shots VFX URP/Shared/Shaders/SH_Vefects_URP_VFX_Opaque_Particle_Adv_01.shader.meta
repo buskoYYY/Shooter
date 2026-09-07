@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 6986f622499dd9e49b04873889d2e7e6
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _MainTexture: {fileID: 2800000, guid: e683f6236cbcb904cb2223acaec1b8df, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shared/Shaders/SH_Vefects_URP_VFX_Opaque_Particle_Adv_01.shader
+  uploadId: 751349

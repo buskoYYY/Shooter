@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: af2149456d0dfab4faadeff486d0b7ac
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shared/Materials/M_VFX_Leaves_01.mat
+  uploadId: 751349

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 44d053afbb3a9fd44ae6507924515a39
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _Flipbook: {fileID: 2800000, guid: ad7430f2d21b25949810b705eea8aeaa, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 281928
+  packageName: Shots VFX - URP
+  packageVersion: 1.0.21
+  assetPath: Assets/Vefects/Shots VFX URP/Shots/Muzzle Flash/Shaders/SH_Vefects_URP_VFX_Muzzle_Smoke_Lit.shader
+  uploadId: 751349
