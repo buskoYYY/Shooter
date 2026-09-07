@@ -367,9 +367,9 @@ PlayerCharacter
 |------|--------|-------------|
 | **2.1** Каркас | ✅ | `IWeapon`, `WeaponManager`, inventory, input 1–6 |
 | **2.2** Ranged MVP | 🟡 | Fire/reload/VFX/SFX/equip motion; осталось: pose polish, tactical reload |
-| **2.3** Melee | ❌ | `MeleeWeapon` — заглушка |
-| **2.4** Gates движения | 🟡 | Sprint/jump/air block; ladder holster/restore в bridge |
-| **2.5** Стены (CollisionLayer) | ❌ | |
+| **2.3** Melee | 🟡 | `MeleeWeapon` + Mixamo stab (CombatKnife retarget позже) |
+| **2.4** Gates движения | ✅ | Sprint/jump/air block; ladder holster/restore в bridge |
+| **2.5** Стены (CollisionLayer) | 🟡 | Setup menu: **Shooter → Project → Setup Weapon Collision Layer** |
 | **2.6** Inspect / break | ❌ | |
 | **2.7** Pickups | ❌ | |
 | **2.8** Тест-сцена | ❌ | |

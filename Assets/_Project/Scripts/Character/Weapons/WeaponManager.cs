@@ -196,6 +196,8 @@ namespace Shooter.Project.Weapons
                 weapon.InitializeForSlot(i);
                 if (weapon is RangedWeapon ranged)
                     ranged.BindOwner(gameObject);
+                else if (weapon is MeleeWeapon melee)
+                    melee.BindOwner(gameObject);
 
                 WeaponPrefabUtility.StripPhysicsComponents(weapon.gameObject);
                 weapon.gameObject.SetActive(false);
@@ -270,6 +272,10 @@ namespace Shooter.Project.Weapons
         public bool CanPerform(WeaponAction action)
         {
             if (_activeWeapon is RangedWeapon busy && busy.IsBusy
+                && action is not WeaponAction.Unequip)
+                return false;
+
+            if (_activeWeapon is MeleeWeapon meleeBusy && meleeBusy.IsBusy
                 && action is not WeaponAction.Unequip)
                 return false;
 
@@ -499,6 +505,12 @@ namespace Shooter.Project.Weapons
             if (_activeWeapon is RangedWeapon ranged)
             {
                 DrawAmmoLine($"{ranged.WeaponId}  {ranged.Magazine}/{ranged.Reserve}");
+                return;
+            }
+
+            if (_activeWeapon is MeleeWeapon melee)
+            {
+                DrawAmmoLine($"{melee.WeaponId}  DUR {melee.Durability:0}/{melee.MaxDurability:0}");
                 return;
             }
 
