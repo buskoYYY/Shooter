@@ -1,5 +1,44 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8234567890123456789
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dee9c1da9424d8498badb5370764946, type: 3}
+  m_Name: PoseOffsetLayerSettings
+  m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseOffsetLayer.PoseOffsetLayerSettings
+  rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
+  alpha: 1
+  curveBlending:
+  - name: AimingWeight
+    mode: 1
+    clampMin: 0
+    source: 2
+  linkDynamically: 0
+  isStandalone: 0
+  poseOffsets:
+  - pose:
+      element:
+        name: IK WeaponBone
+        index: 115
+        isVirtual: 0
+      pose:
+        position: {x: -0.02, y: 0.02, z: 0}
+        rotation: {x: 0, y: 0, z: 0.043619387, w: 0.99904823}
+        scale: {x: 1, y: 1, z: 1}
+      space: 2
+      modifyMode: 0
+    blend:
+      name: CrouchWeight
+      mode: 0
+      clampMin: 0
+      source: 0
+    keepChildrenPose: 0
 --- !u!114 &-6592331017897982123
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -24,51 +63,51 @@ MonoBehaviour:
   rightHand:
     name: hand_r
     index: 70
-    depth: -1
+    isVirtual: 0
   leftHand:
     name: hand_l
     index: 21
-    depth: -1
+    isVirtual: 0
   rightHandIk:
     name: IK RightHand
     index: 116
-    depth: -1
+    isVirtual: 0
   leftHandIk:
     name: IK LeftHand
     index: 117
-    depth: -1
+    isVirtual: 0
   rightHandHint:
     name: IK RightElbow
     index: 118
-    depth: -1
+    isVirtual: 0
   leftHandHint:
     name: IK LeftElbow
     index: 119
-    depth: -1
+    isVirtual: 0
   rightFoot:
     name: foot_r
     index: 154
-    depth: -1
+    isVirtual: 0
   leftFoot:
     name: foot_l
     index: 131
-    depth: -1
+    isVirtual: 0
   rightFootIk:
     name: IK RightFoot
     index: 169
-    depth: -1
+    isVirtual: 0
   leftFootIk:
     name: IK LeftFoot
     index: 170
-    depth: -1
+    isVirtual: 0
   rightFootHint:
     name: IK RightKnee
     index: 171
-    depth: -1
+    isVirtual: 0
   leftFootHint:
     name: IK LeftKnee
     index: 172
-    depth: -1
+    isVirtual: 0
   offsetFeetTargets: 1
   rightHandWeight: 1
   leftHandWeight: 1
@@ -98,21 +137,21 @@ MonoBehaviour:
   weaponIkBone:
     name: IK WeaponBone
     index: 115
-    depth: -1
+    isVirtual: 0
   rightHandElbow:
     name: IK RightElbow
     index: 118
-    depth: -1
+    isVirtual: 0
   leftHandElbow:
     name: IK LeftElbow
     index: 119
-    depth: -1
+    isVirtual: 0
   animatedPivotOffset: {x: 0, y: 0, z: 0}
   hintTargetWeight: 1
   additiveBone:
     name: WeaponBoneAdditive
     index: 174
-    depth: -1
+    isVirtual: 0
   interpSpeed: 0
   aimingInputProperty: AimingWeight
   adsScalar: 1
@@ -137,7 +176,7 @@ MonoBehaviour:
     element:
       name: IK WeaponBone
       index: 115
-      depth: -1
+      isVirtual: 0
     pose:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
@@ -148,7 +187,7 @@ MonoBehaviour:
     element:
       name: IK RightHand
       index: 116
-      depth: -1
+      isVirtual: 0
     pose:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
@@ -159,13 +198,54 @@ MonoBehaviour:
     element:
       name: IK LeftHand
       index: 117
-      depth: -1
+      isVirtual: 0
     pose:
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     space: 0
     modifyMode: 0
+--- !u!114 &-59178131256448480
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3f7bdea6e60413188cbfd0bf60e0b8a, type: 3}
+  m_Name: CollisionLayerSettings
+  m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.CollisionLayer.CollisionLayerSettings
+  rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
+  alpha: 1
+  curveBlending:
+  - name: FullBodyWeight
+    mode: 1
+    clampMin: 0
+    source: 0
+  linkDynamically: 0
+  isStandalone: 0
+  weaponIkBone:
+    name: IK WeaponBone
+    index: 115
+    isVirtual: 0
+  primaryPose:
+    position: {x: 0, y: 0.05, z: -0.15}
+    rotation: {x: -0.67559016, y: 0, z: 0, w: 0.7372773}
+    scale: {x: 1, y: 1, z: 1}
+  secondaryPose:
+    position: {x: -0.12, y: 0, z: -0.15}
+    rotation: {x: 0, y: -0.70710677, z: 0, w: 0.70710677}
+    scale: {x: 1, y: 1, z: 1}
+  targetSpace: 2
+  useSecondaryPose: 1
+  smoothingSpeed: 12
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 64
+  rayStartOffset: 0.5
+  barrelLength: 1.32
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,6 +280,7 @@ MonoBehaviour:
   - {fileID: 1000331771902951453}
   - {fileID: 5097039047826126650}
   - {fileID: -6592331017897982123}
+  - {fileID: -59178131256448480}
 --- !u!114 &1000331771902951453
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -229,105 +310,105 @@ MonoBehaviour:
   - rigElement:
       name: pelvis
       index: 10
-      depth: 1
+      isVirtual: 0
     clampedAngle: {x: 5, y: 5}
     cachedClampedAngle: {x: 5, y: 5}
   - rigElement:
       name: spine_01
       index: 11
-      depth: 2
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: spine_02
       index: 12
-      depth: 3
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: spine_03
       index: 13
-      depth: 4
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: spine_04
       index: 14
-      depth: 5
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: neck_01
       index: 112
-      depth: 7
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: neck_02
       index: 113
-      depth: 8
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   - rigElement:
       name: head
       index: 114
-      depth: 9
+      isVirtual: 0
     clampedAngle: {x: 17, y: 17}
     cachedClampedAngle: {x: 17, y: 17}
   yawOffsetElements:
   - rigElement:
       name: spine_02
       index: 12
-      depth: 3
+      isVirtual: 0
     clampedAngle: {x: 25, y: 25}
     cachedClampedAngle: {x: 25, y: 25}
   - rigElement:
       name: spine_03
       index: 13
-      depth: 4
+      isVirtual: 0
     clampedAngle: {x: 25, y: 25}
     cachedClampedAngle: {x: 25, y: 25}
   - rigElement:
       name: spine_04
       index: 14
-      depth: 5
+      isVirtual: 0
     clampedAngle: {x: 25, y: 25}
     cachedClampedAngle: {x: 25, y: 25}
   - rigElement:
       name: neck_01
       index: 112
-      depth: 7
+      isVirtual: 0
     clampedAngle: {x: 32.5, y: 32.5}
     cachedClampedAngle: {x: 32.5, y: 32.5}
   rollOffsetElements:
   - rigElement:
       name: pelvis
       index: 10
-      depth: 1
+      isVirtual: 0
     clampedAngle: {x: 5, y: 5}
     cachedClampedAngle: {x: 5, y: 5}
   - rigElement:
       name: spine_01
       index: 11
-      depth: 2
+      isVirtual: 0
     clampedAngle: {x: 28.333334, y: 28.333334}
     cachedClampedAngle: {x: 28.333334, y: 28.333334}
   - rigElement:
       name: spine_02
       index: 12
-      depth: 3
+      isVirtual: 0
     clampedAngle: {x: 28.333334, y: 28.333334}
     cachedClampedAngle: {x: 28.333334, y: 28.333334}
   - rigElement:
       name: spine_03
       index: 13
-      depth: 4
+      isVirtual: 0
     clampedAngle: {x: 28.333334, y: 28.333334}
     cachedClampedAngle: {x: 28.333334, y: 28.333334}
   - rigElement:
       name: spine_04
       index: 14
-      depth: 5
+      isVirtual: 0
     clampedAngle: {x: 28.333334, y: 28.333334}
     cachedClampedAngle: {x: 28.333334, y: 28.333334}
 --- !u!114 &3263972937887254653
@@ -354,21 +435,21 @@ MonoBehaviour:
   weaponIkBone:
     name: IK WeaponBone
     index: 115
-    depth: -1
+    isVirtual: 0
   rightHandElbow:
     name: IK RightElbow
     index: 118
-    depth: -1
+    isVirtual: 0
   leftHandElbow:
     name: IK LeftElbow
     index: 119
-    depth: -1
+    isVirtual: 0
   animatedPivotOffset: {x: 0, y: 0, z: 0}
   hintTargetWeight: 1
   headBone:
     name: head
     index: 114
-    depth: 9
+    isVirtual: 0
   freeAimClamp: 0
   freeAimInterpSpeed: 0
   freeAimInputScale: 0
@@ -420,7 +501,7 @@ MonoBehaviour:
   boneToAnimate:
     name: IK WeaponBone
     index: 115
-    depth: -1
+    isVirtual: 0
   rotationCurves:
     x:
       serializedVersion: 2
@@ -596,11 +677,11 @@ MonoBehaviour:
   characterRootBone:
     name: root
     index: 0
-    depth: -1
+    isVirtual: 0
   characterHipBone:
     name: pelvis
     index: 10
-    depth: -1
+    isVirtual: 0
   angleThreshold: 45
   turnCurve:
     serializedVersion: 2
@@ -662,47 +743,47 @@ MonoBehaviour:
     rotation: {x: 0, y: 0, z: 0, w: 1}
     scale: {x: 1, y: 1, z: 1}
   overwriteRoot: 0
-  overwriteWeaponBone: 0
+  overwriteWeaponBone: 1
   ikWeaponBone:
     name: IK WeaponBone
     index: 115
-    depth: -1
+    isVirtual: 0
   ikHandRight:
     name: IK RightHand
     index: 116
-    depth: -1
+    isVirtual: 0
   ikHandLeft:
     name: IK LeftHand
     index: 117
-    depth: -1
+    isVirtual: 0
   ikHandRightHint:
     name: IK RightElbow
     index: 118
-    depth: -1
+    isVirtual: 0
   ikHandLeftHint:
     name: IK LeftElbow
     index: 119
-    depth: -1
+    isVirtual: 0
   weaponBoneRight:
     name: IK WeaponBoneRight
     index: 93
-    depth: -1
+    isVirtual: 0
   weaponBoneLeft:
     name: IK WeaponBoneLeft
     index: 44
-    depth: -1
+    isVirtual: 0
   weaponBone:
     name: WeaponBone
     index: 173
-    depth: -1
+    isVirtual: 0
   pelvis:
     name: pelvis
     index: 10
-    depth: -1
+    isVirtual: 0
   spineRoot:
     name: spine_01
     index: 11
-    depth: -1
+    isVirtual: 0
   stabilizationWeight: StabilizationWeight
   weaponBoneWeight: WeaponBoneWeight
 --- !u!114 &9038444503662684769
@@ -725,21 +806,21 @@ MonoBehaviour:
   weaponIkBone:
     name: IK WeaponBone
     index: 115
-    depth: -1
+    isVirtual: 0
   rightHandElbow:
     name: IK RightElbow
     index: 118
-    depth: -1
+    isVirtual: 0
   leftHandElbow:
     name: IK LeftElbow
     index: 119
-    depth: -1
+    isVirtual: 0
   animatedPivotOffset: {x: 0, y: 0, z: 0}
   hintTargetWeight: 1
   aimTargetBone:
     name: 
     index: 0
-    depth: 0
+    isVirtual: 0
   aimingEaseMode:
     easeFunc: 0
     curve:
@@ -768,42 +849,3 @@ MonoBehaviour:
   aimPointSpeed: 1
   cameraBlend: 0
   isAimingProperty: IsAiming
---- !u!114 &-8234567890123456789
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7dee9c1da9424d8498badb5370764946, type: 3}
-  m_Name: PoseOffsetLayerSettings
-  m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Layers.PoseOffsetLayer.PoseOffsetLayerSettings
-  rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
-  alpha: 1
-  curveBlending:
-  - name: AimingWeight
-    mode: 1
-    clampMin: 0
-    source: 2
-  linkDynamically: 0
-  isStandalone: 0
-  poseOffsets:
-  - pose:
-      element:
-        name: IK WeaponBone
-        index: 115
-        depth: -1
-      pose:
-        position: {x: -0.02, y: 0.02, z: 0}
-        rotation: {x: 0, y: 0, z: 0.043619387, w: 0.99904823}
-        scale: {x: 1, y: 1, z: 1}
-      space: 2
-      modifyMode: 0
-    blend:
-      name: CrouchWeight
-      mode: 0
-      clampMin: 0
-      source: 0
-    keepChildrenPose: 0
