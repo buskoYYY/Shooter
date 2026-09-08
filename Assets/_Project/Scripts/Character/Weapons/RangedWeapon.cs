@@ -32,6 +32,8 @@ namespace Shooter.Project.Weapons
         [Header("FPS AF / recoil")]
         [SerializeField] FPSAnimationAsset reloadClip;
         [SerializeField] FPSAnimationAsset fireClip;
+        [SerializeField] FPSAnimationAsset inspectClip;
+        [SerializeField] FPSAnimationAsset checkAmmoClip;
         [SerializeField] IkMotionLayerSettings equipMotion;
         [SerializeField] IkMotionLayerSettings unEquipMotion;
         [SerializeField] RecoilAnimData recoilData;
@@ -68,7 +70,10 @@ namespace Shooter.Project.Weapons
         float _nextShotTime;
         bool _firing;
         bool _reloading;
+        bool _inspecting;
+        bool _checkingAmmo;
         Coroutine _reloadRoutine;
+        Coroutine _utilityRoutine;
 
         static readonly int FireHash = Animator.StringToHash("Fire");
         static readonly int ReloadHash = Animator.StringToHash("Reload");
@@ -79,7 +84,7 @@ namespace Shooter.Project.Weapons
         public int MagazineSize => magazineSize;
         public bool SupportsAuto => supportsAuto;
         public bool IsReloading => _reloading;
-        public bool IsBusy => _reloading;
+        public bool IsBusy => _reloading || _inspecting || _checkingAmmo;
 
         public void BindOwner(GameObject owner)
         {
@@ -109,6 +114,8 @@ namespace Shooter.Project.Weapons
         {
             base.Equip();
             _reloading = false;
+            _inspecting = false;
+            _checkingAmmo = false;
             _firing = false;
 
             if (_recoilAnimation != null && recoilData != null)
@@ -129,6 +136,7 @@ namespace Shooter.Project.Weapons
             PlayUnequipMotion();
             StopFire();
             CancelReload();
+            CancelUtility();
             base.Unequip();
         }
 
@@ -175,7 +183,7 @@ namespace Shooter.Project.Weapons
 
         public override void Reload()
         {
-            if (IsBroken || _reloading)
+            if (IsBroken || IsBusy)
                 return;
             if (_magazine >= magazineSize || _reserve <= 0)
                 return;
@@ -185,10 +193,24 @@ namespace Shooter.Project.Weapons
             _reloadRoutine = StartCoroutine(ReloadRoutine());
         }
 
+        public override void Inspect()
+        {
+            if (IsBroken || IsBusy || _owner == null)
+                return;
+
+            StopFire();
+            CancelUtility();
+            _utilityRoutine = StartCoroutine(InspectRoutine());
+        }
+
         public override void CheckAmmo()
         {
-            // Phase 2.6 — animation + UI. Debug for now.
-            Debug.Log($"[{WeaponId}] mag {_magazine}/{magazineSize}, reserve {_reserve} ({ammoType})", this);
+            if (IsBroken || IsBusy || _owner == null)
+                return;
+
+            StopFire();
+            CancelUtility();
+            _utilityRoutine = StartCoroutine(CheckAmmoRoutine());
         }
 
         public bool TryAddAmmo(AmmoType type, int amount)
@@ -203,6 +225,7 @@ namespace Shooter.Project.Weapons
         {
             StopFire();
             CancelReload();
+            CancelUtility();
             PlaySfx(emptySfx);
             base.OnBreak();
         }
@@ -235,6 +258,61 @@ namespace Shooter.Project.Weapons
             _reloadRoutine = null;
         }
 
+        IEnumerator InspectRoutine()
+        {
+            _inspecting = true;
+
+            // Do NOT use demo IKMotion_Inspect* / AA_Inspect — wrong skeleton; twists arms
+            // and leaves IK WeaponBone offset so the gun "flies away" after.
+            Vector3 fromPos = transform.localPosition;
+            Quaternion fromRot = transform.localRotation;
+            Vector3 toPos = fromPos + new Vector3(0.04f, 0.07f, -0.06f);
+            Quaternion toRot = fromRot * Quaternion.Euler(-28f, 42f, 18f);
+
+            yield return LerpLocalPose(fromPos, fromRot, toPos, toRot, 0.22f);
+            yield return new WaitForSeconds(0.95f);
+            yield return LerpLocalPose(toPos, toRot, fromPos, fromRot, 0.28f);
+
+            ApplyAttachTransform();
+            _inspecting = false;
+            _utilityRoutine = null;
+        }
+
+        IEnumerator LerpLocalPose(
+            Vector3 aPos, Quaternion aRot, Vector3 bPos, Quaternion bRot, float duration)
+        {
+            float len = Mathf.Max(0.05f, duration);
+            float t = 0f;
+            while (t < len)
+            {
+                t += Time.deltaTime;
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / len));
+                transform.localPosition = Vector3.Lerp(aPos, bPos, u);
+                transform.localRotation = Quaternion.Slerp(aRot, bRot, u);
+                yield return null;
+            }
+
+            transform.localPosition = bPos;
+            transform.localRotation = bRot;
+        }
+
+        IEnumerator CheckAmmoRoutine()
+        {
+            _checkingAmmo = true;
+
+            float wait = 0.55f;
+            if (FPSAnimationAsset.IsValid(checkAmmoClip) && _playables != null)
+            {
+                _playables.PlayAnimation(checkAmmoClip, 0f);
+                if (checkAmmoClip.clip != null)
+                    wait = Mathf.Max(0.35f, checkAmmoClip.clip.length * 0.85f);
+            }
+
+            yield return new WaitForSeconds(wait);
+            _checkingAmmo = false;
+            _utilityRoutine = null;
+        }
+
         void CancelReload()
         {
             if (_reloadRoutine != null)
@@ -244,6 +322,19 @@ namespace Shooter.Project.Weapons
             }
 
             _reloading = false;
+        }
+
+        void CancelUtility()
+        {
+            if (_utilityRoutine != null)
+            {
+                StopCoroutine(_utilityRoutine);
+                _utilityRoutine = null;
+            }
+
+            _inspecting = false;
+            _checkingAmmo = false;
+            ApplyAttachTransform();
         }
 
         void PlayShotFeedback()

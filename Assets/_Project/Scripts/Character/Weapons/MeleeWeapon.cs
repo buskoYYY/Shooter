@@ -86,7 +86,21 @@ namespace Shooter.Project.Weapons
 
         public override void Reload() { }
 
+        public override void Inspect() { }
+
         public override void CheckAmmo() { }
+
+        public override void OnBreak()
+        {
+            if (_attackRoutine != null)
+            {
+                StopCoroutine(_attackRoutine);
+                _attackRoutine = null;
+            }
+
+            _attacking = false;
+            base.OnBreak();
+        }
 
         IEnumerator AttackRoutine()
         {

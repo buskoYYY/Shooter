@@ -25,14 +25,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4038439727927530133}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0067102024, y: 0.10655322, z: -0.0029300884, w: -0.99428004}
+  m_LocalRotation: {x: 0.0068526883, y: -0.12575342, z: -0.0006266962, w: 0.99203765}
   m_LocalPosition: {x: -0.016, y: 0.026, z: -0.156}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 525153168466567622}
-  - {fileID: 9302848593018472611}
-  - {fileID: 9302848593018472613}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0.77, y: 345.55, z: 359.83}
 --- !u!114 &3801359025069816147
@@ -51,6 +49,7 @@ MonoBehaviour:
   slotIndex: 2
   maxDurability: 100
   durability: 100
+  breakSfx: {fileID: 0}
   attachLocalPosition: {x: -0.016, y: 0.026, z: -0.156}
   attachLocalEulerAngles: {x: 0.77, y: 345.55, z: 359.83}
   ammoType: 0
@@ -67,14 +66,16 @@ MonoBehaviour:
   wearPerShot: 0.15
   reloadClip: {fileID: 11400000, guid: 2d446d575ab7f0c44a565f6684c53aaa, type: 2}
   fireClip: {fileID: 0}
+  inspectClip: {fileID: 11400000, guid: 5780858f65bbfe54f9c29b12c8e5bcc3, type: 2}
+  checkAmmoClip: {fileID: 0}
   equipMotion: {fileID: 11400000, guid: b11b46638e8719941a429aa33657277d, type: 2}
   unEquipMotion: {fileID: 11400000, guid: 6e3ba419dec1a754b9c447a8fc1f9b1f, type: 2}
   recoilData: {fileID: 11400000, guid: 4c797e2e3e4ef994191ed00397d07906, type: 2}
   recoilPatternSettings: {fileID: 11400000, guid: b60711d0a5eabca449a3e2324c4d3483, type: 2}
   cameraShake: {fileID: 11400000, guid: 5563e5a81879bf3488e215990ceb8724, type: 2}
   muzzlePoint: {fileID: 5852562543533428616}
-  muzzleFlashPoint: {fileID: 9302848593018472611}
-  shellEjectPoint: {fileID: 9302848593018472613}
+  muzzleFlashPoint: {fileID: 0}
+  shellEjectPoint: {fileID: 0}
   shellEjectLocalOffset: {x: 0.06, y: 0.03, z: -0.02}
   shellEjectForce: 2.4
   muzzleFlashPrefab: {fileID: 3360542172024696037, guid: 330038511cce52e4990a0b332c9cfc4b, type: 3}
@@ -170,68 +171,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6506212990733282748, guid: 3f8355a8e4e41214892d595cdcdc527d, type: 3}
   m_PrefabInstance: {fileID: 824946662494528052}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &9302848593018472610
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9302848593018472611}
-  m_Layer: 0
-  m_Name: MuzzleFlashPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9302848593018472611
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9302848593018472610}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.01, z: 0.18}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3521023983261932976}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &9302848593018472612
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9302848593018472613}
-  m_Layer: 0
-  m_Name: ShellEjectPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9302848593018472613
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9302848593018472612}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.03, y: 0.04, z: 0.05}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3521023983261932976}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &6318802553930965682
 PrefabInstance:
   m_ObjectHideFlags: 0

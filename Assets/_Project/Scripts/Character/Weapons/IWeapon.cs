@@ -11,6 +11,7 @@ namespace Shooter.Project.Weapons
         void Unequip();
         void Attack();
         void Reload();
+        void Inspect();
         void CheckAmmo();
         void OnBreak();
     }

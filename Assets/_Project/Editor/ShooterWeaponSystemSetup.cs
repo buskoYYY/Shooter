@@ -48,6 +48,7 @@ namespace Shooter.Project.Editor
         const string EquipMotion = "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Equip.asset";
         const string UnequipMotion = "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_UnEquip.asset";
         const string CameraShake = "Assets/Demo/Prefabs/AK12/RecoilCameraShake.asset";
+        const string InspectClipPath = "Assets/Demo/Animations/Weapons/General/AA_Inspect.asset";
 
         [MenuItem("Shooter/Project/Add Weapon System")]
         public static void AddWeaponSystemFromProjectMenu() => AddWeaponSystemImpl();
@@ -163,7 +164,7 @@ namespace Shooter.Project.Editor
                 "4 = Mk23 pistol\n\n" +
                 "Weapons keep attach / muzzle flash on rebuild.\n" +
                 "After moving a weapon: RMB component → Capture Attach From Transform.\n\n" +
-                "LMB fire, R reload.\n" +
+                "LMB fire, R reload, I inspect, H check ammo.\n" +
                 "Optional: Shooter → Project → Add Weapon Test Targets.\n" +
                 "Stop Play → Play again.",
                 "OK");
@@ -181,12 +182,19 @@ namespace Shooter.Project.Editor
                 legacy.enabled = false;
 
             Transform model = playerRoot.transform.Find("Graphics/Character_model");
-            Transform weaponBone = model != null
-                ? model.GetComponentInChildren<KRigComponent>(true)?.GetRigTransform(
-                    new KRigElement(-1, FPSANames.IkWeaponBone))
-                : null;
-            if (weaponBone == null && model != null)
+            Transform weaponBone = null;
+            if (model != null)
+            {
+                // Prefer name lookup — GetRigTransform(KRigElement) throws if hierarchy map
+                // is empty while editing prefab contents.
                 weaponBone = FindDeepChild(model, WeaponPrefabUtility.IkWeaponBoneName);
+                if (weaponBone == null)
+                {
+                    var rig = model.GetComponentInChildren<KRigComponent>(true);
+                    if (rig != null)
+                        weaponBone = rig.GetRigTransform(FPSANames.IkWeaponBone);
+                }
+            }
             InputActionAsset inputActions =
                 AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
 
@@ -208,6 +216,9 @@ namespace Shooter.Project.Editor
             WeaponBase slot0 = EnsureEmbeddedWeapon(weaponBone, mk18, 0);
             WeaponBase slot1 = EnsureEmbeddedWeapon(weaponBone, ak12, 1);
             WeaponBase slot2 = EnsureEmbeddedWeapon(weaponBone, pistol, 2);
+            SyncInspectMotions(slot0, mk18);
+            SyncInspectMotions(slot1, ak12);
+            SyncInspectMotions(slot2, pistol);
 
             SerializedProperty slots = managerSo.FindProperty("weaponSlots");
             slots.arraySize = 5;
@@ -227,6 +238,35 @@ namespace Shooter.Project.Editor
             inventorySo.ApplyModifiedPropertiesWithoutUndo();
 
             EditorUtility.SetDirty(playerRoot);
+        }
+
+        static void SyncInspectMotions(WeaponBase instance, WeaponBase template)
+        {
+            if (instance == null || template == null || instance is not RangedWeapon)
+                return;
+
+            var so = new SerializedObject(instance);
+            var templateSo = new SerializedObject(template);
+            CopyRefIfEmpty(so, templateSo, "inspectClip");
+            // Clear leftover demo IK inspect refs — they twist Character_model and detach the gun.
+            SerializedProperty start = so.FindProperty("inspectMotion");
+            SerializedProperty end = so.FindProperty("inspectEndMotion");
+            if (start != null)
+                start.objectReferenceValue = null;
+            if (end != null)
+                end.objectReferenceValue = null;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(instance);
+        }
+
+        static void CopyRefIfEmpty(SerializedObject dst, SerializedObject src, string property)
+        {
+            SerializedProperty d = dst.FindProperty(property);
+            SerializedProperty s = src.FindProperty(property);
+            if (d == null || s == null)
+                return;
+            if (d.objectReferenceValue == null && s.objectReferenceValue != null)
+                d.objectReferenceValue = s.objectReferenceValue;
         }
 
         static WeaponBase EnsureEmbeddedWeapon(Transform weaponBone, WeaponBase prefabAsset, int slotIndex)
@@ -594,6 +634,8 @@ namespace Shooter.Project.Editor
             so.FindProperty("reloadSeconds").floatValue = reloadSeconds;
             so.FindProperty("reloadClip").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(reloadClipPath);
+            so.FindProperty("inspectClip").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(InspectClipPath);
             so.FindProperty("equipMotion").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
             so.FindProperty("unEquipMotion").objectReferenceValue =

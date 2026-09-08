@@ -7,6 +7,8 @@ namespace Shooter.Project.Weapons
         ChangeWeapon,
         Equip,
         Unequip,
-        Attack
+        Attack,
+        Inspect,
+        CheckAmmo
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,6 +12,7 @@ namespace Shooter.Project.Weapons
         [SerializeField] int slotIndex;
         [SerializeField] float maxDurability = 100f;
         [SerializeField] float durability = 100f;
+        [SerializeField] AudioClip breakSfx;
 
         [Header("Attach (local to IK WeaponBone)")]
         [Tooltip("Source of truth for weapon pose. Moving the Transform alone is overwritten on Play — use Capture Attach.")]
@@ -22,6 +24,9 @@ namespace Shooter.Project.Weapons
         public float MaxDurability => maxDurability;
         public float Durability => durability;
         public bool IsBroken => durability <= 0f;
+
+        /// <summary>Raised when durability hits zero (before unequip).</summary>
+        public event Action<WeaponBase> Broken;
 
         public virtual void Equip()
         {
@@ -36,10 +41,15 @@ namespace Shooter.Project.Weapons
 
         public abstract void Attack();
         public abstract void Reload();
+        public abstract void Inspect();
         public abstract void CheckAmmo();
 
         public virtual void OnBreak()
         {
+            if (breakSfx != null)
+                AudioSource.PlayClipAtPoint(breakSfx, transform.position);
+
+            Broken?.Invoke(this);
             Unequip();
         }
 
@@ -91,6 +101,15 @@ namespace Shooter.Project.Weapons
             Undo.RecordObject(transform, "Apply Weapon Attach");
             ApplyAttachTransform();
             EditorUtility.SetDirty(transform);
+        }
+
+        [ContextMenu("Break Weapon (set durability 0)")]
+        void BreakWeaponMenu()
+        {
+            Undo.RecordObject(this, "Break Weapon");
+            durability = 0f;
+            OnBreak();
+            EditorUtility.SetDirty(this);
         }
 
         void OnValidate()

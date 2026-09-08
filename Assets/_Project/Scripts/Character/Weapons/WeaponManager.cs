@@ -38,8 +38,13 @@ namespace Shooter.Project.Weapons
         InputAction _attackAction;
         InputAction _sprintAction;
         InputAction _reloadAction;
+        InputAction _inspectAction;
+        InputAction _checkAmmoAction;
 
         readonly WeaponBase[] _runtimeSlots = new WeaponBase[MaxWeaponSlots];
+
+        string _hudFlashText;
+        float _hudFlashUntil;
 
         public bool IsHolstered => _activeSlotIndex < 0;
         public int ActiveSlotIndex => _activeSlotIndex;
@@ -85,6 +90,8 @@ namespace Shooter.Project.Weapons
         {
             PollSlotInput();
             PollReloadInput();
+            PollInspectInput();
+            PollCheckAmmoInput();
             PollAttackInput();
         }
 
@@ -194,6 +201,8 @@ namespace Shooter.Project.Weapons
                     continue;
 
                 weapon.InitializeForSlot(i);
+                weapon.Broken -= OnWeaponBroken;
+                weapon.Broken += OnWeaponBroken;
                 if (weapon is RangedWeapon ranged)
                     ranged.BindOwner(gameObject);
                 else if (weapon is MeleeWeapon melee)
@@ -230,6 +239,70 @@ namespace Shooter.Project.Weapons
                 return;
 
             _activeWeapon.Reload();
+        }
+
+        void PollInspectInput()
+        {
+            if (!WasInspectPressed())
+                return;
+            if (_activeWeapon == null || !CanPerform(WeaponAction.Inspect))
+                return;
+
+            _activeWeapon.Inspect();
+            FlashHud($"{_activeWeapon.WeaponId}  INSPECT", 1.2f);
+        }
+
+        void PollCheckAmmoInput()
+        {
+            if (!WasCheckAmmoPressed())
+                return;
+            if (_activeWeapon == null || !CanPerform(WeaponAction.CheckAmmo))
+                return;
+
+            _activeWeapon.CheckAmmo();
+            ShowCheckAmmoHud(_activeWeapon);
+        }
+
+        bool WasInspectPressed()
+        {
+            if (_inspectAction != null && _inspectAction.WasPressedThisFrame())
+                return true;
+            return Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame;
+        }
+
+        bool WasCheckAmmoPressed()
+        {
+            if (_checkAmmoAction != null && _checkAmmoAction.WasPressedThisFrame())
+                return true;
+            return Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame;
+        }
+
+        void ShowCheckAmmoHud(WeaponBase weapon)
+        {
+            if (weapon is RangedWeapon ranged)
+            {
+                FlashHud($"{ranged.WeaponId}  MAG {ranged.Magazine}/{ranged.MagazineSize}  RES {ranged.Reserve}");
+                return;
+            }
+
+            FlashHud($"{weapon.WeaponId}  DUR {weapon.Durability:0}/{weapon.MaxDurability:0}");
+        }
+
+        void FlashHud(string text, float seconds = 2.2f)
+        {
+            _hudFlashText = text;
+            _hudFlashUntil = Time.unscaledTime + Mathf.Max(0.4f, seconds);
+        }
+
+        void OnWeaponBroken(WeaponBase weapon)
+        {
+            if (weapon == null)
+                return;
+
+            FlashHud($"{weapon.WeaponId} BROKEN", 2.5f);
+
+            if (_activeWeapon == weapon)
+                Holster(force: true);
         }
 
         void PollAttackInput()
@@ -289,7 +362,7 @@ namespace Shooter.Project.Weapons
             {
                 WeaponAction.Shoot or WeaponAction.Attack =>
                     grounded && !sprinting && !_ladderHolsterActive,
-                WeaponAction.Reload =>
+                WeaponAction.Reload or WeaponAction.Inspect or WeaponAction.CheckAmmo =>
                     grounded && !_ladderHolsterActive,
                 WeaponAction.ChangeWeapon or WeaponAction.Equip or WeaponAction.Unequip =>
                     grounded && !_ladderHolsterActive,
@@ -415,6 +488,8 @@ namespace Shooter.Project.Weapons
             _attackAction = _playerMap.FindAction("Attack", false);
             _sprintAction = _playerMap.FindAction("Sprint", false);
             _reloadAction = _playerMap.FindAction("Reload", false);
+            _inspectAction = _playerMap.FindAction("Inspect", false);
+            _checkAmmoAction = _playerMap.FindAction("CheckAmmo", false);
         }
 
         void ResolveWeaponAttachPoint()
@@ -502,9 +577,15 @@ namespace Shooter.Project.Weapons
             if (!showAmmoHud)
                 return;
 
+            if (!string.IsNullOrEmpty(_hudFlashText) && Time.unscaledTime < _hudFlashUntil)
+            {
+                DrawAmmoLine(_hudFlashText);
+                return;
+            }
+
             if (_activeWeapon is RangedWeapon ranged)
             {
-                DrawAmmoLine($"{ranged.WeaponId}  {ranged.Magazine}/{ranged.Reserve}");
+                DrawAmmoLine($"{ranged.WeaponId}  {ranged.Magazine}/{ranged.Reserve}  DUR {ranged.Durability:0}");
                 return;
             }
 

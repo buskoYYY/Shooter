@@ -370,7 +370,7 @@ PlayerCharacter
 | **2.3** Melee | 🟡 | `MeleeWeapon` + Mixamo stab (CombatKnife retarget позже) |
 | **2.4** Gates движения | ✅ | Sprint/jump/air block; ladder holster/restore в bridge |
 | **2.5** Стены (CollisionLayer) | 🟡 | Setup menu: **Shooter → Project → Setup Weapon Collision Layer** |
-| **2.6** Inspect / break | ❌ | |
+| **2.6** Inspect / break | 🟡 | I / H + OnBreak → holster; перезапусти Setup Ranged для inspectClip |
 | **2.7** Pickups | ❌ | |
 | **2.8** Тест-сцена | ❌ | |
 

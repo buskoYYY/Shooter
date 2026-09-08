@@ -130,6 +130,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Inspect",
+                    "type": "Button",
+                    "id": "e8f9a0b1-c2d3-4e5f-9607-18293a4b5c6d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "CheckAmmo",
+                    "type": "Button",
+                    "id": "f9a0b1c2-d3e4-5f60-a718-293a4b5c6d7e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -570,6 +588,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a0b1c2d3-e4f5-6071-b829-3a4b5c6d7e8f",
+                    "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Inspect",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b1c2d3e4-f5a6-7182-c93a-4b5c6d7e8f90",
+                    "path": "<Keyboard>/h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "CheckAmmo",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
