@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 KINEMATION.
 // All rights reserved.
 
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -25,7 +26,23 @@ namespace KINEMATION.Shared.ScriptableWidget.Editor
 
         public void RefreshEditor(UnityEditor.Editor newEditor, string windowTitle)
         {
-            titleContent.text = windowTitle;
+            titleContent = new GUIContent(windowTitle);
+            
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var parent = typeof(EditorWindow).GetField("m_Parent", flags)?.GetValue(this);
+            var window = parent?.GetType().GetProperty("window", flags)?.GetValue(parent);
+            var showMode = window?.GetType().GetField("m_ShowMode", flags)?.GetValue(window);
+            
+            if (!(showMode is int showModeValue) || showModeValue != 4)
+            {
+                var titleProperty = window?.GetType().GetProperty("title", flags);
+                
+                if (titleProperty != null && titleProperty.CanWrite && titleProperty.PropertyType == typeof(string))
+                {
+                    titleProperty.SetValue(window, windowTitle);
+                }
+            }
+            
             _targetEditor = newEditor;
             Assert.IsNotNull(_targetEditor);
         }

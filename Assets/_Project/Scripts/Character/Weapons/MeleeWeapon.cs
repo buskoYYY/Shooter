@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Shooter.Project.Weapons
 {
     /// <summary>
-    /// Melee knife: playables attack clip + sphere-cast hit. No Demo.FPSController.
+    /// Melee knife: hold overlay + playables attack. No Demo.FPSController.
     /// </summary>
     public class MeleeWeapon : WeaponBase
     {
@@ -23,7 +23,9 @@ namespace Shooter.Project.Weapons
         [SerializeField] Vector2 cameraPunch = new Vector2(1.2f, 0.15f);
 
         [Header("FPS AF")]
+        [SerializeField] FPSAnimationAsset holdOverlayPose;
         [SerializeField] FPSAnimationAsset attackClip;
+        [SerializeField] FPSAnimationAsset attackClipAlt;
         [SerializeField] IkMotionLayerSettings equipMotion;
         [SerializeField] IkMotionLayerSettings unEquipMotion;
 
@@ -31,9 +33,11 @@ namespace Shooter.Project.Weapons
         IPlayablesController _playables;
         FPSAnimator _fpsAnimator;
         ShooterFpsCameraApply _cameraApply;
+        ShooterHandPoseState _handPose;
 
         float _nextAttackTime;
         bool _attacking;
+        bool _useAltAttack;
         Coroutine _attackRoutine;
 
         public bool IsBusy => _attacking;
@@ -47,11 +51,16 @@ namespace Shooter.Project.Weapons
             _playables = owner.GetComponentInChildren<IPlayablesController>(true);
             _fpsAnimator = owner.GetComponentInChildren<FPSAnimator>(true);
             _cameraApply = owner.GetComponent<ShooterFpsCameraApply>();
+            _handPose = owner.GetComponent<ShooterHandPoseState>();
         }
 
         public override void Equip()
         {
             base.Equip();
+
+            if (holdOverlayPose != null && _handPose != null)
+                _handPose.SetArmedWithPose(holdOverlayPose);
+
             if (_fpsAnimator != null && equipMotion != null)
                 _fpsAnimator.LinkAnimatorLayer(equipMotion);
         }
@@ -65,6 +74,7 @@ namespace Shooter.Project.Weapons
             }
 
             _attacking = false;
+            _handPose?.ClearArmedPoseOverride();
 
             if (_fpsAnimator != null && unEquipMotion != null)
                 _fpsAnimator.LinkAnimatorLayer(unEquipMotion);
@@ -99,6 +109,7 @@ namespace Shooter.Project.Weapons
             }
 
             _attacking = false;
+            _handPose?.ClearArmedPoseOverride();
             base.OnBreak();
         }
 
@@ -106,8 +117,9 @@ namespace Shooter.Project.Weapons
         {
             _attacking = true;
 
-            if (FPSAnimationAsset.IsValid(attackClip) && _playables != null)
-                _playables.PlayAnimation(attackClip, 0f);
+            FPSAnimationAsset clip = ResolveAttackClip();
+            if (FPSAnimationAsset.IsValid(clip) && _playables != null)
+                _playables.PlayAnimation(clip, 0f);
 
             _cameraApply?.AddWeaponCameraPunch(cameraPunch);
 
@@ -124,6 +136,17 @@ namespace Shooter.Project.Weapons
 
             _attacking = false;
             _attackRoutine = null;
+        }
+
+        FPSAnimationAsset ResolveAttackClip()
+        {
+            if (FPSAnimationAsset.IsValid(attackClipAlt))
+            {
+                _useAltAttack = !_useAltAttack;
+                return _useAltAttack ? attackClipAlt : attackClip;
+            }
+
+            return attackClip;
         }
 
         void TryHit()

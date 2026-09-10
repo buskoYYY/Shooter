@@ -11,16 +11,20 @@ using UnityEngine;
 namespace Shooter.Project.Editor
 {
     /// <summary>
-    /// Wires Mixamo Stabbing.fbx → AA_Knife_Attack → Melee_Knife prefab → player slot 4 (key 5).
+    /// Humanoid knife hold/attack (demo clips) + CombatKnife mesh → slot 4 (key 5).
+    /// FP_CombatKnife Generic clips need Retarget Pro bake — see Docs TASKS 2.10.
     /// </summary>
     public static class ShooterKnifeSetup
     {
-        const string StabbingPath = "Assets/_Project/Animations/Stabbing.fbx";
         const string CharacterModelPath = "Assets/_Project/Packages/Models/Character_model.fbx";
         const string RigPath = "Assets/_Project/FPS/Rig_CharacterModel.asset";
         const string UpperBodyMaskPath = "Assets/Demo/Animations/Masks/UpperBody_Humanoid.mask";
+        const string HoldClipFbx = "Assets/Demo/Animations/Locomotion/Humanoid/Knife/C_Knife_Static_Humanoid.fbx";
+        const string AttackClipFbx = "Assets/Demo/Animations/Locomotion/Humanoid/Knife/C_Stabbing_Humanoid.fbx";
+        const string HoldAssetPath = "Assets/_Project/FPS/AA_Knife_Hold_Humanoid.asset";
         const string AttackAssetPath = "Assets/_Project/FPS/AA_Knife_Attack_Humanoid.asset";
-        const string KnifeMeshPath = "Assets/_Project/Packages/Melee/CombatKnife/FP_CombatKnife.fbx";
+        const string KnifeMeshPath = "Assets/_Project/Packages/CombatKnife/FP_CombatKnife.fbx";
+        const string KnifeMeshFallback = "Assets/_Project/Packages/Melee/CombatKnife/FP_CombatKnife.fbx";
         const string PrefabPath = "Assets/_Project/Weapons/Prefabs/Melee_Knife.prefab";
         const string PlayerPrefabPath = "Assets/_Project/Prefabs/PlayerCharacter.prefab";
         const string EquipMotion = "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Equip.asset";
@@ -29,31 +33,27 @@ namespace Shooter.Project.Editor
         static readonly Vector3 KnifeAttachPos = new Vector3(-0.02f, 0.03f, -0.08f);
         static readonly Vector3 KnifeAttachEuler = new Vector3(10f, 170f, 0f);
 
-        [MenuItem("Shooter/Project/Setup Melee Knife (Mixamo Stabbing)")]
+        [MenuItem("Shooter/Project/Setup Melee Knife (Humanoid)")]
         public static void SetupMeleeKnife()
         {
-            if (!File.Exists(StabbingPath))
+            ConfigureHumanoidImport(HoldClipFbx);
+            ConfigureHumanoidImport(AttackClipFbx);
+
+            AnimationClip holdClip = LoadFirstClip(HoldClipFbx);
+            AnimationClip attackClip = LoadFirstClip(AttackClipFbx);
+            if (holdClip == null || attackClip == null)
             {
                 EditorUtility.DisplayDialog(
                     "Knife Setup",
-                    "Не найден Assets/_Project/Animations/Stabbing.fbx",
+                    "Не найдены Humanoid knife клипы в Demo/.../Humanoid/Knife/.\n" +
+                    "Нужны C_Knife_Static_Humanoid и C_Stabbing_Humanoid.",
                     "OK");
                 return;
             }
 
-            AnimationClip clip = ConfigureStabbingImport();
-            if (clip == null)
-            {
-                EditorUtility.DisplayDialog(
-                    "Knife Setup",
-                    "Не удалось достать AnimationClip из Stabbing.fbx.\n" +
-                    "В Inspector у FBX: Rig = Humanoid, Avatar = Copy From Character_model, Apply.",
-                    "OK");
-                return;
-            }
-
-            FPSAnimationAsset attackAsset = EnsureAttackAsset(clip);
-            MeleeWeapon prefab = EnsureKnifePrefab(attackAsset);
+            FPSAnimationAsset holdAsset = EnsureAaAsset(HoldAssetPath, holdClip, loopingPose: true);
+            FPSAnimationAsset attackAsset = EnsureAaAsset(AttackAssetPath, attackClip, loopingPose: false);
+            MeleeWeapon prefab = EnsureKnifePrefab(holdAsset, attackAsset);
             WirePlayer(prefab);
 
             AssetDatabase.SaveAssets();
@@ -61,109 +61,84 @@ namespace Shooter.Project.Editor
 
             EditorUtility.DisplayDialog(
                 "Knife Setup",
-                "Готово.\n• AA_Knife_Attack_Humanoid\n• Melee_Knife prefab\n• Слот 4 (клавиша 5)\n\nPlay → 5 → ЛКМ = удар.",
+                "Готово (Humanoid demo clips + CombatKnife mesh).\n\n" +
+                "• AA_Knife_Hold_Humanoid\n" +
+                "• AA_Knife_Attack_Humanoid\n" +
+                "• Melee_Knife → слот 4 (клавиша 5)\n\n" +
+                "FP_CombatKnife Stab1/Stab2 — через Retarget Pro (меню KINEMATION),\n" +
+                "потом подставь baked клипы в hold/attack на префабе.\n\n" +
+                "Play → 5 → поза ножа → ЛКМ удар.",
                 "OK");
         }
 
-        static AnimationClip ConfigureStabbingImport()
+        // Keep old menu name as alias so existing docs still work.
+        [MenuItem("Shooter/Project/Setup Melee Knife (Mixamo Stabbing)")]
+        public static void SetupMeleeKnifeLegacyAlias() => SetupMeleeKnife();
+
+        static void ConfigureHumanoidImport(string fbxPath)
         {
-            var importer = AssetImporter.GetAtPath(StabbingPath) as ModelImporter;
+            var importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
             if (importer == null)
-                return null;
+                return;
 
             ModelImporter characterImporter =
                 AssetImporter.GetAtPath(CharacterModelPath) as ModelImporter;
 
             importer.animationType = ModelImporterAnimationType.Human;
-            importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
             if (characterImporter != null && characterImporter.sourceAvatar != null)
-                importer.sourceAvatar = characterImporter.sourceAvatar;
-            else
             {
-                // Fallback: Create From This Model
-                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
+                importer.sourceAvatar = characterImporter.sourceAvatar;
             }
 
             importer.importAnimation = true;
-
-            ModelImporterClipAnimation[] clips = importer.defaultClipAnimations;
-            if (clips == null || clips.Length == 0)
-                clips = importer.clipAnimations;
-
-            if (clips != null && clips.Length > 0)
-            {
-                for (int i = 0; i < clips.Length; i++)
-                {
-                    clips[i].name = "Stabbing";
-                    clips[i].loopTime = false;
-                    clips[i].lockRootRotation = true;
-                    clips[i].lockRootHeightY = true;
-                    clips[i].lockRootPositionXZ = true;
-                    clips[i].keepOriginalOrientation = true;
-                    clips[i].keepOriginalPositionY = true;
-                    clips[i].keepOriginalPositionXZ = true;
-                }
-
-                importer.clipAnimations = clips;
-            }
-
             importer.SaveAndReimport();
+        }
 
-            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(StabbingPath);
+        static AnimationClip LoadFirstClip(string fbxPath)
+        {
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(fbxPath);
             AnimationClip best = null;
             for (int i = 0; i < assets.Length; i++)
             {
-                if (assets[i] is AnimationClip c && !c.name.StartsWith("__preview"))
-                {
-                    best = c;
-                    if (c.name == "Stabbing")
-                        return c;
-                }
+                if (assets[i] is not AnimationClip c || c.name.StartsWith("__preview"))
+                    continue;
+                best = c;
+                break;
             }
 
             return best;
         }
 
-        static FPSAnimationAsset EnsureAttackAsset(AnimationClip clip)
+        static FPSAnimationAsset EnsureAaAsset(string path, AnimationClip clip, bool loopingPose)
         {
-            var existing = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(AttackAssetPath);
+            var existing = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(path);
             FPSAnimationAsset asset = existing;
             if (asset == null)
             {
                 asset = ScriptableObject.CreateInstance<FPSAnimationAsset>();
-                AssetDatabase.CreateAsset(asset, AttackAssetPath);
+                AssetDatabase.CreateAsset(asset, path);
             }
 
             asset.rigAsset = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
             asset.clip = clip;
             asset.mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
             asset.isAdditive = false;
-            asset.blendTime = new BlendTime(0.08f, 0.12f)
-            {
-                rateScale = 1.15f
-            };
+            asset.blendTime = loopingPose
+                ? new BlendTime(0.15f, 0.15f) { rateScale = 1f }
+                : new BlendTime(0.08f, 0.12f) { rateScale = 1.1f };
             EditorUtility.SetDirty(asset);
             return asset;
         }
 
-        static MeleeWeapon EnsureKnifePrefab(FPSAnimationAsset attackAsset)
+        static MeleeWeapon EnsureKnifePrefab(FPSAnimationAsset holdAsset, FPSAnimationAsset attackAsset)
         {
             Directory.CreateDirectory("Assets/_Project/Weapons/Prefabs");
 
             MeleeWeapon existing = AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath);
             if (existing != null)
             {
-                var so = new SerializedObject(existing);
-                so.FindProperty("attackClip").objectReferenceValue = attackAsset;
-                so.FindProperty("equipMotion").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
-                so.FindProperty("unEquipMotion").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(UnequipMotion);
-                so.FindProperty("slotIndex").intValue = 3;
-                so.FindProperty("weaponId").stringValue = "Knife";
-                so.FindProperty("attachLocalPosition").vector3Value = KnifeAttachPos;
-                so.FindProperty("attachLocalEulerAngles").vector3Value = KnifeAttachEuler;
-                so.ApplyModifiedPropertiesWithoutUndo();
+                ApplyMeleeFields(existing, holdAsset, attackAsset);
                 existing.ApplyAttachTransform();
                 EditorUtility.SetDirty(existing);
                 return existing;
@@ -171,23 +146,10 @@ namespace Shooter.Project.Editor
 
             GameObject root = new GameObject("Melee_Knife");
             var melee = root.AddComponent<MeleeWeapon>();
-            var soNew = new SerializedObject(melee);
-            soNew.FindProperty("weaponId").stringValue = "Knife";
-            soNew.FindProperty("slotIndex").intValue = 3;
-            soNew.FindProperty("attachLocalPosition").vector3Value = KnifeAttachPos;
-            soNew.FindProperty("attachLocalEulerAngles").vector3Value = KnifeAttachEuler;
-            soNew.FindProperty("attackClip").objectReferenceValue = attackAsset;
-            soNew.FindProperty("equipMotion").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
-            soNew.FindProperty("unEquipMotion").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(UnequipMotion);
-            soNew.FindProperty("damage").floatValue = 35f;
-            soNew.FindProperty("range").floatValue = 1.8f;
-            soNew.FindProperty("attackCooldown").floatValue = 0.65f;
-            soNew.FindProperty("hitDelay").floatValue = 0.2f;
-            soNew.ApplyModifiedPropertiesWithoutUndo();
+            ApplyMeleeFields(melee, holdAsset, attackAsset);
 
-            GameObject meshSource = AssetDatabase.LoadAssetAtPath<GameObject>(KnifeMeshPath);
+            string meshPath = File.Exists(KnifeMeshPath) ? KnifeMeshPath : KnifeMeshFallback;
+            GameObject meshSource = AssetDatabase.LoadAssetAtPath<GameObject>(meshPath);
             if (meshSource != null)
             {
                 GameObject mesh = (GameObject)PrefabUtility.InstantiatePrefab(meshSource, root.transform);
@@ -207,6 +169,26 @@ namespace Shooter.Project.Editor
             return AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath);
         }
 
+        static void ApplyMeleeFields(MeleeWeapon melee, FPSAnimationAsset holdAsset, FPSAnimationAsset attackAsset)
+        {
+            var so = new SerializedObject(melee);
+            so.FindProperty("weaponId").stringValue = "Knife";
+            so.FindProperty("slotIndex").intValue = 3;
+            so.FindProperty("attachLocalPosition").vector3Value = KnifeAttachPos;
+            so.FindProperty("attachLocalEulerAngles").vector3Value = KnifeAttachEuler;
+            so.FindProperty("holdOverlayPose").objectReferenceValue = holdAsset;
+            so.FindProperty("attackClip").objectReferenceValue = attackAsset;
+            so.FindProperty("equipMotion").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
+            so.FindProperty("unEquipMotion").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(UnequipMotion);
+            so.FindProperty("damage").floatValue = 35f;
+            so.FindProperty("range").floatValue = 1.8f;
+            so.FindProperty("attackCooldown").floatValue = 0.65f;
+            so.FindProperty("hitDelay").floatValue = 0.2f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         static void WirePlayer(MeleeWeapon knifePrefab)
         {
             if (knifePrefab == null)
@@ -219,8 +201,6 @@ namespace Shooter.Project.Editor
                 Transform weaponBone = null;
                 if (model != null)
                 {
-                    // Prefer name lookup — GetRigTransform(KRigElement) throws if hierarchy map
-                    // is empty / missing the bone while editing prefab contents.
                     weaponBone = FindDeep(model, WeaponPrefabUtility.IkWeaponBoneName);
                     if (weaponBone == null)
                     {
@@ -276,29 +256,47 @@ namespace Shooter.Project.Editor
                 var so = new SerializedObject(existing[i]);
                 so.FindProperty("slotIndex").intValue = slotIndex;
                 if (existing[i] is MeleeWeapon)
+                {
+                    so.FindProperty("holdOverlayPose").objectReferenceValue =
+                        new SerializedObject(prefabAsset).FindProperty("holdOverlayPose").objectReferenceValue;
                     so.FindProperty("attackClip").objectReferenceValue =
-                        AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(AttackAssetPath);
+                        new SerializedObject(prefabAsset).FindProperty("attackClip").objectReferenceValue;
+                }
+
                 so.ApplyModifiedPropertiesWithoutUndo();
                 return existing[i];
             }
 
-            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset.gameObject, weaponBone);
+            GameObject instance = PrefabUtility.InstantiatePrefab(prefabAsset.gameObject, weaponBone) as GameObject;
+            if (instance == null)
+                return null;
+
             instance.name = prefabAsset.name;
             WeaponBase weapon = instance.GetComponent<WeaponBase>();
-            var soNew = new SerializedObject(weapon);
-            soNew.FindProperty("slotIndex").intValue = slotIndex;
-            soNew.ApplyModifiedPropertiesWithoutUndo();
-            weapon.ApplyAttachTransform();
+            if (weapon != null)
+            {
+                var so = new SerializedObject(weapon);
+                so.FindProperty("slotIndex").intValue = slotIndex;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                weapon.ApplyAttachTransform();
+                EditorUtility.SetDirty(weapon);
+            }
+
             return weapon;
         }
 
         static Transform FindDeep(Transform root, string name)
         {
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
+            if (root == null || string.IsNullOrEmpty(name))
+                return null;
+            if (root.name == name)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
             {
-                if (all[i].name == name)
-                    return all[i];
+                Transform found = FindDeep(root.GetChild(i), name);
+                if (found != null)
+                    return found;
             }
 
             return null;

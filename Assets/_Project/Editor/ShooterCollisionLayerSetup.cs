@@ -24,16 +24,31 @@ namespace Shooter.Project.Editor
         [MenuItem("Shooter/Project/Setup Weapon Collision Layer")]
         public static void SetupMenu()
         {
+            SetupCore(placeWall: true, showDialog: true);
+        }
+
+        /// <summary>Wire CollisionLayer without dialog (used by 2.8 test scene setup).</summary>
+        public static void SetupSilent()
+        {
+            SetupCore(placeWall: false, showDialog: false);
+        }
+
+        static bool SetupCore(bool placeWall, bool showDialog)
+        {
             EnsureEnvironmentLayer();
 
             var profile = AssetDatabase.LoadAssetAtPath<FPSAnimatorProfile>(ProfilePath);
             if (profile == null)
             {
-                EditorUtility.DisplayDialog(
-                    "Collision Layer",
-                    "Не найден AnimatorProfile_CharacterModel.\nСначала Phase 2 / FPS setup.",
-                    "OK");
-                return;
+                if (showDialog)
+                {
+                    EditorUtility.DisplayDialog(
+                        "Collision Layer",
+                        "Не найден AnimatorProfile_CharacterModel.\nСначала Phase 2 / FPS setup.",
+                        "OK");
+                }
+
+                return false;
             }
 
             CollisionLayerSettings layer = FindCollisionLayer(profile);
@@ -56,18 +71,24 @@ namespace Shooter.Project.Editor
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
 
-            PlaceOrUpdateTestWall();
+            if (placeWall)
+                PlaceOrUpdateTestWall();
 
-            EditorUtility.DisplayDialog(
-                "Collision Layer",
-                created
-                    ? "Добавлен CollisionLayer в AnimatorProfile_CharacterModel.\n\n" +
-                      "• Layer mask: Environment (layer 6)\n" +
-                      "• В сцене: куб WeaponCollisionWall\n\n" +
-                      "Play → достань оружие → подойди вплотную к стене — ствол должен подняться."
-                    : "CollisionLayer обновлён.\n\n" +
-                      "Play → оружие → к стене WeaponCollisionWall.",
-                "OK");
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog(
+                    "Collision Layer",
+                    created
+                        ? "Добавлен CollisionLayer в AnimatorProfile_CharacterModel.\n\n" +
+                          "• Layer mask: Environment (layer 6)\n" +
+                          "• В сцене: куб WeaponCollisionWall\n\n" +
+                          "Play → достань оружие → подойди вплотную к стене — ствол должен подняться."
+                        : "CollisionLayer обновлён.\n\n" +
+                          "Play → оружие → к стене WeaponCollisionWall.",
+                    "OK");
+            }
+
+            return true;
         }
 
         static CollisionLayerSettings FindCollisionLayer(FPSAnimatorProfile profile)

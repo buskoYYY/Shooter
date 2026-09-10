@@ -423,6 +423,18 @@ namespace Shooter.Project.Editor
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
+        /// <summary>Used by Setup Weapon Test Scene (2.8) — no dialogs.</summary>
+        public static void EnsureTestContentForScene(Transform root)
+        {
+            if (root == null)
+                return;
+
+            CreateDummyTarget(root, "DummyTarget_Near", new Vector3(4f, 1f, 8f), new Vector3(0.8f, 2f, 0.4f));
+            CreateDummyTarget(root, "DummyTarget_Mid", new Vector3(-2f, 1.2f, 12f), new Vector3(0.8f, 2.2f, 0.4f));
+            CreateDummyTarget(root, "DummyTarget_Far", new Vector3(0f, 1.5f, 20f), new Vector3(1f, 2.5f, 0.5f));
+            PlaceAmmoPickups(root);
+        }
+
         static void AddWeaponTestTargets()
         {
             if (!System.IO.File.Exists(TestScenePath))
@@ -436,11 +448,7 @@ namespace Shooter.Project.Editor
 
             var scene = EditorSceneManager.OpenScene(TestScenePath, OpenSceneMode.Single);
             Transform root = GetOrCreateRoot("WeaponTest").transform;
-
-            CreateDummyTarget(root, "DummyTarget_Near", new Vector3(4f, 1f, 8f), new Vector3(0.8f, 2f, 0.4f));
-            CreateDummyTarget(root, "DummyTarget_Mid", new Vector3(-2f, 1.2f, 12f), new Vector3(0.8f, 2.2f, 0.4f));
-            CreateDummyTarget(root, "DummyTarget_Far", new Vector3(0f, 1.5f, 20f), new Vector3(1f, 2.5f, 0.5f));
-            PlaceAmmoPickups(root);
+            EnsureTestContentForScene(root);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

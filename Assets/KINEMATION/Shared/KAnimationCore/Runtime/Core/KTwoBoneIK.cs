@@ -1,7 +1,6 @@
-// Designed by KINEMATION, 2023
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
 
-using Unity.Collections;
-using Unity.Jobs;
 using UnityEngine;
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
@@ -18,6 +17,10 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
         public float rotWeight;
         public float hintWeight;
 
+        public bool allowStretching;
+        public float startStretchRatio;
+        public float maxStretchScale;
+
         public bool hasValidHint;
     }
     
@@ -25,111 +28,249 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Core
     {
         public static void Solve(ref KTwoBoneIkData ikData)
         {
-            Vector3 aPosition = ikData.root.position;
-            Vector3 bPosition = ikData.mid.position;
-            Vector3 cPosition = ikData.tip.position;
-            
-            Vector3 tPosition = Vector3.Lerp(cPosition, ikData.target.position, ikData.posWeight);
-            Quaternion tRotation = Quaternion.Lerp(ikData.tip.rotation, ikData.target.rotation, ikData.rotWeight);
-            bool hasHint = ikData.hasValidHint && ikData.hintWeight > 0f;
+            Vector3 rootPosition = ikData.root.position;
+            Vector3 jointPosition = ikData.mid.position;
+            Vector3 endPosition = ikData.tip.position;
 
-            Vector3 ab = bPosition - aPosition;
-            Vector3 bc = cPosition - bPosition;
-            Vector3 ac = cPosition - aPosition;
-            Vector3 at = tPosition - aPosition;
+            Vector3 effectorPosition = Vector3.Lerp(endPosition, ikData.target.position, ikData.posWeight);
+            Quaternion effectorRotation = Quaternion.Slerp(ikData.tip.rotation, ikData.target.rotation, ikData.rotWeight);
 
-            float abLen = ab.magnitude;
-            float bcLen = bc.magnitude;
-            float acLen = ac.magnitude;
-            float atLen = at.magnitude;
+            float upperLimbLength = (jointPosition - rootPosition).magnitude;
+            float lowerLimbLength = (endPosition - jointPosition).magnitude;
+            float referenceLength = Mathf.Max(upperLimbLength, lowerLimbLength, 1f);
 
-            float oldAbcAngle = KMath.TriangleAngle(acLen, abLen, bcLen);
-            float newAbcAngle = KMath.TriangleAngle(atLen, abLen, bcLen);
+            Vector3 jointTarget = BuildJointTarget(ikData, effectorPosition, referenceLength);
 
-            // Bend normal strategy is to take whatever has been provided in the animation
-            // stream to minimize configuration changes, however if this is collinear
-            // try computing a bend normal given the desired target position.
-            // If this also fails, try resolving axis using hint if provided.
-            Vector3 axis = Vector3.Cross(ab, bc);
-            if (axis.sqrMagnitude < KMath.SqrEpsilon)
+            SolveTwoBoneIK(ref ikData.root, ref ikData.mid, ref ikData.tip, jointTarget, effectorPosition,
+                upperLimbLength, lowerLimbLength, ikData.allowStretching, ikData.startStretchRatio,
+                Mathf.Max(ikData.maxStretchScale, 1f));
+
+            ikData.tip.rotation = effectorRotation;
+        }
+
+        private static void SolveTwoBoneIK(ref KTransform root, ref KTransform joint, ref KTransform end,
+            Vector3 jointTarget, Vector3 effector, float upperLimbLength, float lowerLimbLength,
+            bool allowStretching, float startStretchRatio, float maxStretchScale)
+        {
+            Vector3 rootPosition = root.position;
+            Vector3 jointPosition = joint.position;
+            Vector3 endPosition = end.position;
+
+            SolveTwoBoneIK(rootPosition, jointPosition, jointTarget, effector, 
+                out Vector3 outJointPos, out Vector3 outEndPos, upperLimbLength, lowerLimbLength, allowStretching, 
+                startStretchRatio, maxStretchScale);
+
+            Quaternion rootDelta = FindBetweenNormals(jointPosition - rootPosition, outJointPos - rootPosition);
+            root.rotation = rootDelta * root.rotation;
+            root.position = rootPosition;
+
+            Quaternion jointDelta = FindBetweenNormals(endPosition - jointPosition, outEndPos - outJointPos);
+            joint.rotation = jointDelta * joint.rotation;
+            joint.position = outJointPos;
+
+            end.position = outEndPos;
+        }
+
+        private static void SolveTwoBoneIK(Vector3 rootPos, Vector3 jointPos, Vector3 jointTarget,
+            Vector3 effector, out Vector3 outJointPos, out Vector3 outEndPos, float upperLimbLength,
+            float lowerLimbLength, bool allowStretching, float startStretchRatio, float maxStretchScale)
+        {
+            Vector3 desiredPos = effector;
+            Vector3 desiredDelta = desiredPos - rootPos;
+            float desiredLength = desiredDelta.magnitude;
+
+            Vector3 desiredDir;
+            if (desiredLength < KMath.FloatMin)
             {
-                axis = hasHint ? Vector3.Cross(ikData.hint.position - aPosition, bc) : Vector3.zero;
-
-                if (axis.sqrMagnitude < KMath.SqrEpsilon)
-                    axis = Vector3.Cross(at, bc);
-
-                if (axis.sqrMagnitude < KMath.SqrEpsilon)
-                    axis = Vector3.up;
+                desiredLength = KMath.FloatMin;
+                desiredDir = Vector3.right;
+            }
+            else
+            {
+                desiredDir = desiredDelta / desiredLength;
             }
 
-            axis = Vector3.Normalize(axis);
+            Vector3 jointTargetDelta = jointTarget - rootPos;
+            Vector3 jointBendDir;
 
-            float a = 0.5f * (oldAbcAngle - newAbcAngle);
-            float sin = Mathf.Sin(a);
-            float cos = Mathf.Cos(a);
-            Quaternion deltaR = new Quaternion(axis.x * sin, axis.y * sin, axis.z * sin, cos);
-
-            KTransform localTip = ikData.mid.GetRelativeTransform(ikData.tip, false);
-            ikData.mid.rotation = deltaR * ikData.mid.rotation;
-            
-            // Update child transform.
-            ikData.tip = ikData.mid.GetWorldTransform(localTip, false);
-            
-            cPosition = ikData.tip.position;
-            ac = cPosition - aPosition;
-
-            KTransform localMid = ikData.root.GetRelativeTransform(ikData.mid, false);
-            localTip = ikData.mid.GetRelativeTransform(ikData.tip, false);
-            ikData.root.rotation = KMath.FromToRotation(ac, at) * ikData.root.rotation;
-
-            // Update child transforms.
-            ikData.mid = ikData.root.GetWorldTransform(localMid, false);
-            ikData.tip = ikData.mid.GetWorldTransform(localTip, false);
-
-            if (hasHint)
+            if (jointTargetDelta.sqrMagnitude < KMath.SqrEpsilon)
             {
-                float acSqrMag = ac.sqrMagnitude;
-                if (acSqrMag > 0f)
+                jointBendDir = Vector3.up;
+            }
+            else
+            {
+                Vector3 jointPlaneNormal = Vector3.Cross(desiredDir, jointTargetDelta);
+
+                if (jointPlaneNormal.sqrMagnitude < KMath.SqrEpsilon)
                 {
-                    bPosition = ikData.mid.position;
-                    cPosition = ikData.tip.position;
-                    ab = bPosition - aPosition;
-                    ac = cPosition - aPosition;
+                    FindBestAxisVectors(desiredDir, out jointPlaneNormal, out jointBendDir);
+                }
+                else
+                {
+                    jointPlaneNormal.Normalize();
+                    jointBendDir = jointTargetDelta - Vector3.Dot(jointTargetDelta, desiredDir) * desiredDir;
 
-                    Vector3 acNorm = ac / Mathf.Sqrt(acSqrMag);
-                    Vector3 ah = ikData.hint.position - aPosition;
-                    Vector3 abProj = ab - acNorm * Vector3.Dot(ab, acNorm);
-                    Vector3 ahProj = ah - acNorm * Vector3.Dot(ah, acNorm);
-
-                    float maxReach = abLen + bcLen;
-                    if (abProj.sqrMagnitude > (maxReach * maxReach * 0.001f) && ahProj.sqrMagnitude > 0f)
+                    if (jointBendDir.sqrMagnitude < KMath.SqrEpsilon)
                     {
-                        Quaternion hintR = KMath.FromToRotation(abProj, ahProj);
-                        hintR.x *= ikData.hintWeight;
-                        hintR.y *= ikData.hintWeight;
-                        hintR.z *= ikData.hintWeight;
-                        hintR = KMath.NormalizeSafe(hintR);
-                        ikData.root.rotation = hintR * ikData.root.rotation;
-                        
-                        ikData.mid = ikData.root.GetWorldTransform(localMid, false);
-                        ikData.tip = ikData.mid.GetWorldTransform(localTip, false);
+                        FindBestAxisVectors(desiredDir, out jointPlaneNormal, out jointBendDir);
+                    }
+                    else
+                    {
+                        jointBendDir.Normalize();
                     }
                 }
             }
-            
-            ikData.tip.rotation = tRotation;
+
+            float maxLimbLength = lowerLimbLength + upperLimbLength;
+            if (allowStretching)
+            {
+                float scaleRange = maxStretchScale - startStretchRatio;
+                if (scaleRange > KMath.FloatMin && maxLimbLength > KMath.FloatMin)
+                {
+                    float reachRatio = desiredLength / maxLimbLength;
+                    float scalingFactor = (maxStretchScale - 1f) *
+                                          Mathf.Clamp01((reachRatio - startStretchRatio) / scaleRange);
+                    if (scalingFactor > KMath.FloatMin)
+                    {
+                        float lengthScale = 1f + scalingFactor;
+                        lowerLimbLength *= lengthScale;
+                        upperLimbLength *= lengthScale;
+                        maxLimbLength *= lengthScale;
+                    }
+                }
+            }
+
+            outEndPos = desiredPos;
+            outJointPos = jointPos;
+
+            if (desiredLength >= maxLimbLength)
+            {
+                outEndPos = rootPos + maxLimbLength * desiredDir;
+                outJointPos = rootPos + upperLimbLength * desiredDir;
+                return;
+            }
+
+            float twoAB = 2f * upperLimbLength * desiredLength;
+            float cosAngle = twoAB > KMath.FloatMin
+                ? ((upperLimbLength * upperLimbLength) + (desiredLength * desiredLength) -
+                   (lowerLimbLength * lowerLimbLength)) / twoAB
+                : 0f;
+            cosAngle = Mathf.Clamp(cosAngle, -1f, 1f);
+
+            bool reverseUpperBone = cosAngle < 0f;
+            float angle = Mathf.Acos(cosAngle);
+            float jointLineDist = upperLimbLength * Mathf.Sin(angle);
+
+            float projJointDistSqr = (upperLimbLength * upperLimbLength) - (jointLineDist * jointLineDist);
+            float projJointDist = projJointDistSqr > 0f ? Mathf.Sqrt(projJointDistSqr) : 0f;
+            if (reverseUpperBone)
+            {
+                projJointDist *= -1f;
+            }
+
+            outJointPos = rootPos + (projJointDist * desiredDir) + (jointLineDist * jointBendDir);
         }
-    }
 
-    public struct KTwoBoneIKJob : IJobParallelFor
-    {
-        public NativeArray<KTwoBoneIkData> twoBoneIkJobData;
-
-        public void Execute(int index)
+        private static Vector3 BuildJointTarget(in KTwoBoneIkData ikData, Vector3 effectorPos, float targetDistance)
         {
-            var twoBoneIkData = twoBoneIkJobData[index];
-            KTwoBoneIK.Solve(ref twoBoneIkData);
-            twoBoneIkJobData[index] = twoBoneIkData;
+            Vector3 rootPos = ikData.root.position;
+            Vector3 jointPos = ikData.mid.position;
+            Vector3 endPos = ikData.tip.position;
+            
+            Vector3 desiredDir = GetDesiredDirection(rootPos, effectorPos, endPos);
+            Vector3 bendDir = GetCurrentBendDirection(rootPos, jointPos, endPos, desiredDir) * targetDistance;
+            bool canProject = TryProjectToBendPlane(ikData.hint.position - rootPos, desiredDir, 
+                out Vector3 hintDir);
+
+            if (ikData is {hasValidHint: true, hintWeight: > KMath.FloatMin} && canProject)
+            {
+                float clampedHintWeight = Mathf.Clamp01(ikData.hintWeight);
+                bendDir = bendDir.sqrMagnitude < KMath.SqrEpsilon
+                    ? hintDir
+                    : Vector3.Slerp(bendDir, hintDir, clampedHintWeight).normalized;
+            }
+
+            if (bendDir.sqrMagnitude < KMath.SqrEpsilon)
+            {
+                FindBestAxisVectors(desiredDir, out _, out bendDir);
+            }
+
+            return jointPos + bendDir;
+        }
+
+        private static Vector3 GetDesiredDirection(Vector3 rootPos, Vector3 effectorPos, Vector3 endPos)
+        {
+            /*
+            Vector3 desiredDelta = effectorPos - rootPos;
+            if (desiredDelta.sqrMagnitude >= KMath.SqrEpsilon)
+            {
+                return desiredDelta.normalized;
+            }*/
+
+            Vector3 fallback = endPos - rootPos;
+            return fallback.normalized;
+        }
+
+        public static Vector3 GetCurrentBendDirection(Vector3 rootPos, Vector3 jointPos, Vector3 endPos,
+            Vector3 desiredDir)
+        {
+            if (TryProjectToBendPlane(jointPos - rootPos, desiredDir, out Vector3 bendDir))
+            {
+                return bendDir;
+            }
+
+            Vector3 upper = jointPos - rootPos;
+            Vector3 lower = endPos - jointPos;
+            Vector3 planeNormal = Vector3.Cross(upper, lower);
+            if (planeNormal.sqrMagnitude >= KMath.SqrEpsilon)
+            {
+                bendDir = Vector3.Cross(planeNormal.normalized, desiredDir);
+                if (bendDir.sqrMagnitude >= KMath.SqrEpsilon)
+                {
+                    return bendDir.normalized;
+                }
+            }
+
+            FindBestAxisVectors(desiredDir, out _, out bendDir);
+            return bendDir;
+        }
+
+        private static bool TryProjectToBendPlane(Vector3 vector, Vector3 planeNormal, out Vector3 projectedDir)
+        {
+            Vector3 projected = vector - Vector3.Dot(vector, planeNormal) * planeNormal;
+            if (projected.sqrMagnitude < KMath.SqrEpsilon)
+            {
+                projectedDir = Vector3.zero;
+                return false;
+            }
+
+            projectedDir = projected.normalized;
+            return true;
+        }
+
+        private static void FindBestAxisVectors(Vector3 direction, out Vector3 axis1, out Vector3 axis2)
+        {
+            Vector3 basis = Mathf.Abs(direction.y) < 0.999f ? Vector3.up : Vector3.right;
+
+            axis1 = Vector3.Cross(direction, basis);
+            if (axis1.sqrMagnitude < KMath.SqrEpsilon)
+            {
+                basis = Vector3.forward;
+                axis1 = Vector3.Cross(direction, basis);
+            }
+
+            axis1.Normalize();
+            axis2 = Vector3.Cross(axis1, direction).normalized;
+        }
+
+        private static Quaternion FindBetweenNormals(Vector3 from, Vector3 to)
+        {
+            if (from.sqrMagnitude < KMath.SqrEpsilon || to.sqrMagnitude < KMath.SqrEpsilon)
+            {
+                return Quaternion.identity;
+            }
+
+            return KMath.FromToRotation(from.normalized, to.normalized);
         }
     }
 }

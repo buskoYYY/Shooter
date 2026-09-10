@@ -31,11 +31,19 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
             return DragAndDropVisualMode.Copy;
         }
         
-        protected static DragAndDropVisualMode OnHierarchyDrop(int dropTargetInstanceID, HierarchyDropFlags dropMode,
+#if UNITY_6000_3_OR_NEWER
+        protected static DragAndDropVisualMode OnHierarchyDrop(UnityEngine.EntityId dropTargetId,
+            HierarchyDropFlags dropMode, Transform parentForDraggedObjects, bool perform)
+        {
+            return HandleDragAndDrop(perform);
+        }
+#else
+        protected static DragAndDropVisualMode OnHierarchyDrop(int dropTargetId, HierarchyDropFlags dropMode,
             Transform parentForDraggedObjects, bool perform)
         {
             return HandleDragAndDrop(perform);
         }
+#endif
         
         protected static DragAndDropVisualMode OnInspectorDrop(UnityEngine.Object[] targets, bool perform)
         {

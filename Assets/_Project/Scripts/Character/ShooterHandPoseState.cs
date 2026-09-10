@@ -52,6 +52,7 @@ namespace Shooter.Project.Character
         bool _snapStartOverlay;
         bool _isTransitioning;
         Coroutine _transitionCoroutine;
+        FPSAnimationAsset _armedPoseOverride;
         int _turnInPlaceLayerIndex = -1;
         int _ikAnimatorLayerIndex = -1;
         float _turnInPlaceLayerWeight = 1f;
@@ -183,9 +184,46 @@ namespace Shooter.Project.Character
                 ApplyFullBodyWeightForCurrentState();
         }
 
+        FPSAnimationAsset ResolveCurrentPose() => ResolvePose(_isUnarmed);
+
+        FPSAnimationAsset ResolvePose(bool unarmed)
+        {
+            if (unarmed)
+                return unarmedOverlayPose;
+            return _armedPoseOverride != null ? _armedPoseOverride : armedOverlayPose;
+        }
+
         public void SetUnarmed() => SetHandPose(true);
 
         public void SetArmed() => SetHandPose(false);
+
+        /// <summary>
+        /// Equip with a weapon-specific armed overlay (e.g. knife hold). Cleared by
+        /// <see cref="ClearArmedPoseOverride"/> or <see cref="SetUnarmed"/>.
+        /// </summary>
+        public void SetArmedWithPose(FPSAnimationAsset pose)
+        {
+            if (pose == null)
+            {
+                SetArmed();
+                return;
+            }
+
+            _armedPoseOverride = pose;
+            SetAssetBlendTime(pose, DefaultOverlayBlendIn, DefaultOverlayBlendOut);
+
+            // Force re-apply even if already armed with a different pose.
+            if (!_isUnarmed && _poseSampler != null && _poseSampler.poseToSample == pose && !_isTransitioning)
+                return;
+
+            _isUnarmed = true;
+            SetHandPose(false);
+        }
+
+        public void ClearArmedPoseOverride()
+        {
+            _armedPoseOverride = null;
+        }
 
         /// <summary>
         /// Re-applies locomotion controller and pose sampler after an external animator swap (e.g. ladder exit).
@@ -199,7 +237,7 @@ namespace Shooter.Project.Character
             }
 
             ApplyLocomotionController(_isUnarmed);
-            SyncPoseSamplerSettings(_isUnarmed ? unarmedOverlayPose : armedOverlayPose);
+            SyncPoseSamplerSettings(ResolveCurrentPose());
         }
 
         /// <summary>
@@ -208,7 +246,7 @@ namespace Shooter.Project.Character
         /// </summary>
         public void PreparePoseForFpsRestore()
         {
-            SyncPoseSamplerSettings(_isUnarmed ? unarmedOverlayPose : armedOverlayPose);
+            SyncPoseSamplerSettings(ResolveCurrentPose());
         }
 
         /// <summary>
@@ -216,7 +254,7 @@ namespace Shooter.Project.Character
         /// </summary>
         public void FinalizePoseAfterFpsRestore()
         {
-            FPSAnimationAsset pose = _isUnarmed ? unarmedOverlayPose : armedOverlayPose;
+            FPSAnimationAsset pose = ResolveCurrentPose();
             if (pose?.clip == null || fpsCharacterRoot == null)
                 return;
 
@@ -227,7 +265,10 @@ namespace Shooter.Project.Character
 
         public void SetHandPose(bool unarmed, bool instant = false)
         {
-            FPSAnimationAsset pose = unarmed ? unarmedOverlayPose : armedOverlayPose;
+            if (unarmed)
+                _armedPoseOverride = null;
+
+            FPSAnimationAsset pose = ResolvePose(unarmed);
             if (pose == null || _poseSampler == null)
                 return;
 
@@ -578,7 +619,7 @@ namespace Shooter.Project.Character
 
             _poseSampler.poseToSample = pose;
             _poseSampler.overwriteRoot = false;
-            _poseSampler.overwriteWeaponBone = pose == armedOverlayPose;
+            _poseSampler.overwriteWeaponBone = !_isUnarmed;
         }
 
         void ForceOverlayPoseFullWeight()

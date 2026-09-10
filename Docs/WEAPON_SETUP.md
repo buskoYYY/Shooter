@@ -125,8 +125,31 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 |------|----------|
 | **Shooter → Project → Add Weapon System** | `WeaponManager`, inventory, bootstrap, input bindings |
 | **Shooter → Project → Setup Ranged Weapons** | Mk18 / AK12 / Mk23 prefabs + wire slots |
-| **Shooter → Project → Add Weapon Test Targets** | 3 мишени с `ShooterDummyDamageable` в PlayerTest |
+| **Shooter → Project → Setup Melee Knife** | Нож, слот 5 |
+| **Shooter → Project → Setup Weapon Collision Layer** | CollisionLayer + стена Environment |
+| **Shooter → Project → Add Weapon Test Targets** | Мишени + патроны в PlayerTest |
+| **Shooter → Project → Add Ammo Pickups** | Только патроны |
+| **Shooter → Project → Setup Weapon Test Scene (2.8)** | Всё для приёмки: мишени, патроны, стена, CollisionLayer |
 | **Shooter → Phase 2 → Add Weapon System** | То же (алиас) |
+
+---
+
+## Приёмка 2.8 (PlayerTest)
+
+Сцена: `Assets/_Project/Scenes/PlayerTest.unity`. Один раз: **Shooter → Project → Setup Weapon Test Scene (2.8)**.
+
+| # | Проверка | Ожидание |
+|---|----------|----------|
+| 1 | **1** | Holster / unarmed |
+| 2 | **2 / 3 / 4** | Mk18 / AK12 / Mk23 |
+| 3 | **5** | Нож (если setup knife делали) |
+| 4 | ЛКМ | Стрельба / удар, мишени краснеют |
+| 5 | **R** | Reload |
+| 6 | **I** / **H** | Inspect / check ammo HUD |
+| 7 | Спринт / прыжок | Нет огня (и swap в воздухе) |
+| 8 | Лестница | Holster → restore |
+| 9 | Стена `WeaponCollisionWall` | Ствол поднимается (Environment) |
+| 10 | Зелёный / жёлтый куб | `+Rifle` / `+Pistol` в запас |
 
 ---
 
@@ -152,15 +175,13 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 
 ## Что осталось по ТЗ
 
-См. чеклисты **2.2–2.8** в [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md):
-
-- Shell VFX (можно заменить вручную, как muzzle)
+- Pose polish / tactical reload (2.2)
 - Melee combo (2.3)
-- CollisionLayer у стены (2.5)
-- Inspect, check ammo, break, pickups (2.6–2.7)
-- Тест-сцена с мишенью и пикапами (2.8)
+- **Retarget CombatKnife** (2.10 — план)
+- CollisionLayer тонкая подгонка под ствол (2.5)
+- Анимация лута (2.9 — план)
 
----
+См. [WEAPON_SYSTEM_TZ.md](WEAPON_SYSTEM_TZ.md).
 
 ## См. также
 

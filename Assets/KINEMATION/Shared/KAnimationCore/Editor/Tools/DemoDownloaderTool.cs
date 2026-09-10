@@ -8,7 +8,6 @@ using System.IO;
 using System.Net;
 using UnityEditor;
 using UnityEngine;
-using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 
 namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
 {
@@ -62,16 +61,13 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
         public static void DrawRow(ContentLicense contentLicense)
         {
             InitStyles();
-
-            // Begin padded horizontal row вЂ” respects the vertical group padding!
+            
             EditorGUILayout.BeginHorizontal();
 
-            string rowString = $"{contentLicense.contentAuthor} вЂў {contentLicense.contentName}";
-
-            // Draw label (auto expands)
+            string rowString = $"{contentLicense.contentAuthor} \u2022 {contentLicense.contentName}";
+            
             GUILayout.Label(new GUIContent(rowString, contentLicense.contentName), _labelStyle);
-
-            // Draw chips (right side but attached to label, no snapping)
+            
             if (contentLicense.tags != null)
             {
                 Color originalColor = GUI.backgroundColor;

@@ -1,9 +1,12 @@
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
+
 using System;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace KINEMATION.Shared.KAnimationCore.Editor.Misc
+namespace KINEMATION.Shared.KAnimationCore.Editor.Widgets
 {
     public class AssetObjectWidget<T> where T : Object
     {

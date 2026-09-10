@@ -367,13 +367,14 @@ PlayerCharacter
 |------|--------|-------------|
 | **2.1** Каркас | ✅ | `IWeapon`, `WeaponManager`, inventory, input 1–6 |
 | **2.2** Ranged MVP | 🟡 | Fire/reload/VFX/SFX/equip motion; осталось: pose polish, tactical reload |
-| **2.3** Melee | 🟡 | `MeleeWeapon` + Mixamo stab (CombatKnife retarget позже) |
+| **2.3** Melee | 🟡 | Humanoid hold/stab (demo) + CombatKnife mesh; FP bake — Retarget Pro UI |
 | **2.4** Gates движения | ✅ | Sprint/jump/air block; ladder holster/restore в bridge |
 | **2.5** Стены (CollisionLayer) | 🟡 | Setup menu: **Shooter → Project → Setup Weapon Collision Layer** |
-| **2.6** Inspect / break | 🟡 | I / H + OnBreak → holster; перезапусти Setup Ranged для inspectClip |
+| **2.6** Inspect / break | 🟡 | I / H + OnBreak → holster |
 | **2.7** Pickups | 🟡 | `ShooterAmmoPickup` + меню **Add Ammo Pickups**; анимация лута — 2.9 |
-| **2.8** Тест-сцена | ❌ | |
+| **2.8** Тест-сцена | ✅ | **Setup Weapon Test Scene (2.8)** + чеклист в WEAPON_SETUP |
 | **2.9** Лут: анимация подбора | 📋 план | FreeSampleAnimationSet `ItemPickupSet` — API ниже |
+| **2.10** Нож: retarget CombatKnife | 🟡 | CS0246 fixed; Humanoid wiring; bake Stab1/Stab2 в Retarget Pro |
 
 ### 2.9 — Анимация подбора предмета (лут) — план
 
@@ -387,6 +388,21 @@ PlayerCharacter
 | **С оружием** (правая рука занята) | Только **левая** рука (AvatarMask / слой); правую не трогать |
 
 Пока **не реализовывать** — только в плане. Логика лута / триггеры — отдельно (связь с 2.7).
+
+### 2.10 — Retarget анимаций ножа (CombatKnife)
+
+**Источник:** `Assets/_Project/Packages/CombatKnife/FP_CombatKnife.fbx` — Generic FP (Draw/Hold/Holster/Idle/Stab1/Stab2).
+
+**Сделано в коде:**
+- Удалён orphaned `KSelectorWindow` (CS0246 после установки Retarget Pro)
+- `SetArmedWithPose` + `MeleeWeapon.holdOverlayPose`
+- Меню **Shooter → Project → Setup Melee Knife (Humanoid)** — demo `C_Knife_Static` / `C_Stabbing_Humanoid` + меш CombatKnife
+
+**Bake FP клипов (вручную в Unity):**
+1. Window → KINEMATION → Retarget Pro
+2. Source = FP_CombatKnife (или arms), Target = Character_model
+3. Bake Hold / Stab1 / Stab2 → `Assets/_Project/Animations/Knife/`
+4. Подставь baked клипы в `AA_Knife_Hold_Humanoid` / `AA_Knife_Attack_Humanoid` (и `attackClipAlt` для Stab2)
 
 ### Критичные нюансы (из отладки)
 
@@ -402,6 +418,7 @@ Attach offsets (local): Mk18 `(-0.039, 0.05, -0.009)` / `(0.22, 347.70, 359.70)`
 
 - **Shooter → Project → Add Weapon System**
 - **Shooter → Project → Setup Ranged Weapons (Mk18 / AK12 / Pistol)**
+- **Shooter → Project → Setup Melee Knife (Humanoid)**
 
 ---
 

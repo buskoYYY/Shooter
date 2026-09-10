@@ -1,11 +1,14 @@
-﻿// Designed by KINEMATION, 2024.
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
 
 using System.Collections.Generic;
 using KINEMATION.Shared.KAnimationCore.Runtime.Core;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 {
+    [MovedFrom("KINEMATION.KAnimationCore.Runtime.Rig")]
     public class KRigComponent : MonoBehaviour
     {
         [SerializeField] private List<Transform> hierarchy = new List<Transform>();
@@ -36,13 +39,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
         {
             return hierarchyDepths.ToArray();
         }
-        
-        public void RefreshHierarchy()
-        {
-            hierarchy.Clear();
-            hierarchyDepths.Clear();
-            TraverseHierarchyByLayer(transform, 0);
-        }
 
         public Transform[] GetHierarchy()
         {
@@ -66,18 +62,28 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 
             return set.Contains(entry);
         }
-        
+#endif
         private void TraverseHierarchyByLayer(Transform currentTransform, int depth)
         {
             hierarchy.Add(currentTransform);
+#if UNITY_EDITOR
             hierarchyDepths.Add(depth);
-            
+#endif
+
             foreach (Transform child in currentTransform)
             {
                 TraverseHierarchyByLayer(child, depth + 1);
             }
         }
+        
+        public void RefreshHierarchy()
+        {
+            hierarchy.Clear();
+#if UNITY_EDITOR
+            hierarchyDepths.Clear();
 #endif
+            TraverseHierarchyByLayer(transform, 0);
+        }
         
         public void Initialize()
         {

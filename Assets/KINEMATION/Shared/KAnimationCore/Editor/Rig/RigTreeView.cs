@@ -1,27 +1,27 @@
-// Designed by KINEMATION, 2024.
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
 
-using KINEMATION.Shared.KAnimationCore.Editor.Misc;
 using System.Collections.Generic;
-
+using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
 {
-    public delegate void OnTreeItemClicked(string displayName, int index);
-    public delegate void OnSelectionChanged(List<(string, int)> selectedItems);
+    public delegate void OnItemClicked(KRigElement selection);
+    public delegate void OnSelectionChanged(KRigElement[] selectedItems);
     
     public class RigTreeView : TreeView
     {
-        public OnTreeItemClicked onItemClicked;
-        public OnSelectionChanged onSelectionChanged;
+        public OnItemClicked onItemClicked;
         
         public float singleRowHeight = 0f;
-        public bool drawToggleBoxes;
+        public bool useToggle;
         
         private List<TreeViewItem> _treeItems;
-        private (string, int)[] _originalItems;
+        private KRigElement[] _originalItems;
+        private bool[] _selectedItems;
         
         public RigTreeView(TreeViewState state) : base(state)
         {
@@ -29,25 +29,59 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
             Reload();
         }
 
-        public void InitializeTreeItems(ref (string, int)[] items)
+        public KRigElement[] GetToggledItems()
+        {
+            List<KRigElement> toggledItems = new List<KRigElement>();
+
+            int index = 0;
+            foreach (var element in _originalItems)
+            {
+                if (_selectedItems[index])
+                {
+                    var newElement = element;
+                    newElement.index = index;
+                    toggledItems.Add(newElement);
+                }
+                index++;
+            }
+
+            return toggledItems.ToArray();
+        }
+
+        public void InitializeTreeItems(KRigElement[] hierarchy)
         {
             _treeItems.Clear();
             
-            int count = items.Length;
-            _originalItems = new (string, int)[count];
+            int count = hierarchy.Length;
+            _originalItems = new KRigElement[count];
 
-            int depthOffset = drawToggleBoxes ? 1 : 0;
+            int depthOffset = useToggle ? 1 : 0;
             for (int i = 0; i < count; i++)
             {
-                _treeItems.Add(new TreeViewItem(i + 1, items[i].Item2 + depthOffset, items[i].Item1));
+                _treeItems.Add(new TreeViewItem(i + 1, hierarchy[i].depth + depthOffset, hierarchy[i].name));
             }
             
-            items.CopyTo(_originalItems, 0);
+            hierarchy.CopyTo(_originalItems, 0);
+            
+            _selectedItems = new bool[count];
+            var selection = GetSelection();
+            
+            foreach (var index in selection)
+            {
+                if (index <= 0 || index > count)
+                {
+                    Debug.LogWarning($"RigTreeView: Invalid selection index ({index}). " +
+                        "The rig hierarchy may be out of date. Consider updating the skeleton.");
+                    continue;
+                }
+                
+                _selectedItems[index - 1] = true;
+            }
         }
         
         public void Filter(string query)
         {
-            int depthOffset = drawToggleBoxes ? 1 : 0;
+            int depthOffset = useToggle ? 1 : 0;
             
             _treeItems.Clear();
             query = query.ToLower().Trim();
@@ -57,14 +91,14 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
             {
                 if (string.IsNullOrEmpty(query))
                 {
-                    _treeItems.Add(new TreeViewItem(i + 1, _originalItems[i].Item2 + depthOffset,
-                        _originalItems[i].Item1));
+                    _treeItems.Add(new TreeViewItem(i + 1, _originalItems[i].depth + depthOffset,
+                        _originalItems[i].name));
                     continue;
                 }
                 
-                if (!_originalItems[i].Item1.ToLower().Trim().Contains(query)) continue;
+                if (!_originalItems[i].name.ToLower().Trim().Contains(query)) continue;
                 
-                _treeItems.Add(new TreeViewItem(i + 1, depthOffset, _originalItems[i].Item1));
+                _treeItems.Add(new TreeViewItem(i + 1, depthOffset, _originalItems[i].name));
             }
             
             Reload();
@@ -80,29 +114,42 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
 
             return root;
         }
-
+        
         protected override void RowGUI(RowGUIArgs args)
         {
-            var rect = args.rowRect;
-
             Color darkGrey = new Color(0.2f, 0.2f, 0.2f);
             Color lightGrey = new Color(0.25f, 0.25f, 0.25f);
             Color blue = new Color(115f / 255f, 147f / 255f, 179f / 255f, 0.25f);
+            
+            bool isSelected = args.selected;
+            if (args.rowRect.Contains(Event.current.mousePosition)) isSelected = true;
 
-            var color = args.selected ? blue : args.row % 2 == 0 ? lightGrey : darkGrey;
+            var color = isSelected ? blue : args.row % 2 == 0 ? lightGrey : darkGrey;
+            EditorGUI.DrawRect(args.rowRect, color);
 
-            EditorGUI.DrawRect(rect, color);
-
-            if (drawToggleBoxes)
+            if (useToggle)
             {
-                GUI.enabled = false;
-                EditorGUI.Toggle(rect, args.selected);
-                GUI.enabled = true;
+                var rect = args.rowRect;
+                rect.width = rect.height;
+
+                bool prevToggle = _selectedItems[args.item.id - 1];
+                bool toggle = EditorGUI.Toggle(rect, prevToggle);
+
+                if (toggle != prevToggle)
+                {
+                    // If this item is a part of a larger selection, update the status globally.
+                    if (IsSelected(args.item.id))
+                    {
+                        var selection = GetSelection();
+                        foreach (var selectedId in selection) _selectedItems[selectedId - 1] = toggle;
+                    } // Otherwise, change this toggle only.
+                    else _selectedItems[args.item.id - 1] = toggle;
+                }
             }
 
             singleRowHeight = rowHeight;
 
-            if (!drawToggleBoxes)
+            if (!useToggle)
             {
                 Rect buttonRect = args.rowRect;
                 float indent = GetContentIndent(args.item);
@@ -110,9 +157,9 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
                 
                 if (GUI.Button(buttonRect, args.item.displayName, EditorStyles.label))
                 {
-                    string displayName = _originalItems[args.item.id - 1].Item1;
-                    int index = args.item.id - 1;
-                    onItemClicked?.Invoke(displayName, index);
+                    var element = _originalItems[args.item.id - 1];
+                    element.index = args.item.id - 1;
+                    onItemClicked?.Invoke(element);
                 }
 
                 return;
@@ -120,52 +167,19 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
             
             base.RowGUI(args);
         }
-        
-        protected override void SelectionChanged(IList<int> selectedIds)
-        {
-            if (!drawToggleBoxes) return;
-            
-            List<(string, int)> selectedItems = new List<(string, int)>();
-            
-            foreach (var selectedId in selectedIds)
-            {
-                string displayName = _originalItems[selectedId - 1].Item1;
-                int index = selectedId - 1;
-                selectedItems.Add((displayName, index));
-            }
-            
-            onSelectionChanged?.Invoke(selectedItems);
-        }
     }
 
-    public class RigTreeWidget : IEditorTool
+    public class RigTreeWidget
     {
-        public RigTreeView rigTreeView;
-        private TreeViewState _rigTreeViewState;
-        
-        public RigTreeWidget()
-        {
-            _rigTreeViewState = new TreeViewState();
-            rigTreeView = new RigTreeView(_rigTreeViewState);
-        }
+        public RigTreeView rigTreeView = new RigTreeView(new TreeViewState());
 
-        public void Refresh(ref (string, int)[] items)
+        public void Refresh(KRigElement[] hierarchy)
         {
-            rigTreeView.InitializeTreeItems(ref items);
+            rigTreeView.InitializeTreeItems(hierarchy);
             rigTreeView.Reload();
             rigTreeView.ExpandAll();
         }
-
-        public void Init() { }
-
-        public string GetToolName() => string.Empty;
-
-        public string GetToolCategory() => string.Empty;
-
-        public string GetToolDescription() => string.Empty;
-
-        public string GetDocsURL() => string.Empty;
-
+        
         public void Render()
         {
             float maxHeight = rigTreeView.singleRowHeight + rigTreeView.totalHeight;

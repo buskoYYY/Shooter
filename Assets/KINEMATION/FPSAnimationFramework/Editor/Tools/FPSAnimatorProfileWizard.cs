@@ -17,7 +17,7 @@ using UnityEditor;
 using UnityEngine;
 
 using System.Collections.Generic;
-using KINEMATION.Shared.KAnimationCore.Editor.Misc;
+using KINEMATION.Shared.KAnimationCore.Editor;
 
 namespace KINEMATION.FPSAnimationFramework.Editor.Tools
 {

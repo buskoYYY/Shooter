@@ -8,79 +8,50 @@ using UnityEngine;
 
 namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
 {
-    public delegate void OnItemClicked(KRigElement selection);
-
     public class RigWindow : EditorWindow
     {
         private OnItemClicked _onClicked;
         private OnSelectionChanged _onSelectionChanged;
-
+        
+        private Vector2 _scrollPosition;
         private string _searchEntry = string.Empty;
 
         private RigTreeWidget _rigTreeWidget;
-        private bool _useSelection;
-        private List<(string, int)> _selectedItems;
-        private KRigElement[] _hierarchy;
-
-        public static void ShowWindow(
-            KRigElement[] hierarchy,
-            OnItemClicked onClicked,
-            OnSelectionChanged onSelectionChanged,
-            bool useSelection,
-            List<int> selection = null,
-            string title = "Selection")
+        private bool _useSelection = false;
+        
+        public static void ShowWindow(KRigElement[] hierarchy, OnItemClicked onClicked, 
+            OnSelectionChanged onSelectionChanged, bool useSelection, List<int> selection = null, string title = "Selection")
         {
-            var window = CreateInstance<RigWindow>();
+            RigWindow window = CreateInstance<RigWindow>();
 
             window._useSelection = useSelection;
             window._onClicked = onClicked;
             window._onSelectionChanged = onSelectionChanged;
-            window._hierarchy = hierarchy;
             window.titleContent = new GUIContent(title);
-
-            (string, int)[] items = new (string, int)[hierarchy.Length];
-            for (int i = 0; i < hierarchy.Length; i++)
+            
+            window._rigTreeWidget = new RigTreeWidget
             {
-                items[i] = (hierarchy[i].name, 0);
-            }
+                rigTreeView =
+                {
+                    useToggle = useSelection,
+                    onItemClicked = window.OnItemClicked
+                }
+            };
 
-            window._rigTreeWidget = new RigTreeWidget();
-
-            if (window._useSelection)
-            {
-                window._rigTreeWidget.rigTreeView.drawToggleBoxes = true;
-                window._rigTreeWidget.rigTreeView.onSelectionChanged = window.OnSelectionChanged;
-                window._selectedItems = new List<(string, int)>();
-            }
-            else
-            {
-                window._rigTreeWidget.rigTreeView.onItemClicked = window.OnTreeItemClicked;
-            }
-
-            window._rigTreeWidget.Refresh(ref items);
-
-            if (window._useSelection && selection != null)
+            if (selection != null)
             {
                 window._rigTreeWidget.rigTreeView.SetSelection(selection);
             }
-
+            
+            window._rigTreeWidget.Refresh(hierarchy);
             window.minSize = new Vector2(450f, 550f);
             window.ShowAuxWindow();
         }
 
-        private void OnTreeItemClicked(string itemName, int index)
+        private void OnItemClicked(KRigElement selection)
         {
-            KRigElement selection = index >= 0 && index < _hierarchy.Length
-                ? _hierarchy[index]
-                : new KRigElement(index, itemName);
-
-            _onClicked?.Invoke(selection);
+            _onClicked.Invoke(selection);
             Close();
-        }
-
-        private void OnSelectionChanged(List<(string, int)> selectedItems)
-        {
-            _selectedItems = selectedItems;
         }
 
         private void OnGUI()
@@ -88,17 +59,14 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Rig
             EditorGUILayout.BeginHorizontal(GUI.skin.FindStyle("Toolbar"));
             _searchEntry = EditorGUILayout.TextField(_searchEntry, EditorStyles.toolbarSearchField);
             EditorGUILayout.EndHorizontal();
-
+            
             _rigTreeWidget.rigTreeView.Filter(_searchEntry);
             _rigTreeWidget.Render();
         }
-
+        
         private void OnDisable()
         {
-            if (_useSelection)
-            {
-                _onSelectionChanged?.Invoke(_selectedItems);
-            }
+            if (_useSelection) _onSelectionChanged?.Invoke(_rigTreeWidget.rigTreeView.GetToggledItems());
         }
     }
 }

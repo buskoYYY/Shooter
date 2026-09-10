@@ -205,8 +205,9 @@ void OnBreak();
 
 ### 2.8 — Тестовая сцена оружия (~2 ч)
 
-- [ ] Слоты 2–3 с разным оружием, стена для collision, pickup патронов
-- [ ] Чеклист по ТЗ (таблица ниже)
+- [x] Слоты 2–4 (и 5 нож), стена Environment, pickup патронов, мишени в `PlayerTest`
+- [x] Меню **Shooter → Project → Setup Weapon Test Scene (2.8)**
+- [x] Чеклист приёмки: [WEAPON_SETUP.md](WEAPON_SETUP.md) → «Приёмка 2.8»
 
 ### 2.9 — Анимация подбора лута (план, не в работе)
 
@@ -216,6 +217,14 @@ void OnBreak();
 - [ ] Unarmed → полный клип
 - [ ] Armed → только левая рука (слой / mask), правую не трогать
 - [ ] Связать с лутом / 2.7 позже
+
+### 2.10 — Retarget ножа CombatKnife (план, не в работе)
+
+Источник: `FP_CombatKnife.fbx` (Generic FP: Draw/Hold/Holster/Idle/Stab1/Stab2). Сейчас удар = Mixamo.
+
+- [ ] Retarget Pro / Blender → Humanoid `Character_model`
+- [ ] Hold + Stab1/Stab2 вместо Mixamo; draw/holster по желанию
+- [ ] Не ломать правую руку / armed overlay
 
 **Не в Задаче 2:** Motion Warping (mantle/vault) — по-прежнему вне scope.
 

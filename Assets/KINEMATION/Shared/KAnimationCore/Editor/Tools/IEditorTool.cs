@@ -1,12 +1,15 @@
-﻿namespace KINEMATION.Shared.KAnimationCore.Editor.Misc
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
+
+namespace KINEMATION.Shared.KAnimationCore.Editor.Tools
 {
     public interface IEditorTool
     {
-        void Init();
-        void Render();
-        string GetToolName();
-        string GetToolCategory();
-        string GetToolDescription();
-        string GetDocsURL();
+        public void Init();
+        public void Render();
+        public string GetToolCategory();
+        public string GetToolName();
+        public string GetDocsURL();
+        public string GetToolDescription();
     }
 }

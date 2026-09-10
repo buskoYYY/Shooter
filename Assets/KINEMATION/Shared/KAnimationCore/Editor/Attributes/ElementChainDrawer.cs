@@ -1,11 +1,11 @@
-﻿// Designed by KINEMATION, 2024.
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
 
-using KINEMATION.Shared.KAnimationCore.Editor.Misc;
-using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
-
+using System;
 using System.Collections.Generic;
-using System.Linq;
-
+using KINEMATION.Shared.KAnimationCore.Editor.Rig;
+using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
+using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,77 +14,108 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Attributes
     [CustomPropertyDrawer(typeof(KRigElementChain))]
     public class ElementChainDrawer : PropertyDrawer
     {
+        private CustomElementChainDrawerAttribute GetCustomChainAttribute()
+        {
+            CustomElementChainDrawerAttribute attr = null;
+
+            var attributes = fieldInfo.GetCustomAttributes(true);
+            foreach (var customAttribute in attributes)
+            {
+                attr = customAttribute as CustomElementChainDrawerAttribute;
+                if (attr != null) break;
+            }
+            
+            return attr;
+        }
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            KRig rig = RigDrawerUtility.TryGetRigAsset(fieldInfo, property);
+            IRigProvider rig = RigEditorUtility.TryGetRigProvider(fieldInfo, property);
             
             SerializedProperty elementChain = property.FindPropertyRelative("elementChain");
             SerializedProperty chainName = property.FindPropertyRelative("chainName");
-            SerializedProperty isStandalone = property.FindPropertyRelative("isStandalone");
             
             if (rig != null)
             {
-                var rigHierarchy = rig.rigHierarchy;
-                
                 float labelWidth = EditorGUIUtility.labelWidth;
-                float indentLevel = EditorGUI.indentLevel;
+                var customChain = GetCustomChainAttribute();
                 
-                float totalWidth = position.width - indentLevel - labelWidth;
+                Rect labelRect = new Rect(position.x, position.y, labelWidth, EditorGUIUtility.singleLineHeight);
+                Rect buttonRect = position;
                 
-                Rect propertyFieldRect = new Rect(position.x + indentLevel, position.y,
-                    labelWidth, EditorGUIUtility.singleLineHeight);
-                
-                Rect buttonRect = new Rect(position.x + indentLevel + labelWidth, position.y,
-                    totalWidth, EditorGUIUtility.singleLineHeight);
-                
-                if (isStandalone.boolValue)
+                string buttonText = $"Edit {chainName.stringValue}";
+
+                if (customChain is {drawLabel: true})
                 {
-                    buttonRect = position;
-                }
-                else
-                {
-                    chainName.stringValue = EditorGUI.TextField(propertyFieldRect, chainName.stringValue);
-                }
-                
-                if (GUI.Button(buttonRect, $"Edit {chainName.stringValue}"))
-                {
-                    List<int> selectedIds = new List<int>();
+                    EditorGUI.PrefixLabel(labelRect, label);
+                    labelRect.x += labelRect.width;
+                    labelRect.width = (position.width - labelWidth) / 2f;
+
+                    buttonRect.x = labelRect.x;
+                    buttonRect.width = position.width - labelWidth;
                     
-                    // Get the active element indexes.
-                    int arraySize = elementChain.arraySize;
-                    for (int i = 0; i < arraySize; i++)
+                    buttonText = $"Edit {label.text}";
+                }
+
+                if (customChain is {drawTextField: true})
+                {
+                    chainName.stringValue = EditorGUI.TextField(labelRect, chainName.stringValue);
+                    
+                    buttonRect.width = position.width  - labelRect.width - (labelRect.x - position.x);
+                    buttonRect.x = labelRect.x + labelRect.width;
+                    
+                    buttonText = "Edit";
+                }
+                
+                if (GUI.Button(buttonRect, buttonText))
+                {
+                    var hierarchy = rig.GetHierarchy();
+                    if (hierarchy != null)
                     {
-                        var indexProp 
-                            = elementChain.GetArrayElementAtIndex(i).FindPropertyRelative("index");
-                        selectedIds.Add(indexProp.intValue + 1);
-                    }
-                    
-                    var elementNames = rigHierarchy.Select(element => element.name).ToList();
-                    KSelectorWindow.ShowWindow(ref elementNames, ref rig.rigDepths,
-                        (selectedName, selectedIndex) => { },
-                        items =>
+                        List<int> selectedIds = null;
+
+                        // Get the active element indexes.
+                        int arraySize = elementChain.arraySize;
+
+                        if (arraySize > 0)
                         {
-                            elementChain.ClearArray();
+                            selectedIds = new List<int>();
 
-                            foreach (var selection in items)
+                            for (int i = 0; i < arraySize; i++)
                             {
-                                elementChain.arraySize++;
-                                int lastIndex = elementChain.arraySize - 1;
-                                
-                                var element = elementChain.GetArrayElementAtIndex(lastIndex);
-                                var name = element.FindPropertyRelative("name");
-                                var index = element.FindPropertyRelative("index");
-
-                                name.stringValue = selection.Item1;
-                                index.intValue = selection.Item2;
+                                var boneName
+                                    = elementChain.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue;
+                                selectedIds.Add(Array.FindIndex(hierarchy,
+                                    element => element.name.Equals(boneName)) + 1);
                             }
-                            
-                            property.serializedObject.ApplyModifiedProperties();
-                        },
-                        true, selectedIds, "Element Chain Selection"
-                    );
+                        }
+
+                        RigWindow.ShowWindow(hierarchy,
+                            (selectedElement) => { },
+                            items =>
+                            {
+                                elementChain.ClearArray();
+
+                                foreach (var selection in items)
+                                {
+                                    elementChain.arraySize++;
+                                    int lastIndex = elementChain.arraySize - 1;
+
+                                    var element = elementChain.GetArrayElementAtIndex(lastIndex);
+                                    var name = element.FindPropertyRelative("name");
+                                    var index = element.FindPropertyRelative("index");
+
+                                    name.stringValue = selection.name;
+                                    index.intValue = selection.index;
+                                }
+
+                                property.serializedObject.ApplyModifiedProperties();
+                            },
+                            true, selectedIds, "Element Chain Selection"
+                        );
+                    }
                 }
             }
             else

@@ -1,4 +1,7 @@
-﻿using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
+
+using KINEMATION.Shared.KAnimationCore.Runtime.Rig;
 using UnityEditor;
 using UnityEngine;
 

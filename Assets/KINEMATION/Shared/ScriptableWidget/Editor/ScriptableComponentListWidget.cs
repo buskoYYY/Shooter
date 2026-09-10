@@ -94,6 +94,37 @@ namespace KINEMATION.Shared.ScriptableWidget.Editor
             AddComponent(_componentTypes[selected], componentName);
         }
 
+        public bool IsComponentEditorActive(int index)
+        {
+            if (index < 0 || index >= _editors.Count)
+            {
+                return false;
+            }
+
+            if (_useStandaloneWindow)
+            {
+                return _componentEditorWindow != null && _componentEditorWindow.GetEditor() == _editors[index];
+            }
+
+            return _editorIndex == index;
+        }
+
+        public void RepaintComponentEditor(int index)
+        {
+            if (!IsComponentEditorActive(index))
+            {
+                return;
+            }
+
+            if (_useStandaloneWindow)
+            {
+                _componentEditorWindow?.Repaint();
+                return;
+            }
+
+            InternalEditorUtility.RepaintAllViews();
+        }
+
         public void RemoveComponent(int index)
         {
             if (_componentEditorWindow != null && _editors[index] == _componentEditorWindow.GetEditor())

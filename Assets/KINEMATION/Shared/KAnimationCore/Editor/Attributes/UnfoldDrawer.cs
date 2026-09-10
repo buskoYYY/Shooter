@@ -1,4 +1,7 @@
-﻿using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
+﻿// Copyright (c) 2026 KINEMATION.
+// All rights reserved.
+
+using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 using UnityEditor;
 using UnityEngine;
 
@@ -28,6 +31,8 @@ namespace KINEMATION.Shared.KAnimationCore.Editor.Attributes
                     }
 
                     enterChildren = false;
+                    propertyPosition.height =
+                        EditorGUI.GetPropertyHeight(iterator, new GUIContent(iterator.displayName), true);
 
                     EditorGUI.PropertyField(propertyPosition, iterator, new GUIContent(iterator.displayName), true);
 
