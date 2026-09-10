@@ -62,6 +62,9 @@ namespace Shooter.Project.Editor
         [MenuItem("Shooter/Project/Add Weapon Test Targets")]
         public static void AddWeaponTestTargetsMenu() => AddWeaponTestTargets();
 
+        [MenuItem("Shooter/Project/Add Ammo Pickups")]
+        public static void AddAmmoPickupsMenu() => AddAmmoPickups();
+
         public static void TrySetupOnPlayer(GameObject playerRoot)
         {
             if (playerRoot == null)
@@ -437,16 +440,89 @@ namespace Shooter.Project.Editor
             CreateDummyTarget(root, "DummyTarget_Near", new Vector3(4f, 1f, 8f), new Vector3(0.8f, 2f, 0.4f));
             CreateDummyTarget(root, "DummyTarget_Mid", new Vector3(-2f, 1.2f, 12f), new Vector3(0.8f, 2.2f, 0.4f));
             CreateDummyTarget(root, "DummyTarget_Far", new Vector3(0f, 1.5f, 20f), new Vector3(1f, 2.5f, 0.5f));
+            PlaceAmmoPickups(root);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
             EditorUtility.DisplayDialog(
                 "Weapon test targets",
-                "Added 3 damageable targets under WeaponTest.\n\n" +
-                "Play → equip weapon (2–4) → shoot targets.\n" +
-                "They tint red as health drops.",
+                "Added 3 damageable targets + ammo pickups under WeaponTest.\n\n" +
+                "Play → equip (2–4) → shoot / walk into ammo boxes.\n" +
+                "Rifle ammo (green) / Pistol ammo (yellow).",
                 "OK");
+        }
+
+        static void AddAmmoPickups()
+        {
+            if (!System.IO.File.Exists(TestScenePath))
+            {
+                EditorUtility.DisplayDialog(
+                    "Ammo pickups",
+                    "Scene not found:\n" + TestScenePath,
+                    "OK");
+                return;
+            }
+
+            var scene = EditorSceneManager.OpenScene(TestScenePath, OpenSceneMode.Single);
+            Transform root = GetOrCreateRoot("WeaponTest").transform;
+            PlaceAmmoPickups(root);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+
+            EditorUtility.DisplayDialog(
+                "Ammo pickups",
+                "Added ammo pickups under WeaponTest.\n\n" +
+                "Green = Rifle (+30)\nYellow = Pistol (+24)\n\n" +
+                "Play → walk into a box (need matching weapon in slots).",
+                "OK");
+        }
+
+        static void PlaceAmmoPickups(Transform parent)
+        {
+            CreateAmmoPickup(parent, "Ammo_Rifle_A", new Vector3(1.5f, 0.35f, 5f), AmmoType.Rifle, 30,
+                new Color(0.25f, 0.8f, 0.35f));
+            CreateAmmoPickup(parent, "Ammo_Rifle_B", new Vector3(2.5f, 0.35f, 5f), AmmoType.Rifle, 30,
+                new Color(0.25f, 0.8f, 0.35f));
+            CreateAmmoPickup(parent, "Ammo_Pistol", new Vector3(3.5f, 0.35f, 5f), AmmoType.Pistol, 24,
+                new Color(0.9f, 0.75f, 0.2f));
+        }
+
+        static void CreateAmmoPickup(
+            Transform parent, string name, Vector3 position, AmmoType type, int amount, Color color)
+        {
+            Transform existing = parent.Find(name);
+            GameObject go;
+            if (existing != null)
+            {
+                go = existing.gameObject;
+            }
+            else
+            {
+                go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = name;
+                go.transform.SetParent(parent, false);
+                go.transform.localScale = new Vector3(0.45f, 0.35f, 0.45f);
+            }
+
+            go.transform.position = position;
+
+            var col = go.GetComponent<Collider>();
+            if (col != null)
+                col.isTrigger = true;
+
+            var pickup = go.GetComponent<ShooterAmmoPickup>();
+            if (pickup == null)
+                pickup = go.AddComponent<ShooterAmmoPickup>();
+            pickup.Configure(type, amount);
+
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                var mat = new Material(renderer.sharedMaterial);
+                mat.color = color;
+                renderer.sharedMaterial = mat;
+            }
         }
 
         static GameObject GetOrCreateRoot(string name)

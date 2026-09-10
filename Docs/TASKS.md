@@ -371,8 +371,22 @@ PlayerCharacter
 | **2.4** Gates движения | ✅ | Sprint/jump/air block; ladder holster/restore в bridge |
 | **2.5** Стены (CollisionLayer) | 🟡 | Setup menu: **Shooter → Project → Setup Weapon Collision Layer** |
 | **2.6** Inspect / break | 🟡 | I / H + OnBreak → holster; перезапусти Setup Ranged для inspectClip |
-| **2.7** Pickups | ❌ | |
+| **2.7** Pickups | 🟡 | `ShooterAmmoPickup` + меню **Add Ammo Pickups**; анимация лута — 2.9 |
 | **2.8** Тест-сцена | ❌ | |
+| **2.9** Лут: анимация подбора | 📋 план | FreeSampleAnimationSet `ItemPickupSet` — API ниже |
+
+### 2.9 — Анимация подбора предмета (лут) — план
+
+**Клип:** `Assets/VanillaLoopStudio/FreeSampleAnimationSet/Art/Animations/ItemPickupSet/Mannequin/A_ItemPickup_fromIdle_RH_100cm.fbx` (Humanoid; в пакете помечен **RH** — правая рука; для armed — слой / mirror на левую).
+
+**API (когда дойдём):** функция вроде `PlayItemPickupAnimation()` для системы лута.
+
+| Состояние | Поведение |
+|-----------|-----------|
+| **Без оружия** (unarmed / holster) | Полная анимация подбора |
+| **С оружием** (правая рука занята) | Только **левая** рука (AvatarMask / слой); правую не трогать |
+
+Пока **не реализовывать** — только в плане. Логика лута / триггеры — отдельно (связь с 2.7).
 
 ### Критичные нюансы (из отладки)
 

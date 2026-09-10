@@ -198,13 +198,24 @@ void OnBreak();
 
 ### 2.7 — Подбор патронов (~2 ч)
 
-- [ ] Pickup trigger + `AmmoPickup` (type + count)
-- [ ] Расширяемый список типов на оружии
+- [x] Pickup trigger + `ShooterAmmoPickup` (`AmmoType` + count)
+- [x] `WeaponManager.TryAddAmmo` — сначала активное оружие, иначе первый подходящий слот
+- [x] Editor: **Shooter → Project → Add Ammo Pickups** (и вместе с test targets)
+- [ ] Анимация подбора — см. 2.9 (позже)
 
 ### 2.8 — Тестовая сцена оружия (~2 ч)
 
 - [ ] Слоты 2–3 с разным оружием, стена для collision, pickup патронов
 - [ ] Чеклист по ТЗ (таблица ниже)
+
+### 2.9 — Анимация подбора лута (план, не в работе)
+
+Клип: FreeSampleAnimationSet → `ItemPickupSet` → `A_ItemPickup_fromIdle_RH_100cm`.
+
+- [ ] `PlayItemPickupAnimation()` для системы лута
+- [ ] Unarmed → полный клип
+- [ ] Armed → только левая рука (слой / mask), правую не трогать
+- [ ] Связать с лутом / 2.7 позже
 
 **Не в Задаче 2:** Motion Warping (mantle/vault) — по-прежнему вне scope.
 

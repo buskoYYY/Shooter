@@ -425,13 +425,27 @@ namespace Shooter.Project.Weapons
 
         public bool TryAddAmmo(AmmoType type, int amount)
         {
+            if (amount <= 0)
+                return false;
+
+            if (_activeWeapon is RangedWeapon active && active.TryAddAmmo(type, amount))
+                return true;
+
             for (int i = 0; i < MaxWeaponSlots; i++)
             {
-                if (GetWeaponInSlot(i) is RangedWeapon ranged && ranged.TryAddAmmo(type, amount))
+                WeaponBase weapon = GetWeaponInSlot(i);
+                if (weapon == null || weapon == _activeWeapon)
+                    continue;
+                if (weapon is RangedWeapon ranged && ranged.TryAddAmmo(type, amount))
                     return true;
             }
 
             return false;
+        }
+
+        public void NotifyAmmoPickedUp(AmmoType type, int amount)
+        {
+            FlashHud($"+{amount} {type}", 1.6f);
         }
 
         public void NotifyLadderEnter()
