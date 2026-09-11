@@ -1270,7 +1270,7 @@ MonoBehaviour:
   hasGun1: 1
   hasGun2: 1
   hasGun3: 1
-  hasGun4: 0
+  hasGun4: 1
   hasGun5: 0
 --- !u!114 &4983882516917541788
 MonoBehaviour:
@@ -1290,7 +1290,7 @@ MonoBehaviour:
   - {fileID: 2385572579767601315}
   - {fileID: 6692505658434530795}
   - {fileID: 4505391831092075546}
-  - {fileID: 0}
+  - {fileID: 2284576887263392055}
   - {fileID: 0}
   autoCollectFromAttachPoint: 1
   showAmmoHud: 1
@@ -1447,6 +1447,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eb1d9b53f4d616b4fa6a93167e0be112, type: 3}
+--- !u!114 &2284576887263392055 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7573615018203092365, guid: eb1d9b53f4d616b4fa6a93167e0be112, type: 3}
+  m_PrefabInstance: {fileID: 8551931245421520058}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f5e6d7c8b9a01012456789abcdef012, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Shooter.Project::Shooter.Project.Weapons.MeleeWeapon
 --- !u!4 &2604545790626780540 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5948028810864996806, guid: eb1d9b53f4d616b4fa6a93167e0be112, type: 3}

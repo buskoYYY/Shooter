@@ -125,7 +125,8 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 |------|----------|
 | **Shooter → Project → Add Weapon System** | `WeaponManager`, inventory, bootstrap, input bindings |
 | **Shooter → Project → Setup Ranged Weapons** | Mk18 / AK12 / Mk23 prefabs + wire slots |
-| **Shooter → Project → Setup Melee Knife** | Нож, слот 5 |
+| **Shooter → Project → Setup Melee Knife** | Нож demo Humanoid, слот 5 |
+| **Shooter → Project → Retarget CombatKnife** | FP→Character_model bake Hold/Stab + wire AA |
 | **Shooter → Project → Setup Weapon Collision Layer** | CollisionLayer + стена Environment |
 | **Shooter → Project → Add Weapon Test Targets** | Мишени + патроны в PlayerTest |
 | **Shooter → Project → Add Ammo Pickups** | Только патроны |
@@ -177,7 +178,7 @@ Overlay armed/unarmed — см. [FPS_CAMERA_AND_HANDS.md](FPS_CAMERA_AND_HANDS.m
 
 - Pose polish / tactical reload (2.2)
 - Melee combo (2.3)
-- **Retarget CombatKnife** (2.10 — план)
+- **Retarget CombatKnife** (2.10) — меню готово, bake в Unity
 - CollisionLayer тонкая подгонка под ствол (2.5)
 - Анимация лута (2.9 — план)
 

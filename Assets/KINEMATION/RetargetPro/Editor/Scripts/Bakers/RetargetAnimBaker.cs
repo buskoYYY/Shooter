@@ -236,6 +236,18 @@ namespace KINEMATION.RetargetPro.Editor.Scripts.Bakers
                 return;
             }
 
+            // Prefer Humanoid when baking onto a humanoid target (e.g. Character_model).
+            GameObject target = _targetCharacterInstance != null ? _targetCharacterInstance : _targetCharacter;
+            Animator humanoidAnimator = target != null ? target.GetComponentInChildren<Animator>(true) : null;
+            bool targetIsHumanoid = humanoidAnimator != null && humanoidAnimator.isHuman
+                                    && humanoidAnimator.avatar != null && humanoidAnimator.avatar.isValid;
+            if (targetIsHumanoid
+                && RetargetProBakerRegistry.GetIndexById(HumanoidAnimationBaker.BakerId) >= 0)
+            {
+                _selectedBakerId = HumanoidAnimationBaker.BakerId;
+                return;
+            }
+
             if (RetargetProBakerRegistry.GetIndexById(GenericAnimationBaker.BakerId) >= 0)
             {
                 _selectedBakerId = GenericAnimationBaker.BakerId;

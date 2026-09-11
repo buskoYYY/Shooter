@@ -9,7 +9,9 @@
         "FPSAnimationFramework.Editor",
         "KAnimationCore.Runtime",
         "KAnimationCore.Editor",
-        "RecoilAnimation.Runtime"
+        "RecoilAnimation.Runtime",
+        "RetargetPro.Runtime",
+        "RetargetPro.Editor"
     ],
     "includePlatforms": [
         "Editor"

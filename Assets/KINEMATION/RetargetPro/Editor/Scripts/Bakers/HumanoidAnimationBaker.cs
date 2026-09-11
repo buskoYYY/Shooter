@@ -72,7 +72,8 @@ namespace KINEMATION.RetargetPro.Editor.Scripts.Bakers
             _hasRootRotationSample = false;
             
             Animator animator = rigComponent.GetComponent<Animator>();
-            if (animator == null || animator.isHuman) return;
+            // Humanoid baker requires a valid human Avatar (inverted check was a package bug).
+            if (animator == null || !animator.isHuman) return;
             
             _poseHandler = new HumanPoseHandler(animator.avatar, animator.transform);
 

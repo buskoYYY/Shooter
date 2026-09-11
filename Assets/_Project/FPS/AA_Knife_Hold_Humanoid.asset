@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 59f5fc06806945df8a985b4b99c57863, type: 3}
-  m_Name: AA_Knife_Attack_Humanoid
+  m_Name: AA_Knife_Hold_Humanoid
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Playables.FPSAnimationAsset
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
-  clip: {fileID: -203655887218126122, guid: ede5ff2280d8bca489cf5ec9e5653d71, type: 3}
+  clip: {fileID: -203655887218126122, guid: 240dbdbc989385e41a5b3ad65af4e572, type: 3}
   mask: {fileID: 0}
   overrideMask: {fileID: 0}
   isAdditive: 0
   blendTime:
-    blendInTime: 0.08
-    blendOutTime: 0.12
-    rateScale: 1.1
+    blendInTime: 0.15
+    blendOutTime: 0.15
+    rateScale: 1
   curves: []

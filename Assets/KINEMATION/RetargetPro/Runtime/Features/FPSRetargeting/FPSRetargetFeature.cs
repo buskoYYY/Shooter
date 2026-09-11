@@ -110,7 +110,7 @@ namespace KINEMATION.RetargetPro.Runtime.Features.FPSRetargeting
         private static readonly string[] WeaponQueries =
         {
             "weapon root", "weapon", "ik hand gun", "ik gun", "hand gun", "gun", "rifle", "pistol", "shotgun",
-            "smg", "carbine", "launcher", "firearm"
+            "smg", "carbine", "launcher", "firearm", "knife", "combatknife", "blade", "melee"
         };
 
         private static readonly string[] WeaponAvoidQueries =
@@ -127,25 +127,92 @@ namespace KINEMATION.RetargetPro.Runtime.Features.FPSRetargeting
         private static KRigElementChain BuildArmChain(KRig rig, BoneSide side, string fallbackName)
         {
             KRigElementChain best = new KRigElementChain { chainName = fallbackName };
-            if (rig == null || rig.rigElementChains == null)
+            if (rig == null)
             {
                 return best;
             }
 
             int bestScore = 0;
-            foreach (KRigElementChain chain in rig.rigElementChains)
+            if (rig.rigElementChains != null)
             {
-                KRigElementChain candidate = ExtractArmChain(chain, side, fallbackName, out int score);
-                if (candidate.elementChain.Count == 0 || score <= bestScore)
+                foreach (KRigElementChain chain in rig.rigElementChains)
                 {
-                    continue;
-                }
+                    KRigElementChain candidate = ExtractArmChain(chain, side, fallbackName, out int score);
+                    if (candidate.elementChain.Count == 0 || score <= bestScore)
+                    {
+                        continue;
+                    }
 
-                best = candidate;
-                bestScore = score;
+                    best = candidate;
+                    bestScore = score;
+                }
             }
 
-            return best;
+            if (best.elementChain.Count > 0)
+            {
+                return best;
+            }
+
+            // FPS arm packs often have empty preset chains — resolve from hierarchy.
+            return BuildArmChainFromHierarchy(rig, side, fallbackName);
+        }
+
+        private static KRigElementChain BuildArmChainFromHierarchy(KRig rig, BoneSide side, string fallbackName)
+        {
+            KRigElementChain result = new KRigElementChain { chainName = fallbackName };
+            if (rig?.rigHierarchy == null || rig.rigHierarchy.Count == 0)
+            {
+                return result;
+            }
+
+            KRigElement bestUpper = default;
+            KRigElement bestLower = default;
+            KRigElement bestHand = default;
+            int bestUpperScore = 0;
+            int bestLowerScore = 0;
+            int bestHandScore = 0;
+            bool hasUpper = false;
+            bool hasLower = false;
+            bool hasHand = false;
+
+            for (int i = 0; i < rig.rigHierarchy.Count; i++)
+            {
+                KRigElement element = rig.rigHierarchy[i];
+                int upperScore = ScoreName(element.name, UpperArmQueries, UpperArmAvoidQueries, side);
+                if (upperScore > bestUpperScore)
+                {
+                    bestUpperScore = upperScore;
+                    bestUpper = element;
+                    hasUpper = true;
+                }
+
+                int lowerScore = ScoreName(element.name, LowerArmQueries, LowerArmAvoidQueries, side);
+                if (lowerScore > bestLowerScore)
+                {
+                    bestLowerScore = lowerScore;
+                    bestLower = element;
+                    hasLower = true;
+                }
+
+                int handScore = ScoreName(element.name, HandQueries, HandAvoidQueries, side);
+                if (handScore > bestHandScore)
+                {
+                    bestHandScore = handScore;
+                    bestHand = element;
+                    hasHand = true;
+                }
+            }
+
+            if (!hasUpper || !hasLower || !hasHand)
+            {
+                return result;
+            }
+
+            result.chainName = fallbackName;
+            AddUniqueElement(result.elementChain, bestUpper);
+            AddUniqueElement(result.elementChain, bestLower);
+            AddUniqueElement(result.elementChain, bestHand);
+            return result;
         }
 
         private static KRigElementChain ExtractArmChain(KRigElementChain sourceChain, BoneSide side,
@@ -261,6 +328,12 @@ namespace KINEMATION.RetargetPro.Runtime.Features.FPSRetargeting
             {
                 foreach (KRigElement element in rig.rigHierarchy)
                 {
+                    // Prefer real weapon sockets over the character/model root.
+                    if (element.depth <= 0)
+                    {
+                        continue;
+                    }
+
                     int score = ScoreName(element.name, WeaponQueries, WeaponAvoidQueries, BoneSide.Unknown);
                     if (score <= 0)
                     {
@@ -272,6 +345,26 @@ namespace KINEMATION.RetargetPro.Runtime.Features.FPSRetargeting
                         bestElement = element;
                         bestScore = score;
                         bestDepth = element.depth;
+                        hasBest = true;
+                    }
+                }
+            }
+
+            // Fallback: allow root only if nothing else matched (rare).
+            if (!hasBest && rig.rigHierarchy != null)
+            {
+                foreach (KRigElement element in rig.rigHierarchy)
+                {
+                    int score = ScoreName(element.name, WeaponQueries, WeaponAvoidQueries, BoneSide.Unknown);
+                    if (score <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!hasBest || score > bestScore)
+                    {
+                        bestElement = element;
+                        bestScore = score;
                         hasBest = true;
                     }
                 }

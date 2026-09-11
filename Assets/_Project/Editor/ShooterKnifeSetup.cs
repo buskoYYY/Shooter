@@ -11,20 +11,20 @@ using UnityEngine;
 namespace Shooter.Project.Editor
 {
     /// <summary>
-    /// Humanoid knife hold/attack (demo clips) + CombatKnife mesh → slot 4 (key 5).
-    /// FP_CombatKnife Generic clips need Retarget Pro bake — see Docs TASKS 2.10.
+    /// Humanoid knife hold/attack + CombatKnife mesh → slot 4 (key 5).
+    /// Prefer <see cref="ShooterCombatKnifeRetargetSetup"/> for FP_CombatKnife bake.
     /// </summary>
     public static class ShooterKnifeSetup
     {
         const string CharacterModelPath = "Assets/_Project/Packages/Models/Character_model.fbx";
         const string RigPath = "Assets/_Project/FPS/Rig_CharacterModel.asset";
-        const string UpperBodyMaskPath = "Assets/Demo/Animations/Masks/UpperBody_Humanoid.mask";
         const string HoldClipFbx = "Assets/Demo/Animations/Locomotion/Humanoid/Knife/C_Knife_Static_Humanoid.fbx";
         const string AttackClipFbx = "Assets/Demo/Animations/Locomotion/Humanoid/Knife/C_Stabbing_Humanoid.fbx";
         const string HoldAssetPath = "Assets/_Project/FPS/AA_Knife_Hold_Humanoid.asset";
         const string AttackAssetPath = "Assets/_Project/FPS/AA_Knife_Attack_Humanoid.asset";
-        const string KnifeMeshPath = "Assets/_Project/Packages/CombatKnife/FP_CombatKnife.fbx";
-        const string KnifeMeshFallback = "Assets/_Project/Packages/Melee/CombatKnife/FP_CombatKnife.fbx";
+        const string KnifeMeshPath = "Assets/_Project/Packages/CombatKnife/Pickup_CombatKnife.fbx";
+        const string KnifeMeshFallback = "Assets/_Project/Packages/CombatKnife/FP_CombatKnife.fbx";
+        const string KnifeMeshFallbackAlt = "Assets/_Project/Packages/Melee/CombatKnife/FP_CombatKnife.fbx";
         const string PrefabPath = "Assets/_Project/Weapons/Prefabs/Melee_Knife.prefab";
         const string PlayerPrefabPath = "Assets/_Project/Prefabs/PlayerCharacter.prefab";
         const string EquipMotion = "Assets/Demo/AnimatorProfiles/IKMotions/IKMotion_Equip.asset";
@@ -32,6 +32,20 @@ namespace Shooter.Project.Editor
 
         static readonly Vector3 KnifeAttachPos = new Vector3(-0.02f, 0.03f, -0.08f);
         static readonly Vector3 KnifeAttachEuler = new Vector3(10f, 170f, 0f);
+
+        /// <summary>Called after CombatKnife bake — reuses AA assets and rewires player slot.</summary>
+        public static void SetupMeleeKnifeFromBaked(
+            FPSAnimationAsset holdAsset,
+            FPSAnimationAsset attackAsset,
+            FPSAnimationAsset attackAltAsset)
+        {
+            if (holdAsset == null || attackAsset == null)
+                return;
+
+            MeleeWeapon prefab = EnsureKnifePrefab(holdAsset, attackAsset, attackAltAsset);
+            WirePlayer(prefab);
+            AssetDatabase.SaveAssets();
+        }
 
         [MenuItem("Shooter/Project/Setup Melee Knife (Humanoid)")]
         public static void SetupMeleeKnife()
@@ -53,7 +67,7 @@ namespace Shooter.Project.Editor
 
             FPSAnimationAsset holdAsset = EnsureAaAsset(HoldAssetPath, holdClip, loopingPose: true);
             FPSAnimationAsset attackAsset = EnsureAaAsset(AttackAssetPath, attackClip, loopingPose: false);
-            MeleeWeapon prefab = EnsureKnifePrefab(holdAsset, attackAsset);
+            MeleeWeapon prefab = EnsureKnifePrefab(holdAsset, attackAsset, null);
             WirePlayer(prefab);
 
             AssetDatabase.SaveAssets();
@@ -65,8 +79,7 @@ namespace Shooter.Project.Editor
                 "• AA_Knife_Hold_Humanoid\n" +
                 "• AA_Knife_Attack_Humanoid\n" +
                 "• Melee_Knife → слот 4 (клавиша 5)\n\n" +
-                "FP_CombatKnife Stab1/Stab2 — через Retarget Pro (меню KINEMATION),\n" +
-                "потом подставь baked клипы в hold/attack на префабе.\n\n" +
+                "Для FP_CombatKnife: Shooter → Project → Retarget CombatKnife.\n\n" +
                 "Play → 5 → поза ножа → ЛКМ удар.",
                 "OK");
         }
@@ -122,7 +135,7 @@ namespace Shooter.Project.Editor
 
             asset.rigAsset = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
             asset.clip = clip;
-            asset.mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
+            asset.mask = null;
             asset.isAdditive = false;
             asset.blendTime = loopingPose
                 ? new BlendTime(0.15f, 0.15f) { rateScale = 1f }
@@ -131,45 +144,112 @@ namespace Shooter.Project.Editor
             return asset;
         }
 
-        static MeleeWeapon EnsureKnifePrefab(FPSAnimationAsset holdAsset, FPSAnimationAsset attackAsset)
+        static MeleeWeapon EnsureKnifePrefab(
+            FPSAnimationAsset holdAsset,
+            FPSAnimationAsset attackAsset,
+            FPSAnimationAsset attackAltAsset)
         {
             Directory.CreateDirectory("Assets/_Project/Weapons/Prefabs");
 
-            MeleeWeapon existing = AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath);
-            if (existing != null)
+            if (AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath) != null)
             {
-                ApplyMeleeFields(existing, holdAsset, attackAsset);
-                existing.ApplyAttachTransform();
-                EditorUtility.SetDirty(existing);
-                return existing;
+                GameObject contents = PrefabUtility.LoadPrefabContents(PrefabPath);
+                try
+                {
+                    var melee = contents.GetComponent<MeleeWeapon>();
+                    if (melee == null)
+                        melee = contents.AddComponent<MeleeWeapon>();
+
+                    ApplyMeleeFields(melee, holdAsset, attackAsset, attackAltAsset);
+                    EnsureKnifeMesh(contents);
+                    melee.ApplyAttachTransform();
+                    PrefabUtility.SaveAsPrefabAsset(contents, PrefabPath);
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+
+                return AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath);
             }
 
             GameObject root = new GameObject("Melee_Knife");
-            var melee = root.AddComponent<MeleeWeapon>();
-            ApplyMeleeFields(melee, holdAsset, attackAsset);
-
-            string meshPath = File.Exists(KnifeMeshPath) ? KnifeMeshPath : KnifeMeshFallback;
-            GameObject meshSource = AssetDatabase.LoadAssetAtPath<GameObject>(meshPath);
-            if (meshSource != null)
-            {
-                GameObject mesh = (GameObject)PrefabUtility.InstantiatePrefab(meshSource, root.transform);
-                if (mesh != null)
-                {
-                    mesh.name = "FP_CombatKnife";
-                    mesh.transform.localPosition = Vector3.zero;
-                    mesh.transform.localRotation = Quaternion.identity;
-                    mesh.transform.localScale = Vector3.one;
-                    WeaponPrefabUtility.StripPhysicsComponents(mesh);
-                }
-            }
-
-            melee.ApplyAttachTransform();
+            var created = root.AddComponent<MeleeWeapon>();
+            ApplyMeleeFields(created, holdAsset, attackAsset, attackAltAsset);
+            EnsureKnifeMesh(root);
+            created.ApplyAttachTransform();
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
             return AssetDatabase.LoadAssetAtPath<MeleeWeapon>(PrefabPath);
         }
 
-        static void ApplyMeleeFields(MeleeWeapon melee, FPSAnimationAsset holdAsset, FPSAnimationAsset attackAsset)
+        static void EnsureKnifeMesh(GameObject root)
+        {
+            if (root == null)
+                return;
+
+            Transform existingMesh = root.transform.Find("CombatKnife_Mesh");
+            if (existingMesh == null)
+                existingMesh = root.transform.Find("FP_CombatKnife");
+            if (existingMesh != null)
+            {
+                StripArmRenderers(existingMesh.gameObject);
+                WeaponPrefabUtility.StripPhysicsComponents(existingMesh.gameObject);
+                return;
+            }
+
+            string meshPath = ResolveKnifeMeshPath();
+            GameObject meshSource = AssetDatabase.LoadAssetAtPath<GameObject>(meshPath);
+            if (meshSource == null)
+            {
+                Debug.LogError("[Shooter] Knife mesh not found at " + meshPath);
+                return;
+            }
+
+            GameObject mesh = (GameObject)PrefabUtility.InstantiatePrefab(meshSource, root.transform);
+            if (mesh == null)
+                return;
+
+            mesh.name = meshPath.Contains("Pickup_") ? "CombatKnife_Mesh" : "FP_CombatKnife";
+            mesh.transform.localPosition = Vector3.zero;
+            mesh.transform.localRotation = Quaternion.identity;
+            mesh.transform.localScale = Vector3.one;
+            StripArmRenderers(mesh);
+            WeaponPrefabUtility.StripPhysicsComponents(mesh);
+        }
+
+        static string ResolveKnifeMeshPath()
+        {
+            if (File.Exists(KnifeMeshPath))
+                return KnifeMeshPath;
+            if (File.Exists(KnifeMeshFallback))
+                return KnifeMeshFallback;
+            return KnifeMeshFallbackAlt;
+        }
+
+        /// <summary>FP_CombatKnife includes arm SMRs — hide them on the held weapon mesh.</summary>
+        static void StripArmRenderers(GameObject root)
+        {
+            if (root == null)
+                return;
+
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer r = renderers[i];
+                if (r == null)
+                    continue;
+                string n = r.gameObject.name.ToLowerInvariant();
+                if (n.Contains("arm_standard"))
+                    r.enabled = false;
+            }
+        }
+
+        static void ApplyMeleeFields(
+            MeleeWeapon melee,
+            FPSAnimationAsset holdAsset,
+            FPSAnimationAsset attackAsset,
+            FPSAnimationAsset attackAltAsset)
         {
             var so = new SerializedObject(melee);
             so.FindProperty("weaponId").stringValue = "Knife";
@@ -178,6 +258,8 @@ namespace Shooter.Project.Editor
             so.FindProperty("attachLocalEulerAngles").vector3Value = KnifeAttachEuler;
             so.FindProperty("holdOverlayPose").objectReferenceValue = holdAsset;
             so.FindProperty("attackClip").objectReferenceValue = attackAsset;
+            if (attackAltAsset != null)
+                so.FindProperty("attackClipAlt").objectReferenceValue = attackAltAsset;
             so.FindProperty("equipMotion").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<IkMotionLayerSettings>(EquipMotion);
             so.FindProperty("unEquipMotion").objectReferenceValue =
@@ -253,14 +335,25 @@ namespace Shooter.Project.Editor
                 if (existing[i].SlotIndex != slotIndex)
                     continue;
 
+                // Nested instance without mesh → replace from updated prefab.
+                bool hasRenderer = existing[i].GetComponentInChildren<Renderer>(true) != null;
+                if (!hasRenderer)
+                {
+                    Object.DestroyImmediate(existing[i].gameObject);
+                    break;
+                }
+
                 var so = new SerializedObject(existing[i]);
                 so.FindProperty("slotIndex").intValue = slotIndex;
                 if (existing[i] is MeleeWeapon)
                 {
+                    var prefabSo = new SerializedObject(prefabAsset);
                     so.FindProperty("holdOverlayPose").objectReferenceValue =
-                        new SerializedObject(prefabAsset).FindProperty("holdOverlayPose").objectReferenceValue;
+                        prefabSo.FindProperty("holdOverlayPose").objectReferenceValue;
                     so.FindProperty("attackClip").objectReferenceValue =
-                        new SerializedObject(prefabAsset).FindProperty("attackClip").objectReferenceValue;
+                        prefabSo.FindProperty("attackClip").objectReferenceValue;
+                    so.FindProperty("attackClipAlt").objectReferenceValue =
+                        prefabSo.FindProperty("attackClipAlt").objectReferenceValue;
                 }
 
                 so.ApplyModifiedPropertiesWithoutUndo();
