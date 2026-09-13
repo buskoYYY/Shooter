@@ -86,6 +86,7 @@ namespace Shooter.Project.Character
         NormalMovement _normalMovement;
         ShooterLadderFpsBridge _ladderBridge;
         ShooterHandPoseState _handPoseState;
+        ShooterItemPickupAnimation _itemPickup;
         FPSAnimator _fpsAnimator;
         UserInputController _userInput;
         Animator _animator;
@@ -245,6 +246,7 @@ namespace Shooter.Project.Character
             _normalMovement = GetComponentInChildren<NormalMovement>();
             _ladderBridge = GetComponent<ShooterLadderFpsBridge>();
             _handPoseState = GetComponent<ShooterHandPoseState>();
+            _itemPickup = GetComponent<ShooterItemPickupAnimation>();
 
             if (fpsCharacterRoot == null)
             {
@@ -600,6 +602,14 @@ namespace Shooter.Project.Character
 
             // Equip/holster blend: keep overlay alive until settle — early FBW=1 twists arms.
             if (_handPoseState != null && _handPoseState.IsTransitioning)
+            {
+                _animator.SetFloat(FullBodyWeightHash, 0f);
+                _userInput.SetValue(FPSANames.PlayablesWeight, 1f);
+                return;
+            }
+
+            // Loot pickup slot clip needs the playables stack (unarmed normally keeps PW=0).
+            if (_itemPickup != null && _itemPickup.ForcePlayablesActive)
             {
                 _animator.SetFloat(FullBodyWeightHash, 0f);
                 _userInput.SetValue(FPSANames.PlayablesWeight, 1f);

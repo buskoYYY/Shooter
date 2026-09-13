@@ -1848,6 +1848,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.045
       objectReference: {fileID: 0}
+    - target: {fileID: 4288907907590989077, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: cameraPull.z
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4288907907590989077, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
+      propertyPath: cameraExtraFov
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8631274992878959782, guid: ca683d23098a6e845b0d7da80db197ed, type: 3}
       propertyPath: m_IsActive
       value: 0

@@ -373,21 +373,24 @@ PlayerCharacter
 | **2.6** Inspect / break | 🟡 | I / H + OnBreak → holster |
 | **2.7** Pickups | 🟡 | `ShooterAmmoPickup` + меню **Add Ammo Pickups**; анимация лута — 2.9 |
 | **2.8** Тест-сцена | ✅ | **Setup Weapon Test Scene (2.8)** + чеклист в WEAPON_SETUP |
-| **2.9** Лут: анимация подбора | 📋 план | FreeSampleAnimationSet `ItemPickupSet` — API ниже |
+| **2.9** Лут: анимация подбора | 🟡 | `PlayItemPickupAnimation()` — меню Setup Item Pickup (2.9) |
 | **2.10** Нож: retarget CombatKnife | 🟡 | Меню Retarget CombatKnife; bake в Unity |
 
-### 2.9 — Анимация подбора предмета (лут) — план
+### 2.9 — Анимация подбора предмета (лут)
 
-**Клип:** `Assets/VanillaLoopStudio/FreeSampleAnimationSet/Art/Animations/ItemPickupSet/Mannequin/A_ItemPickup_fromIdle_RH_100cm.fbx` (Humanoid; в пакете помечен **RH** — правая рука; для armed — слой / mirror на левую).
+**Клип:** `A_ItemPickup_fromIdle_RH_100cm.fbx` (Humanoid RH). Armed = mirrored LH + LeftArm mask.
 
-**API (когда дойдём):** функция вроде `PlayItemPickupAnimation()` для системы лута.
+**API:** `ShooterItemPickupAnimation.PlayItemPickupAnimation()` на игроке.
 
 | Состояние | Поведение |
 |-----------|-----------|
-| **Без оружия** (unarmed / holster) | Полная анимация подбора |
-| **С оружием** (правая рука занята) | Только **левая** рука (AvatarMask / слой); правую не трогать |
+| **Unarmed / holster** | Upper-body AA (`AA_ItemPickup_Unarmed`) |
+| **Armed** | Только левая рука (`AA_ItemPickup_ArmedLeft`) |
 
-Пока **не реализовывать** — только в плане. Логика лута / триггеры — отдельно (связь с 2.7).
+**Setup:** **Shooter → Project → Setup Item Pickup Animation (2.9)**  
+Тест в Play: Context Menu на `ShooterItemPickupAnimation` → Play Item Pickup.
+
+Логика лута / триггеры — отдельно (связь с 2.7).
 
 ### 2.10 — Retarget анимаций ножа (CombatKnife)
 

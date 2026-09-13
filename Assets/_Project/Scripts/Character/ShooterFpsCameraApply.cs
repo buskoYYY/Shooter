@@ -55,6 +55,16 @@ namespace Shooter.Project.Character
         Vector2 _weaponCameraPunch;
         const float WeaponPunchDecay = 12f;
 
+        // Unarmed loot pickup: temporary look-space pullback so hands enter the view.
+        bool _pickupCameraActive;
+        float _pickupEndTime;
+        float _pickupWeight;
+        float _pickupWeightVelocity;
+        Vector3 _pickupLookOffset;
+        float _pickupExtraFov;
+        float _pickupBlendIn = 0.12f;
+        float _pickupBlendOut = 0.22f;
+
         public float LadderLookSmoothTime
         {
             get => ladderLookSmoothTime;
@@ -99,6 +109,21 @@ namespace Shooter.Project.Character
         public void AddWeaponCameraPunch(Vector2 pitchYaw)
         {
             _weaponCameraPunch += pitchYaw;
+        }
+
+        /// <summary>
+        /// Pulls the FPS camera back in look-space for an unarmed item-pickup gesture, then blends out.
+        /// </summary>
+        public void PlayPickupCameraPull(Vector3 lookSpaceOffset, float extraFov, float duration,
+            float blendIn = 0.12f, float blendOut = 0.22f)
+        {
+            _pickupLookOffset = lookSpaceOffset;
+            _pickupExtraFov = Mathf.Max(0f, extraFov);
+            _pickupBlendIn = Mathf.Max(0.02f, blendIn);
+            _pickupBlendOut = Mathf.Max(0.02f, blendOut);
+            _pickupEndTime = Time.time + Mathf.Max(0.1f, duration);
+            _pickupCameraActive = true;
+            _pickupWeightVelocity = 0f;
         }
 
         void Awake()
@@ -204,9 +229,50 @@ namespace Shooter.Project.Character
             else if (!wantLadder && _ladderCameraActive)
                 EndLadderCamera();
 
+            UpdatePickupCameraWeight();
+
             // After FPSAnimator / FPSCameraController (order 0): final pose for rendering + culling.
             EnsureDetachedFromHead();
             ApplyCamera();
+            ApplyPickupFieldOfView();
+        }
+
+        void UpdatePickupCameraWeight()
+        {
+            float target = 0f;
+            if (_pickupCameraActive)
+            {
+                float remaining = _pickupEndTime - Time.time;
+                if (remaining <= 0f)
+                {
+                    _pickupCameraActive = false;
+                    target = 0f;
+                }
+                else if (remaining <= _pickupBlendOut)
+                    target = Mathf.Clamp01(remaining / _pickupBlendOut);
+                else
+                    target = 1f;
+            }
+
+            float smooth = _pickupWeight < target ? _pickupBlendIn : _pickupBlendOut;
+            _pickupWeight = Mathf.SmoothDamp(_pickupWeight, target, ref _pickupWeightVelocity, smooth);
+            if (!_pickupCameraActive && _pickupWeight < 0.001f)
+            {
+                _pickupWeight = 0f;
+                _pickupWeightVelocity = 0f;
+            }
+        }
+
+        void ApplyPickupFieldOfView()
+        {
+            if (_fpsCamera == null || defaultFieldOfView <= 0f)
+                return;
+
+            Camera cam = _fpsCamera.GetComponent<Camera>();
+            if (cam == null)
+                return;
+
+            cam.fieldOfView = defaultFieldOfView + _pickupExtraFov * _pickupWeight;
         }
 
         bool ShouldUseLadderCamera()
@@ -401,7 +467,11 @@ namespace Shooter.Project.Character
                 0f);
 
             // Offset in look space so looking up does not bury the eye in the chest/sleeves.
-            Vector3 eyeOffset = rotation * cameraLocalOffset;
+            Vector3 local = cameraLocalOffset;
+            if (_pickupWeight > 0.001f)
+                local += _pickupLookOffset * _pickupWeight;
+
+            Vector3 eyeOffset = rotation * local;
             if (_head != null)
                 position = _head.position + eyeOffset;
             else
