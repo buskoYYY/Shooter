@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: AA_Knife_AttackAlt_Humanoid
   m_EditorClassIdentifier: FPSAnimationFramework.Runtime::KINEMATION.FPSAnimationFramework.Runtime.Playables.FPSAnimationAsset
   rigAsset: {fileID: 11400000, guid: 7a54dfe69c87dfb429f4f7caff6724a1, type: 2}
-  clip: {fileID: -203655887218126122, guid: ede5ff2280d8bca489cf5ec9e5653d71, type: 3}
+  clip: {fileID: 7400000, guid: 30543ba209beefc47848fa70af707682, type: 2}
   mask: {fileID: 0}
   overrideMask: {fileID: 0}
   isAdditive: 0

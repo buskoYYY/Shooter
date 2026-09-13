@@ -393,21 +393,16 @@ PlayerCharacter
 
 **Источник:** `Assets/_Project/Packages/CombatKnife/FP_CombatKnife.fbx` — Generic FP (Draw/Hold/Holster/Idle/Stab1/Stab2).
 
-**Сделано в коде:**
-- Удалён orphaned `KSelectorWindow` (CS0246 после установки Retarget Pro)
-- `SetArmedWithPose` + `MeleeWeapon.holdOverlayPose`
-- Меню **Shooter → Project → Setup Melee Knife (Humanoid)** — demo fallback
-- Меню **Shooter → Project → Retarget CombatKnife (FP → Character_model)** — профиль + FPS feature + bake Hold/Stab1/Stab2 → AA + Melee_Knife + `attackClipAlt`
-- Фикс Humanoid baker (`!animator.isHuman`); bake на Humanoid target выбирает Humanoid baker
+**Сделано:**
+- Меню **Shooter → Project → Retarget CombatKnife (FP → Character_model)**
+- Bake **только Stab1/Stab2** → `AA_Knife_Attack*` (укол вперёд)
+- **Hold** остаётся demo `C_Knife_Static_Humanoid` (baked Hold ломал руки)
+- targetWeapon принудительно `ik_hand_gun` (не `weapon_l`)
 
 **В Unity:**
-1. Дождись компиляции после Retarget Pro
-2. **Shooter → Project → Retarget CombatKnife (FP → Character_model)**
-3. Если FPS feature не замаплен — в окне Retarget Pro назначь Weapon / Refresh, снова меню
-4. Play → **5** → поза → ЛКМ (Stab1/Stab2)
-
-Baked клипы: `Assets/_Project/Animations/Knife/`  
-Profile: `Retarget_FP_CombatKnife_Character_model.asset`
+1. **Shooter → Project → Setup Melee Knife (Humanoid)** — меш + demo hold (если ещё нет)
+2. **Shooter → Project → Retarget CombatKnife (FP → Character_model)** — bake Stab
+3. Play → **5** → поза → ЛКМ (Stab1/Stab2)
 
 ### Критичные нюансы (из отладки)
 

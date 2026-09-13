@@ -1011,13 +1011,13 @@ MonoBehaviour:
     elementChain:
     - name: UpperArm.R
       index: 44
-      depth: 2
+      depth: 0
     - name: Forearm.R
       index: 45
-      depth: 3
+      depth: 0
     - name: Hand.R
       index: 50
-      depth: 4
+      depth: 0
   sourceLeftArm:
     chainName: LeftArm
     elementChain:
@@ -1035,19 +1035,19 @@ MonoBehaviour:
     elementChain:
     - name: Weapon
       index: 66
-      depth: 2
+      depth: 0
   targetRightArm:
     chainName: rightArm
     elementChain:
     - name: upperarm_r
       index: 78
-      depth: 9
+      depth: 0
     - name: lowerarm_r
       index: 79
-      depth: 10
+      depth: 0
     - name: hand_r
       index: 80
-      depth: 11
+      depth: 0
   targetLeftArm:
     chainName: leftArm
     elementChain:
@@ -1065,14 +1065,14 @@ MonoBehaviour:
     elementChain:
     - name: ik_hand_gun
       index: 17
-      depth: 3
+      depth: 0
   enableWeaponHandle: 0
   enableRightHandHandle: 0
   enableLeftHandle: 0
   enableRightPole: 0
   enableLeftPole: 0
-  rightHandOffset: {x: 0, y: 0, z: 0}
-  leftHandOffset: {x: 0, y: 0, z: 0}
-  weaponOffset: {x: 0, y: 0, z: 0}
+  rightHandOffset: {x: 0.01, y: 0.02, z: 0.02}
+  leftHandOffset: {x: 0, y: 0.1, z: 0}
+  weaponOffset: {x: -0.05, y: -0.12, z: 0.4}
   rightPoleOffset: {x: 0, y: 0, z: 0}
   leftPoleOffset: {x: 0, y: 0, z: 0}

@@ -65,7 +65,7 @@ MonoBehaviour:
   cameraPunch: {x: 1.2, y: 0.15}
   holdOverlayPose: {fileID: 11400000, guid: 046a79f71ed80a44ba73da8ba54b8390, type: 2}
   attackClip: {fileID: 11400000, guid: a1b2c3d4e5f64789a1b2c3d4e5f64702, type: 2}
-  attackClipAlt: {fileID: 11400000, guid: 091b9604ba84a2c489b8ee8808f2fcce, type: 2}
+  attackClipAlt: {fileID: 0}
   equipMotion: {fileID: 11400000, guid: b11b46638e8719941a429aa33657277d, type: 2}
   unEquipMotion: {fileID: 11400000, guid: 6e3ba419dec1a754b9c447a8fc1f9b1f, type: 2}
 --- !u!1001 &450966288856871152

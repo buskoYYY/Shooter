@@ -17,8 +17,8 @@ using Object = UnityEngine.Object;
 namespace Shooter.Project.Editor
 {
     /// <summary>
-    /// FP_CombatKnife (Generic) → Character_model (Humanoid) via Retarget Pro:
-    /// profile + FPS feature → bake Hold/Stab1/Stab2 → wire AA + Melee_Knife.
+    /// FP_CombatKnife Stab1/Stab2 → Character_model via Retarget Pro.
+    /// Hold stays on demo C_Knife_Static (baked Hold previously broke arms).
     /// </summary>
     public static class ShooterCombatKnifeRetargetSetup
     {
@@ -32,11 +32,16 @@ namespace Shooter.Project.Editor
         const string PrefabPath = "Assets/_Project/Weapons/Prefabs/Melee_Knife.prefab";
         const string RigPath = "Assets/_Project/FPS/Rig_CharacterModel.asset";
 
-        static readonly string[] BakeClipNames =
+        static readonly string[] StabBakeNames =
         {
-            "CombatKnife_Hold",
             "CombatKnife_Stab1",
             "CombatKnife_Stab2"
+        };
+
+        static readonly string[] StabOutputPaths =
+        {
+            KnifeFolder + "/Character_model_CombatKnife_Stab1.anim",
+            KnifeFolder + "/Character_model_CombatKnife_Stab2.anim"
         };
 
         [MenuItem("Shooter/Project/Retarget CombatKnife (FP → Character_model)")]
@@ -65,14 +70,13 @@ namespace Shooter.Project.Editor
             FPSRetargetFeature fps = EnsureFpsFeature(profile, out string fpsMsg);
             bool fpsOk = fps != null && fps.GetStatus();
 
-            AnimationClip holdSrc = FindClip(SourceFbx, "CombatKnife_Hold");
             AnimationClip stab1Src = FindClip(SourceFbx, "CombatKnife_Stab1");
             AnimationClip stab2Src = FindClip(SourceFbx, "CombatKnife_Stab2");
-            if (holdSrc == null || stab1Src == null || stab2Src == null)
+            if (stab1Src == null || stab2Src == null)
             {
                 EditorUtility.DisplayDialog(
                     "CombatKnife Retarget",
-                    "В FP_CombatKnife.fbx нет клипов Hold/Stab1/Stab2.",
+                    "В FP_CombatKnife.fbx нет клипов Stab1/Stab2.",
                     "OK");
                 RetargetProWindow.ShowWindow(profile);
                 return;
@@ -86,37 +90,70 @@ namespace Shooter.Project.Editor
                     "Профиль создан, но FPS Retarget Feature не полностью замаплен " +
                     "(нужны руки + weapon bone на source/target).\n\n" +
                     fpsMsg + "\n\n" +
-                    "В окне Retarget Pro нажми Refresh / назначь Weapon вручную, " +
-                    "затем снова запусти этот пункт меню для Bake.",
+                    "В окне Retarget Pro назначь Weapon = source Weapon, target = ik_hand_gun,\n" +
+                    "затем снова запусти этот пункт меню.",
                     "OK");
                 return;
             }
 
-            Dictionary<string, AnimationClip> baked = BakeClips(profile, holdSrc, stab1Src, stab2Src, out string bakeError);
-            if (baked == null || baked.Count == 0)
+            DeleteOldStabBakes();
+
+            Dictionary<string, AnimationClip> baked =
+                BakeStabClips(profile, stab1Src, stab2Src, out string bakeError);
+            if (baked == null || baked.Count < 2)
             {
                 RetargetProWindow.ShowWindow(profile);
                 EditorUtility.DisplayDialog(
                     "CombatKnife Retarget",
-                    "Bake не удался:\n" + bakeError +
+                    "Bake Stab не удался:\n" + bakeError +
                     "\n\nОткрой Window → KINEMATION → Retarget Pro и bake вручную.",
                     "OK");
                 return;
             }
 
-            AnimationClip holdBaked = null;
-            AnimationClip stab1Baked = null;
-            AnimationClip stab2Baked = null;
-            baked.TryGetValue("CombatKnife_Hold", out holdBaked);
-            baked.TryGetValue("CombatKnife_Stab1", out stab1Baked);
-            baked.TryGetValue("CombatKnife_Stab2", out stab2Baked);
+            baked.TryGetValue("CombatKnife_Stab1", out AnimationClip stab1Baked);
+            baked.TryGetValue("CombatKnife_Stab2", out AnimationClip stab2Baked);
 
-            FPSAnimationAsset holdAa = EnsureAa(HoldAaPath, holdBaked, loopingPose: true);
+            float maxMuscle = Mathf.Max(
+                GetMaxAbsMuscle(stab1Baked),
+                GetMaxAbsMuscle(stab2Baked));
+
+            // Humanoid muscles must stay ~[-1,1]. Auto FPS→body bake often exceeds that
+            // (spinning hands/knife). Refuse to wire broken clips over working Mixamo.
+            const float MaxSafeMuscle = 1.25f;
+            if (maxMuscle > MaxSafeMuscle)
+            {
+                RetargetProWindow.ShowWindow(profile);
+                EditorUtility.DisplayDialog(
+                    "CombatKnife Retarget",
+                    "Bake Stab готов, но качество плохое (max muscle = " +
+                    maxMuscle.ToString("0.00") + ", норма ≤ 1.0).\n\n" +
+                    "Так и выглядит «кручение ножа» в руках.\n\n" +
+                    "AA_Attack НЕ перезаписаны — остаётся Mixamo.\n\n" +
+                    "Дальше в окне Retarget Pro:\n" +
+                    "1) Preview Stab1 на Character_model\n" +
+                    "2) FPS feature: Weapon Offset / Hand Offsets / Root Rotation Offset\n" +
+                    "3) Когда руки выглядят нормально — Bake вручную\n" +
+                    "4) Подставь клипы в AA_Knife_Attack*",
+                    "OK");
+                return;
+            }
+
+            // Hold stays demo static — do not overwrite with baked Hold.
+            FPSAnimationAsset holdAa = AssetDatabase.LoadAssetAtPath<FPSAnimationAsset>(HoldAaPath);
             FPSAnimationAsset attackAa = EnsureAa(AttackAaPath, stab1Baked, loopingPose: false);
             FPSAnimationAsset attackAltAa = EnsureAa(AttackAltAaPath, stab2Baked, loopingPose: false);
-            WireMeleePrefab(holdAa, attackAa, attackAltAa);
 
-            // Keep player prefab in sync via existing knife setup wiring.
+            if (holdAa == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "CombatKnife Retarget",
+                    "Нет AA_Knife_Hold_Humanoid. Сначала:\nShooter → Project → Setup Melee Knife (Humanoid)",
+                    "OK");
+                return;
+            }
+
+            WireMeleePrefab(holdAa, attackAa, attackAltAa);
             ShooterKnifeSetup.SetupMeleeKnifeFromBaked(holdAa, attackAa, attackAltAa);
 
             AssetDatabase.SaveAssets();
@@ -127,13 +164,35 @@ namespace Shooter.Project.Editor
 
             EditorUtility.DisplayDialog(
                 "CombatKnife Retarget",
-                "Готово.\n\n" +
-                "• Profile: " + ProfilePath + "\n" +
-                "• Baked → " + KnifeFolder + "\n" +
-                "• AA_Knife_Hold / Attack / AttackAlt\n" +
-                "• Melee_Knife + Player слот 4 (клавиша 5)\n\n" +
-                "Play → 5 → поза ножа → ЛКМ (Stab1/Stab2 чередуются).",
+                "Готово (только Stab1/Stab2).\n\n" +
+                "• Hold = demo C_Knife_Static (без изменений)\n" +
+                "• Attack = baked Stab1\n" +
+                "• AttackAlt = baked Stab2\n" +
+                "• Клипы → " + KnifeFolder + "\n\n" +
+                "Play → 5 → поза → ЛКМ (Stab1/Stab2 чередуются).",
                 "OK");
+        }
+
+        static void DeleteOldStabBakes()
+        {
+            for (int i = 0; i < StabOutputPaths.Length; i++)
+            {
+                if (AssetDatabase.LoadAssetAtPath<AnimationClip>(StabOutputPaths[i]) != null)
+                    AssetDatabase.DeleteAsset(StabOutputPaths[i]);
+            }
+
+            // Also clear unique-path duplicates from earlier bakes.
+            string[] guids = AssetDatabase.FindAssets("Character_model_CombatKnife_Stab t:AnimationClip",
+                new[] { KnifeFolder });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                if (path.Contains("CombatKnife_Stab"))
+                    AssetDatabase.DeleteAsset(path);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         static RetargetProfile EnsureProfile(GameObject sourceModel, GameObject targetModel, out string message)
@@ -209,7 +268,6 @@ namespace Shooter.Project.Editor
 
             if (fps == null)
             {
-                // Drop auto Basic/IK features — FPS arms need FPS Retarget only.
                 ClearFeatures(profile);
                 fps = ScriptableObject.CreateInstance<FPSRetargetFeature>();
                 fps.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
@@ -234,9 +292,7 @@ namespace Shooter.Project.Editor
             AssetDatabase.SaveAssetIfDirty(profile);
 
             if (!fps.GetStatus())
-            {
                 message = DescribeMissingChains(fps) + "\n" + fps.GetErrorMessage();
-            }
 
             return fps;
         }
@@ -270,8 +326,7 @@ namespace Shooter.Project.Editor
         }
 
         /// <summary>
-        /// CombatKnife source rig has empty preset chains — force arms from hierarchy names.
-        /// Prefer Weapon / IK WeaponBone sockets over model roots.
+        /// Force CombatKnife arms + Weapon / ik_hand_gun (never weapon_l).
         /// </summary>
         static void TryFixFpsChains(FPSRetargetFeature fps)
         {
@@ -287,7 +342,7 @@ namespace Shooter.Project.Editor
                     new[] { "UpperArm.L", "Forearm.L", "Hand.L" });
             }
 
-            // Prefer real Weapon bone (not FP_CombatKnife root).
+            // Always force source Weapon bone.
             KRigElement sourceWeapon = FindExactElement(fps.sourceRig, "Weapon");
             if (sourceWeapon.index < 0)
                 sourceWeapon = FindBestWeaponElement(fps.sourceRig,
@@ -313,7 +368,7 @@ namespace Shooter.Project.Editor
                     new[] { "upperarm_l", "lowerarm_l", "hand_l" });
             }
 
-            // Prefer FPS gun socket — never weapon_l / weapon_r prop bones.
+            // Always force ik_hand_gun — never weapon_l / weapon_r.
             KRigElement targetWeapon = FindExactElement(fps.targetRig, "ik_hand_gun");
             if (targetWeapon.index < 0)
                 targetWeapon = FindExactElement(fps.targetRig, "IK WeaponBone");
@@ -384,12 +439,6 @@ namespace Shooter.Project.Editor
                     continue;
 
                 string lower = el.name.ToLowerInvariant().Replace('_', ' ').Replace('.', ' ');
-                if (excludePropSideBones &&
-                    (lower == "weapon l" || lower == "weapon r" || lower == "weapon_l" || lower == "weapon_r"
-                     || lower.EndsWith(" weapon l") || lower.EndsWith(" weapon r")))
-                    continue;
-
-                // Exact "weapon_l"/"weapon_r" after normalize: "weapon l"
                 if (excludePropSideBones && (lower == "weapon l" || lower == "weapon r"))
                     continue;
 
@@ -421,9 +470,8 @@ namespace Shooter.Project.Editor
             return chain != null && chain.elementChain != null && chain.elementChain.Count > 0;
         }
 
-        static Dictionary<string, AnimationClip> BakeClips(
+        static Dictionary<string, AnimationClip> BakeStabClips(
             RetargetProfile profile,
-            AnimationClip hold,
             AnimationClip stab1,
             AnimationClip stab2,
             out string error)
@@ -442,7 +490,7 @@ namespace Shooter.Project.Editor
 
             try
             {
-                AnimationClip[] sources = { hold, stab1, stab2 };
+                AnimationClip[] sources = { stab1, stab2 };
                 for (int i = 0; i < sources.Length; i++)
                 {
                     AnimationClip src = sources[i];
@@ -458,7 +506,7 @@ namespace Shooter.Project.Editor
                         return null;
                     }
 
-                    result[BakeClipNames[i]] = baked;
+                    result[StabBakeNames[i]] = baked;
                 }
             }
             finally
@@ -469,6 +517,30 @@ namespace Shooter.Project.Editor
             }
 
             return result;
+        }
+
+        static float GetMaxAbsMuscle(AnimationClip clip)
+        {
+            if (clip == null)
+                return 0f;
+
+            float max = 0f;
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            for (int i = 0; i < bindings.Length; i++)
+            {
+                EditorCurveBinding b = bindings[i];
+                if (b.type != typeof(Animator))
+                    continue;
+
+                AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, b);
+                if (curve == null)
+                    continue;
+
+                for (int k = 0; k < curve.length; k++)
+                    max = Mathf.Max(max, Mathf.Abs(curve[k].value));
+            }
+
+            return max;
         }
 
         static AnimationClip FindClip(string fbxPath, string clipName)
@@ -500,7 +572,6 @@ namespace Shooter.Project.Editor
 
             asset.rigAsset = AssetDatabase.LoadAssetAtPath<KRig>(RigPath);
             asset.clip = clip;
-            // Match working rifle overlays: null mask → controller upperBodyMask.
             asset.mask = null;
             asset.isAdditive = false;
             asset.blendTime = loopingPose
@@ -520,7 +591,8 @@ namespace Shooter.Project.Editor
                 return;
 
             var so = new SerializedObject(melee);
-            so.FindProperty("holdOverlayPose").objectReferenceValue = hold;
+            if (hold != null)
+                so.FindProperty("holdOverlayPose").objectReferenceValue = hold;
             so.FindProperty("attackClip").objectReferenceValue = attack;
             so.FindProperty("attackClipAlt").objectReferenceValue = attackAlt;
             so.ApplyModifiedPropertiesWithoutUndo();
