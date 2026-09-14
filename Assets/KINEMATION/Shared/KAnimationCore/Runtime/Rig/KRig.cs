@@ -4,10 +4,12 @@
 using System.Collections.Generic;
 using KINEMATION.Shared.KAnimationCore.Runtime.Attributes;
 using KINEMATION.Shared.KAnimationCore.Runtime.Input;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 using Object = UnityEngine.Object;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 {
@@ -58,6 +60,11 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
             
             return result;
         }
+
+        public KRigElement GetElementByName(string targetName)
+        {
+            return rigHierarchy.Find(item => item.name.Equals(targetName));
+        }
         
 #if UNITY_EDITOR
         public List<int> rigDepths = new List<int>();
@@ -95,11 +102,6 @@ namespace KINEMATION.Shared.KAnimationCore.Runtime.Rig
 
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
-        }
-        
-        public KRigElement GetElementByName(string targetName)
-        {
-            return rigHierarchy.Find(item => item.name.Equals(targetName));
         }
 
         public void RegisterRigObserver(Object newRigObserver)
